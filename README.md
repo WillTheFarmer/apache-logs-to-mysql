@@ -27,7 +27,7 @@ _this release imports 2 LogFormats - default combined and customized extended_
 
 > LogFormat "%h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" combined
 ### h - Remote hostname. Will log the IP address if HostnameLookups is set to Off, which is the default. If it logs the hostname for only a few hosts, you probably have access control directives mentioning them by name. See the Require host documentation.
-### l - Remote logname (from identd, if supplied). This will return a dash unless mod_ident is present and IdentityCheck is set On. Not importing or using due to required Apache Module mod_ident causing serious latency problems. By default value is '-'. 
+### l - Remote logname (from identd, if supplied). This will return a dash unless mod_ident is present and IdentityCheck is set On. I do import and process this variable and variable remote user below. I am not using myself due to required Apache Module mod_ident causing serious latency problems. By default value is '-'. 
 ### u - Remote user if the request was authenticated. May be bogus if return status (%s) is 401 (unauthorized).
 ### t - The time, in the form given by format, which should be in an extended strftime(3) format (potentially localized). If the format starts with begin: (default) the time is taken at the beginning of the request processing. 
 ### r - First line of request. This variable contains three data points: req_method, req_uri and req_protocol.
