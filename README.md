@@ -1,5 +1,9 @@
 # ApacheLogs2MySQL
-Imports Apache2 Access &amp; Error logs into MySQL Schema and normalizes data using over 100 Schema Objects. This little side project turned into a couple long weeks of Apache research and building three different approaches. The easiest and best approach is customize Apache's LogFormat and ErrorLogFormat. Use comma for TERMINATED BY ',' and Apache variables that return a single value rather than multiple. Using Python I was able to strip inidividual data points from Apache's default access log - LogFormat but reading the error log was too much for my Python skills. The reason is Apache error logs have three different row formats in the same file - connection, request and other error. The Error Log led me to regrouping and a new approach. The use of staging tables for Access and Error logs. Once I did the staging process for the Error Log I ditched the Pyhton parsing for the Apache default Access Log format. The Apache LogFormat - combined is done in the staging and I also created an expanded LogFormat which provides more information than the combine.
+Imports Apache2 Access &amp; Error logs into MySQL Schema and normalizes data using over 100 Schema Objects. This little side project turned into a couple long weeks of Apache research and building three different approaches. The easiest and best approach is customize Apache's LogFormat and ErrorLogFormat. Use comma for TERMINATED BY ',' and Apache variables that return a single value rather than multiple. Using Python I was able to strip individual data points from Apache's default access log - LogFormat but reading the error log was too much for my Python skills. The reason is Apache error logs have three different row formats in the same file - connection, request and other error. 
+
+My testing logs are from Apache 2.4.58 running on Ubuntu 24.04. The code is all new and has not been tested hard yet.
+
+The Error Log led me to regrouping and a new approach - using staging tables for Access and Error logs. Once I did the staging process for the Error Log I ditched the Pyhton parsing for the Apache default Access Log format. The Apache LogFormat - combined is done now in the staging process. I also created an expanded LogFormat which provides more information than the combine. The expanded LogFormat uses commas for variable speration (FIELDS TERMINATED BY ',') as well and requires no additional parsing in the staging process.
 
 This is my first repository, I only finished the error log code 4 hours ago and I've been up for 41 hours. I jumped the gun on posting this... Tomorrow I'll post code after some sleep. When I created this I assummed it would not be visible until I turned visible ON. If it is visible I am including notes and screenshots for now.
 
@@ -95,7 +99,9 @@ Modified Token	Meaning
 
 > Example (default format for threaded MPMs)
 ### ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i"
-This would result in error messages such as:
+
+> This would result in error messages such as:
+
 [Thu May 12 08:28:57.652118 2011] [core:error] [pid 8777:tid 4326490112] [client ::1:58619] File does not exist: /usr/local/apache2/htdocs/favicon.ico
 
 > Notice that, as discussed above, some fields are omitted entirely because they are not defined.
