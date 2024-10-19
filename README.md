@@ -58,7 +58,7 @@ _this release imports 2 LogFormats - default combined and customized extended_
 ### %s - Status. For requests that have been internally redirected, this is the status of the original request.
 ### %H - The request protocol.
 ### %m - The request method.
-### %U - The URL path requested, not including any query string.
+### %U - The URI path requested, not including any query string.
 ### "%{Referer}i - Referer log format
 ### %{User-agent}i - Agent (Browser) log format
 ### %{VARNAME}C - The contents of cookie VARNAME in the request sent to the server. Only version 0 cookies are fully supported.
