@@ -1,13 +1,13 @@
 # ApacheLogs2MySQL
 Imports Apache2 Access &amp; Error logs into MySQL Schema and normalizes data using over 100 Schema Objects. This little side project turned into a couple long weeks of Apache research and building three different approaches. The easiest and best approach is customize Apache's LogFormat and ErrorLogFormat. Use comma for TERMINATED BY ',' and Apache variables that return a single value rather than multiple. Using Python I was able to strip individual data points from Apache's default access log - LogFormat but reading the error log was too much for my Python skills. The reason is Apache error logs have three different row formats in the same file - connection, request and other error. 
 
-My testing logs are from Apache 2.4.58 running on Ubuntu 24.04. The code is all new and has not been tested hard yet.
-
 The Error Log led me to regrouping and a new approach - using staging tables for Access and Error logs. Once I did the staging process for the Error Log I ditched the Pyhton parsing for the Apache default Access Log format. The Apache LogFormat - combined is done now in the staging process. I also created an expanded LogFormat which provides more information than the combine. The expanded LogFormat uses commas for variable speration (FIELDS TERMINATED BY ',') as well and requires no additional parsing in the staging process.
 
-This is my first repository, I only finished the error log code 4 hours ago and I've been up for 41 hours. I jumped the gun on posting this... Tomorrow I'll post code after some sleep. When I created this I assummed it would not be visible until I turned visible ON. If it is visible I am including notes and screenshots for now.
-
 Python is used to execute MySQL LOAD DATA and Store Procedures. Python is also used to iterate over files and subfolders in a given folder. Python is the King of the import process!
+
+My less than 50 testing logs are from Apache 2.4.58 running on Ubuntu 24.04. All the code is new and has not been tested hard yet.
+
+This is my first repository, I only finished the error log code 4 hours ago and I've been up for 41 hours. I may have jumped the gun on posting this so soon... Tomorrow I'll post code after some sleep. When I created this repository assummed it would not be visible until I turned a visible switch ON. If it is visible I am including notes and screenshots for now.
 
 Images of Tables, Views, Stored Functions and Procedures in apache_logs Schema. More information and code to come tomorrow. 
 ![Screenshot 2024-10-19 001434](https://github.com/user-attachments/assets/54912935-3ea9-4d0d-8b6a-a92d329e9e88)
