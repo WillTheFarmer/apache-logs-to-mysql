@@ -13,7 +13,7 @@ Python is used to execute MySQL LOAD DATA and Store Procedures. Python is also u
 
 My less than 50 testing logs are from Apache 2.4.58 running on Ubuntu 24.04. All the code is new and has not been tested hard yet.
 
-This is my first repository, I only finished the error log code 4 hours ago and I've been up for 41 hours. I may have jumped the gun on posting this so soon... Tomorrow I'll post code after some sleep. When I created this repository I assummed it would not be visible until turning a "visible" switch ON. If it is visible I am including notes and screenshots for now.
+This is my first repository, I only finished the error log code 4 hours ago and I've been up for 41 hours. I may have jumped the gun on posting this so soon... Tomorrow I'll post code after some sleep. When I created this repository I assumed it would not be visible until turning a "visible" switch ON. If it is visible I am including notes and screenshots for now.
 
 Images of Tables, Views, Stored Functions and Procedures in apache_logs Schema. More information and code to come tomorrow. 
 ![Screenshot 2024-10-19 001434](https://github.com/user-attachments/assets/54912935-3ea9-4d0d-8b6a-a92d329e9e88)
