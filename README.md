@@ -49,3 +49,14 @@ View Data images are from 2 views in the apache_logs schema. Database normalizat
 
 MySQL View - apache_logs.access_log_browser_list - data from LogFormat: extended
 ![view-access_useragent_browser_list](https://github.com/user-attachments/assets/1550daf7-e591-47c4-a70a-cb4fc5fdefd9)
+
+MySQL Error Views - most of the verbiage above is about Access Logs. The application also does the same normalization with error logs. These are many of the views in apache_logs Schema. The error log attribute is the name of the first column. Each attribute has associated table in apache_logs Schema.
+![Screenshot 2024-10-26 164911](https://github.com/user-attachments/assets/11094e41-9897-44ab-8c23-e8b75cb5916f)
+![Screenshot 2024-10-26 164842](https://github.com/user-attachments/assets/c1fcfb1a-2c45-4525-80ce-11702b0c609a)
+![Screenshot 2024-10-26 164449](https://github.com/user-attachments/assets/9bcf7ffe-c72f-43cb-8011-2cdf2978934a)
+![Screenshot 2024-10-26 164517](https://github.com/user-attachments/assets/b624d139-3d9f-4184-a63c-b3c70df6d53c)
+![Screenshot 2024-10-26 164645](https://github.com/user-attachments/assets/ec15619a-900d-4036-a7b4-fe610777d65d)
+![Screenshot 2024-10-26 164714](https://github.com/user-attachments/assets/caaac761-730e-4ccf-8a43-0ef40be7b164)
+![Screenshot 2024-10-26 164741](https://github.com/user-attachments/assets/7ab48d24-1d24-4733-ab57-e76654a28e14)
+![Screenshot 2024-10-26 164805](https://github.com/user-attachments/assets/d8fae147-69f2-4995-b800-f8c8bf14308e)
+![Screenshot 2024-10-26 164828](https://github.com/user-attachments/assets/485d24ea-2c34-4c01-8452-bd43e0993aab)
