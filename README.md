@@ -1,7 +1,8 @@
-# ApacheLogs2MySQL - first release is scheduled for 10/29/2024 - I've been working non-stop, around the clock on this project.  
+# ApacheLogs2MySQL - release is 10/29/2024 - I've been working non-stop, around the clock on this project.  
 
-ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema designed to automate importing Apache Access & Error Log files into a normalized database for reporting & data analysis.
+ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema designed to automate importing Apache Access & Error Log files into a normalized database for reporting & data analysis. Application runs & tested on Windows, Linux and MacOS.
 
+MySQL View - apache_logs.access_log_requri_list - data from LogFormat: extended
 ![view-access_requri_list](https://github.com/user-attachments/assets/7cf9ff89-a1d7-4e93-ae93-deeca87175f9)
 
 ApacheLogs2MySQL processes the 3 standard Apache Access Logformats - vhost_combined, combined and common
@@ -16,9 +17,11 @@ All folder pathnames, filename patterns, logging, MySQL connection settings are 
 
 Application is developed with Python 3.12, common Python modules and MySQL. Python handles polling of log file folders and executing MySQL Database LOAD DATA statements, Stored Procedures & Functions and SQL Statements. Python drives the application but MySQL does all Data Manipulation & Processing.
 
-Application runs on Windows, Linux and MacOS. It has been tested with MySQL versions 8.0.39, 8.4.3, 9.0.0 & 9.1.0.
+It has been tested with MySQL versions 8.0.39, 8.4.3, 9.0.0 & 9.1.0. The processing and polling has been heavily tested on three platforms.
 
-The processing and polling has been heavily tested on three platforms. This weekend my plan is finalizing import_log functionality. This is logging of messages, events and errors of process. I do not want to release until table structures are certain. 
+This weekend is finalizing logging functionality of import client & server processes. I do not want to release until table structures are certain.
+
+For Auditability logging of messages, events and errors of processes on client and server is extremely important. This application has both a client and server module. The client module can be run on multiple computers in different locations feeding a single server module.
 
 Please visit https://farmfreshsoftware.com/ApacheLogs2MySQL.html for more information.
 
@@ -44,4 +47,5 @@ Database normalization is the process of organizing data in a relational databas
 
 View Data images are from 2 views in the apache_logs schema. Database normalization at work. There are 35 more schema views.
 
+MySQL View - apache_logs.access_log_browser_list - data from LogFormat: extended
 ![view-access_useragent_browser_list](https://github.com/user-attachments/assets/1550daf7-e591-47c4-a70a-cb4fc5fdefd9)
