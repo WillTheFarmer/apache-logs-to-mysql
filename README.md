@@ -1,4 +1,4 @@
-# ApacheLogs2MySQL - release is 10/29/2024 - I've been working non-stop, around the clock on this project.  
+# ApacheLogs2MySQL - release is 10/31/2024
 
 ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema designed to automate importing Apache Access & Error Log files into a normalized database for reporting & data analysis. Application runs & tested on Windows, Linux and MacOS.
 
@@ -28,21 +28,23 @@ Please visit https://farmfreshsoftware.com/ApacheLogs2MySQL.html for more inform
 MySQL database must be configured with - local-infile=1 - add line in mysqld.cnf under [mysqld]
 
 Apache uses the same Standard Access log formats on all 3 platforms.
-
+```
 LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" vhost_combined
-
+```
+```
 LogFormat "%h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" combined
-
+```
+```
 LogFormat "%h %l %u %t \"%r\" %>s %O" common
-
+```
 Application is designed to use an Extended format in Apache configuration to get even more information from your servers.
-
+```
 LogFormat "\"%h\",%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\",\"%{Referer}i\",\"%{User-Agent}i\",\"%{farmwork.app}C\",%v" extended
-
+```
 The application also processes Error Logs with default format for threaded MPMs (Multi-Processing Modules). If you're running Apache 2.4 on any platform and ErrorLogFormat is not defined in config files this is the Error Log format.
-
+```
 ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i"
-
+```
 Database normalization is the process of organizing data in a relational database to improve data integrity and reduce redundancy. Normalization ensures that data is organized in a way that makes sense for the data model and attributes, and that the database functions efficiently.
 
 View Data images are from 2 views in the apache_logs schema. Database normalization at work. There are 35 more schema views.

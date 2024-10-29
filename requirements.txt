@@ -1,0 +1,4 @@
+PyMySQL
+user-agents
+watchdog
+python-dotenv
