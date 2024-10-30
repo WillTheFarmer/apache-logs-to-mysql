@@ -15,18 +15,26 @@ There is no need to move log files either. Log files can be left in the folder t
 
 All folder pathnames, filename patterns, logging, MySQL connection settings are in .env file for easy installation and maintenance. The folder polling Python module runs great in PM2 daemon process manager for 24/7 online processing.
 
-Application is developed with Python 3.12, common Python modules and MySQL. Python handles polling of log file folders and executing MySQL Database LOAD DATA statements, Stored Procedures & Functions and SQL Statements. Python drives the application but MySQL does all Data Manipulation & Processing.
-
-It has been tested with MySQL versions 8.0.39, 8.4.3, 9.0.0 & 9.1.0. The processing and polling has been heavily tested on three platforms.
-
-This weekend is finalizing logging functionality of import client & server processes. I do not want to release until table structures are certain.
+Python handles polling of log file folders and executing MySQL Database LOAD DATA statements, Stored Procedures & Functions and SQL Statements. Python drives the application but MySQL does all Data Manipulation & Processing.
 
 For Auditability logging of messages, events and errors of processes on client and server is extremely important. This application has both a client and server module. The client module can be run on multiple computers in different locations feeding a single server module.
 
-Please visit https://farmfreshsoftware.com/ApacheLogs2MySQL.html for more information.
+Application processing and polling has been heavily tested with MySQL versions 8.0.39, 8.4.3, 9.0.0 & 9.1.0 and on 3 platforms.
 
-MySQL database must be configured with - local-infile=1 - add line in mysqld.cnf under [mysqld]
+Application is developed with Python 3.12, MySQL and 4 Python modules. Modules are listed with Python Package Index link, install command for each platform & GitHub Repository link.
 
+|Python Package|Windows 10 & 11|Ubuntu 24.04|macOS 15.0.1 Darwin 24.0.0|GitHub Repository|
+|--------------|---------------|------------|--------------------------|-----------------|
+|[PyMySQL](https://pypi.org/project/PyMySQL/)|python -m pip install PyMySQL[rsa]|sudo apt-get install python3-pymysql|python3 -m pip install 'PyMySQL[rsa]'|[PyMySQL/PyMySQL](https://github.com/PyMySQL/PyMySQL)|
+|[user-agents](https://pypi.org/project/user-agents/)|pip install pyyaml ua-parser user-agents|sudo apt-get install python3-user-agents|python3 -m pip install user-agents|[selwin/python-user-agents](https://github.com/selwin/python-user-agents)|
+|[watchdog](https://pypi.org/project/watchdog/)|pip install watchdog|sudo apt-get install python3-watchdog|python3 -m pip install watchdog|[gorakhargosh/watchdog](https://github.com/gorakhargosh/watchdog/tree/master)|
+|[python-dotenv](https://pypi.org/project/python-dotenv/)|pip install python-dotenv|sudo apt-get install python3-dotenv|python3 -m pip install python-dotenv|[theskumar/python-dotenv](https://github.com/theskumar/python-dotenv)|
+
+MySQL server must be configured in my.ini, mysqld.cnf or my.cnf file depending on platform: 
+```
+[mysqld]
+local-infile=1
+```
 Apache uses the same Standard Access log formats on all 3 platforms.
 ```
 LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" vhost_combined
@@ -37,7 +45,7 @@ LogFormat "%h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" combine
 ```
 LogFormat "%h %l %u %t \"%r\" %>s %O" common
 ```
-Application is designed to use an Extended format in Apache configuration to get even more information from your servers.
+Application is designed to use this extended format in Apache configuration to get even more information from your servers.
 ```
 LogFormat "\"%h\",%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\",\"%{Referer}i\",\"%{User-Agent}i\",\"%{farmwork.app}C\",%v" extended
 ```

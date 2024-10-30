@@ -1,0 +1,8 @@
+*.pyc
+*.pyo
+*.env
+*.code-workspace
+/.vscode
+/build
+/dist
+/__pycache__
