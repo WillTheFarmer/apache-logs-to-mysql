@@ -22,7 +22,6 @@ Python handles polling of log file folders and executing MySQL Database LOAD DAT
 For Auditability logging of messages, events and errors of processes on client and server is extremely important. This application has both a client and server module. The client module can be run on multiple computers in different locations feeding a single server module.
 
 Application is developed with Python 3.12, MySQL and 4 Python modules. Modules are listed with Python Package Index link, install command for each platform & GitHub Repository link.
-
 ## Required Python Modules
 |Python Package|Windows 10 & 11|Ubuntu 24.04|macOS 15.0.1 Darwin 24.0.0|GitHub Repository|
 |--------------|---------------|------------|--------------------------|-----------------|
@@ -30,7 +29,6 @@ Application is developed with Python 3.12, MySQL and 4 Python modules. Modules a
 |[user-agents](https://pypi.org/project/user-agents/)|pip install pyyaml ua-parser user-agents|sudo apt-get install python3-user-agents|python3 -m pip install user-agents|[selwin/python-user-agents](https://github.com/selwin/python-user-agents)|
 |[watchdog](https://pypi.org/project/watchdog/)|pip install watchdog|sudo apt-get install python3-watchdog|python3 -m pip install watchdog|[gorakhargosh/watchdog](https://github.com/gorakhargosh/watchdog/tree/master)|
 |[python-dotenv](https://pypi.org/project/python-dotenv/)|pip install python-dotenv|sudo apt-get install python3-dotenv|python3 -m pip install python-dotenv|[theskumar/python-dotenv](https://github.com/theskumar/python-dotenv)|
-
 ## Required MySQL Server Settings
 MySQL server must be configured in my.ini, mysqld.cnf or my.cnf file depending on platform: 
 ```
@@ -56,7 +54,10 @@ The application also processes Error Logs with default format for threaded MPMs 
 ```
 ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i"
 ```
-## MySQL Installation Steps
+## Installation Instructions
+The steps are very important in making this installation painless. Please follow in the order the instructions are listed.
+
+### 1. MySQL Steps
 Before running the apachLogs2MySQL.sql file open it in your favorite editor and do a Find and Replace the following with a MySQL User account with dba rights on the server you are installing on. This will make installation much easier. Copy below:
 ```
 root`@`%`
@@ -72,7 +73,7 @@ local-infile=1
 ```
 After those 3 steps the server should be good to go.
 
-## Settings.env Variables Explained
+### 2. Settings.env steps
 First rename the settings.env file to .env
 
 By default the load_dotenv() is looking for a file name .env which is standard name for setting files. The file is loaded in both the apacheLogs2MySQL.py and watch4files.py with the following line of code:
@@ -88,6 +89,7 @@ Lunix & macOS require single frontslash:
 /home/will/apacheLogs/
 ```
 Below is settings.env with default settings for running on my Windows 11 Pro workstation.
+### 3. Settings.env Variables
 ```
 MYSQL_HOST=localhost
 MYSQL_PORT=3306
@@ -116,7 +118,7 @@ EXTENDED_LOG=1
 USERAGENT=1
 USERAGENT_LOG=1
 ```
-## Python Installation Steps
+### 4. Python Steps
 Running from command line
 ```
 python watch4logs.py
