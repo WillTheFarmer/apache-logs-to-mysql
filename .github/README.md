@@ -1,11 +1,11 @@
 # ApacheLogs2MySQL
 ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema designed to automate importing Apache Access & Error Log files into a normalized database for reporting & data analysis. 
 
-Application runs on Windows, Linux and MacOS platforms and tested with MySQL versions 8.0.39, 8.4.3, 9.0.0 & 9.1.0.
+Application runs on Windows, Linux and MacOS platforms & tested with MySQL versions 8.0.39, 8.4.3, 9.0.0 & 9.1.0.
 
-MySQL View - apache_logs.access_log_requri_list - data from LogFormat: extended
-![view-access_requri_list](https://github.com/user-attachments/assets/7cf9ff89-a1d7-4e93-ae93-deeca87175f9)
-
+## MySQL view with logs totalled by Browsers
+MySQL View - apache_logs.access_log_browser_list - data from LogFormat: extended
+![view-access_useragent_browser_list](https://github.com/user-attachments/assets/1550daf7-e591-47c4-a70a-cb4fc5fdefd9)
 ## Application Description
 ApacheLogs2MySQL processes the 3 standard Apache Access Logformats - vhost_combined, combined and common
 
@@ -117,10 +117,8 @@ EXTENDED_RECURSIVE=1
 EXTENDED_LOG=1
 USERAGENT=1
 USERAGENT_LOG=1
-
 ```
 ## Python Installation Steps
-
 Running from command line
 ```
 python watch4logs.py
@@ -129,15 +127,14 @@ Running from PM2
 ```
 pm2 start watch4logs.py
 ```
-
 ## Database Normalization
 Database normalization is the process of organizing data in a relational database to improve data integrity and reduce redundancy. Normalization ensures that data is organized in a way that makes sense for the data model and attributes, and that the database functions efficiently.
 
 View Data images are from 2 views in the apache_logs schema. Database normalization at work. There are 35 more schema views.
-
-MySQL View - apache_logs.access_log_browser_list - data from LogFormat: extended
-![view-access_useragent_browser_list](https://github.com/user-attachments/assets/1550daf7-e591-47c4-a70a-cb4fc5fdefd9)
-
+## MySQL view with logs totalled by URIs
+MySQL View - apache_logs.access_log_requri_list - data from LogFormat: extended
+![view-access_requri_list](https://github.com/user-attachments/assets/7cf9ff89-a1d7-4e93-ae93-deeca87175f9)
+## Error Log Views
 MySQL Error Views - most of the verbiage above is about Access Logs. The application also does the same normalization with error logs. These are many of the views in apache_logs Schema. The error log attribute is the name of the first column. Each attribute has associated table in apache_logs Schema.
 ![Screenshot 2024-10-26 164911](https://github.com/user-attachments/assets/11094e41-9897-44ab-8c23-e8b75cb5916f)
 ![Screenshot 2024-10-26 164842](https://github.com/user-attachments/assets/c1fcfb1a-2c45-4525-80ce-11702b0c609a)
