@@ -23,7 +23,7 @@ For Auditability logging of messages, events and errors of processes on client a
 
 Application is developed with Python 3.12, MySQL and 4 Python modules. Modules are listed with Python Package Index link, install command for each platform & GitHub Repository link.
 ## Required Python Modules
-I went through the trouble of including lots of information about required Python modules including install command lines for each platform. I had to email author of PyMySQL for the macOS command line. Yes, the single quotes are required. The quickest option is simply run the first command line under '4. Python Steps'. If that works you are all set. The `requirements.txt` file is included in repository.
+I provide lots of information about required Python modules including install command lines for each platform. I had to email author of PyMySQL for the macOS command line. The normal command line did not work and I could not find the proper one posted anywhere. Yes, the single quotes are required. The quickest option is simply run the command line under '4. Python Steps'. If that works you are all set. The `requirements.txt` file is included in repository.
 |Python Package|Windows 10 & 11|Ubuntu 24.04|macOS 15.0.1 Darwin 24.0.0|GitHub Repository|
 |--------------|---------------|------------|--------------------------|-----------------|
 |[PyMySQL](https://pypi.org/project/PyMySQL/)|python -m pip install PyMySQL[rsa]|sudo apt-get install python3-pymysql|python3 -m pip install 'PyMySQL[rsa]'|[PyMySQL/PyMySQL](https://github.com/PyMySQL/PyMySQL)|
@@ -119,23 +119,23 @@ EXTENDED_LOG=1
 USERAGENT=1
 USERAGENT_LOG=1
 ```
-### 5. Python Steps
-Install all modules from command line
+### 4. Python Steps
+Install all modules:
 ```
 pip install -r requirements.txt
 ```
-### 6. Run Application
-If MySQL steps completed successfully, renamed settings.env to .env, updated variables for MySQL server connection and log folders and successfully installed the Python modules it is time to run the application. If you have log files in the folders already run the apacheLogs2MySQL.py directly. It will process all the logs in all the folders. If you have empty folders and want to drop files into folders run the watch4logs.py. Once you get it all figured out use PM2 to run the application 24/7 waiting to process files on arrival.
+### 5. Run Application
+If MySQL steps completed successfully, renamed file `settings.env` to `.env`, updated variables for MySQL server connection and log folders and successfully installed Python modules it is time to run application. If you have log files in the folders already run the apacheLogs2MySQL.py directly. It will process all the logs in all the folders. If you have empty folders and want to drop files into folders run the watch4logs.py. Once you get all logs processed & get a better understanding of application use PM2 to run application 24/7 waiting to process files on arrival.
 
-Running import processing directly from command line:
+Run import process directly:
 ```
 python apacheLogs2MySQL.py
 ```
-Running polling module from command line:
+Run polling module:
 ```
 python watch4logs.py
 ```
-Running polling module from PM2:
+Run polling module from PM2:
 ```
 pm2 start watch4logs.py
 ```

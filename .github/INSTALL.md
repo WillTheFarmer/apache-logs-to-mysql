@@ -4,8 +4,10 @@ The steps are very important in making this installation painless. Please follow
 ### 1. MySQL Steps
 Before running the apachLogs2MySQL.sql file open it in your favorite editor and do a Find and Replace the following with a MySQL User account with dba rights on the server you are installing on. This will make installation much easier. Copy below:
 ```
-root`@`%`
+`root`@`%`
 ```
+Rename above <sup>user</sup> to a <sup>user</sup> on your server. For example - `root`@`%` to `dbadmin`@`localhost`
+
 The easiest way to install is using the MySQL Command Line Client. Login as user with DBA rights and execute the following:
 ```
 source yourpath/apacheLogs2MySQL.sql
@@ -63,7 +65,7 @@ USERAGENT=1
 USERAGENT_LOG=1
 ```
 ### 4. Required Python Modules
-I went through the trouble of including lots of information about required Python modules including install command lines for each platform. I had to email author of PyMySQL for the macOS command line. Yes, the single quotes are required. The quickest option is simply run the first command line under '5. Python Steps'. If that works you are all set. The `requirements.txt` file is included in repository.
+I provide lots of information about required Python modules including install command lines for each platform. I had to email author of PyMySQL for the macOS command line. The normal command line did not work and I could not find the proper one posted anywhere. Yes, the single quotes are required. The quickest option is simply run the command line under '5. Python Steps'. If that works you are all set. The `requirements.txt` file is included in repository.
 |Python Package|Windows 10 & 11|Ubuntu 24.04|macOS 15.0.1 Darwin 24.0.0|GitHub Repository|
 |--------------|---------------|------------|--------------------------|-----------------|
 |[PyMySQL](https://pypi.org/project/PyMySQL/)|python -m pip install PyMySQL[rsa]|sudo apt-get install python3-pymysql|python3 -m pip install 'PyMySQL[rsa]'|[PyMySQL/PyMySQL](https://github.com/PyMySQL/PyMySQL)|
@@ -71,22 +73,22 @@ I went through the trouble of including lots of information about required Pytho
 |[watchdog](https://pypi.org/project/watchdog/)|pip install watchdog|sudo apt-get install python3-watchdog|python3 -m pip install watchdog|[gorakhargosh/watchdog](https://github.com/gorakhargosh/watchdog/tree/master)|
 |[python-dotenv](https://pypi.org/project/python-dotenv/)|pip install python-dotenv|sudo apt-get install python3-dotenv|python3 -m pip install python-dotenv|[theskumar/python-dotenv](https://github.com/theskumar/python-dotenv)|
 ### 5. Python Steps
-Install all modules from command line
+Install all modules:
 ```
 pip install -r requirements.txt
 ```
 ### 6. Run Application
-If MySQL steps completed successfully, renamed settings.env to .env, updated variables for MySQL server connection and log folders and successfully installed the Python modules it is time to run the application. If you have log files in the folders already run the apacheLogs2MySQL.py directly. It will process all the logs in all the folders. If you have empty folders and want to drop files into folders run the watch4logs.py. Once you get it all figured out use PM2 to run the application 24/7 waiting to process files on arrival.
+If MySQL steps completed successfully, renamed file `settings.env` to `.env`, updated variables for MySQL server connection and log folders and successfully installed Python modules it is time to run application. If you have log files in the folders already run the apacheLogs2MySQL.py directly. It will process all the logs in all the folders. If you have empty folders and want to drop files into folders run the watch4logs.py. Once you get all logs processed & get a better understanding of application use PM2 to run application 24/7 waiting to process files on arrival.
 
-Running import processing directly from command line:
+Run import process directly:
 ```
 python apacheLogs2MySQL.py
 ```
-Running polling module from command line:
+Run polling module:
 ```
 python watch4logs.py
 ```
-Running polling module from PM2:
+Run polling module from PM2:
 ```
 pm2 start watch4logs.py
 ```
