@@ -14,35 +14,6 @@ Plus I've got to rebuild the hydrualic cylinder on my tractor's loader :tractor:
 If you have a Data Process Project and require an expert email farmfreshsoftware@gmail.com with subject <sup>data hired gun</sup> and I'll be sure to reply.
 
 Any contribution made will be reflected in feeding cows, fixing tractor and additional repository development projects I am currently working. 
-If there is enough financial contributions I'll create a repository for a complete Node.js application to acess the apache_logs schema.
+If there is enough interest & financial contributions I'll create a repository for a complete Node.js application to access the apache_logs schema.
 
 Data processes like this is what I've been building for 30 years. :information_desk_person:
-
-## title {.tabset .tabset-fade}
-content above tabbed region.
-
-### tab Social-Media
-
-tab content Social-Media
-
-### tab Contact
-
-tab content  Contact
-
-### tab Revisions
-
-tab content  Revisions
-
-### tab Articles
-
-tab content  Articles
-
-### tab Skills
-
-tab content  Skills
-
-### tab Insights
-
-tab content  Insights
-
-content below tabbed region
