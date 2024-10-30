@@ -1,4 +1,0 @@
-PyMySQL==1.1.1
-user-agents==2.2.0
-watchdog==5.0.3
-python-dotenv==1.0.1
