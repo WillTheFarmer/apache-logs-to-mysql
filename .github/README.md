@@ -3,7 +3,7 @@ ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema designed to a
 
 Application runs on Windows, Linux and MacOS platforms & tested with MySQL versions 8.0.39, 8.4.3, 9.0.0 & 9.1.0.
 
-## MySQL view with logs totalled by Browsers
+## MySQL view logs totalled by Browsers
 MySQL View - apache_logs.access_log_browser_list - data from LogFormat: extended
 ![view-access_useragent_browser_list](https://github.com/user-attachments/assets/1550daf7-e591-47c4-a70a-cb4fc5fdefd9)
 ## Application Description
@@ -24,7 +24,6 @@ For Auditability logging of messages, events and errors of processes on client a
 Application is developed with Python 3.12, MySQL and 4 Python modules. Modules are listed with Python Package Index link, install command for each platform & GitHub Repository link.
 
 ## Required Python Modules
-
 |Python Package|Windows 10 & 11|Ubuntu 24.04|macOS 15.0.1 Darwin 24.0.0|GitHub Repository|
 |--------------|---------------|------------|--------------------------|-----------------|
 |[PyMySQL](https://pypi.org/project/PyMySQL/)|python -m pip install PyMySQL[rsa]|sudo apt-get install python3-pymysql|python3 -m pip install 'PyMySQL[rsa]'|[PyMySQL/PyMySQL](https://github.com/PyMySQL/PyMySQL)|
@@ -58,7 +57,6 @@ The application also processes Error Logs with default format for threaded MPMs 
 ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i"
 ```
 ## MySQL Installation Steps
-
 Before running the apachLogs2MySQL.sql file open it in your favorite editor and do a Find and Replace the following with a MySQL User account with dba rights on the server you are installing on. This will make installation much easier. Copy below:
 ```
 root`@`%`
@@ -131,7 +129,7 @@ pm2 start watch4logs.py
 Database normalization is the process of organizing data in a relational database to improve data integrity and reduce redundancy. Normalization ensures that data is organized in a way that makes sense for the data model and attributes, and that the database functions efficiently.
 
 View Data images are from 2 views in the apache_logs schema. Database normalization at work. There are 35 more schema views.
-## MySQL view with logs totalled by URIs
+## MySQL view logs totalled by URIs
 MySQL View - apache_logs.access_log_requri_list - data from LogFormat: extended
 ![view-access_requri_list](https://github.com/user-attachments/assets/7cf9ff89-a1d7-4e93-ae93-deeca87175f9)
 ## Error Log Views
