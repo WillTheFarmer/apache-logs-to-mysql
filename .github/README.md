@@ -1,7 +1,7 @@
 # ApacheLogs2MySQL
 ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema designed to automate importing Apache Access & Error Log files into a normalized database for reporting & data analysis. 
 
-Application runs & tested on Windows, Linux and MacOS.
+Application runs on Windows, Linux and MacOS platforms with MySQL versions 8.0.39, 8.4.3, 9.0.0 & 9.1.0.
 
 MySQL View - apache_logs.access_log_requri_list - data from LogFormat: extended
 ![view-access_requri_list](https://github.com/user-attachments/assets/7cf9ff89-a1d7-4e93-ae93-deeca87175f9)
@@ -20,8 +20,6 @@ All folder pathnames, filename patterns, logging, MySQL connection settings are 
 Python handles polling of log file folders and executing MySQL Database LOAD DATA statements, Stored Procedures & Functions and SQL Statements. Python drives the application but MySQL does all Data Manipulation & Processing.
 
 For Auditability logging of messages, events and errors of processes on client and server is extremely important. This application has both a client and server module. The client module can be run on multiple computers in different locations feeding a single server module.
-
-Application processing and polling has been heavily tested with MySQL versions 8.0.39, 8.4.3, 9.0.0 & 9.1.0 and on 3 platforms.
 
 Application is developed with Python 3.12, MySQL and 4 Python modules. Modules are listed with Python Package Index link, install command for each platform & GitHub Repository link.
 
