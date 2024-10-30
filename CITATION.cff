@@ -11,7 +11,7 @@ authors:
   - given-names: Will
     family-names: Raymond
     email: farmfreshsoftware@gmail.com
-    affiliation: Farm Fresh Software LLC
+    affiliation: Farm Fresh Software
 identifiers:
   - type: url
     value: 'https://github.com/WillTheFarmer/ApacheLogs2MySQL'
@@ -19,19 +19,19 @@ repository-code: 'https://github.com/WillTheFarmer/ApacheLogs2MySQL'
 url: 'https://farmfreshsoftware.com/ApacheLogs2MySQL.html'
 abstract: >-
   ApacheLogs2MySQL includes two Python files, one SQL file
-  and one ENV file. Module 'apacheLogs2MySQL.py' handles
+  and one ENV file. Python module 'apacheLogs2MySQL.py' handles
   file processing and execution of MySQL LOAD DATA
-  statements, stored procedures and SQL statements. Module
+  statements, stored procedures and SQL statements. Python module
   'watch4logs.py' imports module 'apacheLogs2MySQL.py' and
   watches Apache log folders for new files. When new files
   are created in folders module calls
   apacheLogs2MySQL.processLogs() function. SQL file
-  'apacheLogs2MySQL.sql' creates a MySQL Schema named
-  'apache_logs' with tables, views, stored functions and
-  procedures designed to automate importing Apache Access &
-  Error Log files into a normalized database for reporting &
-  data analysis. ENV file contains all environment settings
-  required to execute Python modules.
+  'apacheLogs2MySQL.sql' contains Data Definition Language (DDL)
+  that creates a MySQL Schema named 'apache_logs' with tables,
+  views, stored functions and procedures designed to automate 
+  importing Apache Access & Error Log files into a normalized 
+  database for reporting & data analysis. ENV file contains 
+  all environment variables required to execute Python modules.
 keywords:
   - Python
   - MySQL
@@ -39,5 +39,5 @@ keywords:
   - Access & Error Logs
 license: Apache-2.0
 commit: My First Open-Source Release
-version: '1.0'
+version: '1.0.0'
 date-released: '2024-10-31'
