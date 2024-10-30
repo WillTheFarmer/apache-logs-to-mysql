@@ -75,11 +75,18 @@ Install all modules from command line
 ```
 pip install -r requirements.txt
 ```
-Running from command line
+### 6. Run Application
+If MySQL steps completed successfully, renamed settings.env to .env, updated variables for MySQL server connection and log folders and successfully installed the Python modules it is time to run the application. If you have log files in the folders already run the apacheLogs2MySQL.py directly. It will process all the logs in all the folders. If you have empty folders and want to drop files into folders run the watch4logs.py. Once you get it all figured out use PM2 to run the application 24/7 waiting to process files on arrival.
+
+Running import processing directly from command line:
+```
+python apacheLogs2MySQL.py
+```
+Running polling module from command line:
 ```
 python watch4logs.py
 ```
-Running from PM2
+Running polling module from PM2:
 ```
 pm2 start watch4logs.py
 ```
