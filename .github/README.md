@@ -23,6 +23,7 @@ For Auditability logging of messages, events and errors of processes on client a
 
 Application is developed with Python 3.12, MySQL and 4 Python modules. Modules are listed with Python Package Index link, install command for each platform & GitHub Repository link.
 ## Required Python Modules
+I went through the trouble of including lots of information about required Python modules including install command lines for each platform. I had to email author of PyMySQL for the macOS command line. Yes, the single quotes are required. The quickest option is simply run the first command line under '4. Python Steps'. If that works you are all set. The `requirements.txt` file is included in repository.
 |Python Package|Windows 10 & 11|Ubuntu 24.04|macOS 15.0.1 Darwin 24.0.0|GitHub Repository|
 |--------------|---------------|------------|--------------------------|-----------------|
 |[PyMySQL](https://pypi.org/project/PyMySQL/)|python -m pip install PyMySQL[rsa]|sudo apt-get install python3-pymysql|python3 -m pip install 'PyMySQL[rsa]'|[PyMySQL/PyMySQL](https://github.com/PyMySQL/PyMySQL)|
@@ -118,7 +119,11 @@ EXTENDED_LOG=1
 USERAGENT=1
 USERAGENT_LOG=1
 ```
-### 4. Python Steps
+### 5. Python Steps
+Install all modules from command line
+```
+pip install -r requirements.txt
+```
 Running from command line
 ```
 python watch4logs.py
