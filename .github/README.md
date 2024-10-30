@@ -1,10 +1,12 @@
-# ApacheLogs2MySQL - release is 10/31/2024
+# ApacheLogs2MySQL
+ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema designed to automate importing Apache Access & Error Log files into a normalized database for reporting & data analysis. 
 
-ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema designed to automate importing Apache Access & Error Log files into a normalized database for reporting & data analysis. Application runs & tested on Windows, Linux and MacOS.
+Application runs & tested on Windows, Linux and MacOS.
 
 MySQL View - apache_logs.access_log_requri_list - data from LogFormat: extended
 ![view-access_requri_list](https://github.com/user-attachments/assets/7cf9ff89-a1d7-4e93-ae93-deeca87175f9)
 
+## Application Description
 ApacheLogs2MySQL processes the 3 standard Apache Access Logformats - vhost_combined, combined and common
 
 This is a fast, reliable processing application with detailed event-logging and two-staged data conversation. Data manipulation can be fine tuned in second conversion stage if required for customizing LogFormats. Log-levels can be set to capture every process step, info messages and errors of the import process from log file to schema import_log table.
@@ -23,6 +25,8 @@ Application processing and polling has been heavily tested with MySQL versions 8
 
 Application is developed with Python 3.12, MySQL and 4 Python modules. Modules are listed with Python Package Index link, install command for each platform & GitHub Repository link.
 
+## Required Python Modules
+
 |Python Package|Windows 10 & 11|Ubuntu 24.04|macOS 15.0.1 Darwin 24.0.0|GitHub Repository|
 |--------------|---------------|------------|--------------------------|-----------------|
 |[PyMySQL](https://pypi.org/project/PyMySQL/)|python -m pip install PyMySQL[rsa]|sudo apt-get install python3-pymysql|python3 -m pip install 'PyMySQL[rsa]'|[PyMySQL/PyMySQL](https://github.com/PyMySQL/PyMySQL)|
@@ -30,11 +34,13 @@ Application is developed with Python 3.12, MySQL and 4 Python modules. Modules a
 |[watchdog](https://pypi.org/project/watchdog/)|pip install watchdog|sudo apt-get install python3-watchdog|python3 -m pip install watchdog|[gorakhargosh/watchdog](https://github.com/gorakhargosh/watchdog/tree/master)|
 |[python-dotenv](https://pypi.org/project/python-dotenv/)|pip install python-dotenv|sudo apt-get install python3-dotenv|python3 -m pip install python-dotenv|[theskumar/python-dotenv](https://github.com/theskumar/python-dotenv)|
 
+## Required MySQL Server Settings
 MySQL server must be configured in my.ini, mysqld.cnf or my.cnf file depending on platform: 
 ```
 [mysqld]
 local-infile=1
 ```
+## Supported Log Formats
 Apache uses the same Standard Access log formats on all 3 platforms.
 ```
 LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" vhost_combined
@@ -53,6 +59,7 @@ The application also processes Error Logs with default format for threaded MPMs 
 ```
 ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i"
 ```
+## Database Normalization
 Database normalization is the process of organizing data in a relational database to improve data integrity and reduce redundancy. Normalization ensures that data is organized in a way that makes sense for the data model and attributes, and that the database functions efficiently.
 
 View Data images are from 2 views in the apache_logs schema. Database normalization at work. There are 35 more schema views.
