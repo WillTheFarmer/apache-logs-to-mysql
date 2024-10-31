@@ -1,7 +1,9 @@
 # ApacheLogs2MySQL
-ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema designed to automate importing Apache Access & Error Log files into a normalized database for reporting & data analysis. 
+ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema designed to automate importing Apache Access & Error Log files into a normalized database schema for reporting & data analysis. 
 
-Application runs on Windows, Linux and MacOS platforms & tested with MySQL versions 8.0.39, 8.4.3, 9.0.0 & 9.1.0.
+Application runs on Windows, Linux and MacOS & tested with MySQL versions 8.0.39, 8.4.3, 9.0.0 & 9.1.0.
+
+For hassle-free installation follow `INSTALL.md` step by step. Install information is also in `README.md` for reference but `INSTALL.md` a concise list of installation steps. 
 
 ## MySQL view logs totalled by Browsers
 MySQL View - apache_logs.access_log_browser_list - data from LogFormat: extended
@@ -31,7 +33,7 @@ I provide lots of information about required Python modules including install co
 |[watchdog](https://pypi.org/project/watchdog/)|pip install watchdog|sudo apt-get install python3-watchdog|python3 -m pip install watchdog|[gorakhargosh/watchdog](https://github.com/gorakhargosh/watchdog/tree/master)|
 |[python-dotenv](https://pypi.org/project/python-dotenv/)|pip install python-dotenv|sudo apt-get install python3-dotenv|python3 -m pip install python-dotenv|[theskumar/python-dotenv](https://github.com/theskumar/python-dotenv)|
 ## Required MySQL Server Settings
-MySQL server must be configured in my.ini, mysqld.cnf or my.cnf file depending on platform: 
+MySQL server must be configured in `my.ini`, `mysqld.cnf` or `my.cnf` depending on platform with following: 
 ```
 [mysqld]
 local-infile=1
@@ -47,7 +49,7 @@ LogFormat "%h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" combine
 ```
 LogFormat "%h %l %u %t \"%r\" %>s %O" common
 ```
-Application is designed to use this extended format in Apache configuration to get even more information from your servers.
+Application is designed to use this extended format in Apache configuration to get more information from your servers.
 ```
 LogFormat "\"%h\",%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\",\"%{Referer}i\",\"%{User-Agent}i\",\"%{farmwork.app}C\",%v" extended
 ```
@@ -59,15 +61,15 @@ ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ re
 The steps are very important in making this installation painless. Please follow in the order the instructions are listed.
 
 ### 1. MySQL Steps
-Before running the apachLogs2MySQL.sql file open it in your favorite editor and do a Find and Replace the following with a MySQL User account with dba rights on the server you are installing on. This will make installation much easier. Copy below:
+Before running `apachLogs2MySQL.sql` open file in your favorite editor and do a ***Find and Replace*** of the following User Account with a User Account with DBA Role on server you are installing on. This will make everything much easier. Copy below:
 ```
 root`@`%`
 ```
-The easiest way to install is using the MySQL Command Line Client. Login as user with DBA rights and execute the following:
+The easiest way to install is use MySQL Command Line Client. Login as User with DBA Role and execute the following:
 ```
 source yourpath/apacheLogs2MySQL.sql
 ```
-MySQL server must be configured in my.ini, mysqld.cnf or my.cnf file depending on platform: 
+MySQL server must be configured in `my.ini`, `mysqld.cnf` or `my.cnf` depending on platform: 
 ```
 [mysqld]
 local-infile=1
@@ -123,6 +125,11 @@ USERAGENT_LOG=1
 Install all modules:
 ```
 pip install -r requirements.txt
+```
+macOS platform may require installation of pip.
+```
+xcode-select --install
+python3 -m ensurepip --upgrade 
 ```
 ### 5. Run Application
 If MySQL steps completed successfully, renamed file `settings.env` to `.env`, updated variables for MySQL server connection and log folders and successfully installed Python modules it is time to run application. If you have log files in the folders already run the apacheLogs2MySQL.py directly. It will process all the logs in all the folders. If you have empty folders and want to drop files into folders run the watch4logs.py. Once you get all logs processed & get a better understanding of application use PM2 to run application 24/7 waiting to process files on arrival.

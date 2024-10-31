@@ -1,18 +1,18 @@
 ## Installation Instructions
-The steps are very important in making this installation painless. Please follow in the order the instructions are listed.
+The steps are very important to make installation painless. Please follow instructions in order.
 
 ### 1. MySQL Steps
-Before running the apachLogs2MySQL.sql file open it in your favorite editor and do a Find and Replace the following with a MySQL User account with dba rights on the server you are installing on. This will make installation much easier. Copy below:
+Before running `apachLogs2MySQL.sql` open file in your favorite editor and do a ***Find and Replace*** of the following User Account with a User Account with DBA Role on server you are installing on. This will make everything much easier. Copy below:
 ```
 `root`@`%`
 ```
 Rename above <sup>user</sup> to a <sup>user</sup> on your server. For example - `root`@`%` to `dbadmin`@`localhost`
 
-The easiest way to install is using the MySQL Command Line Client. Login as user with DBA rights and execute the following:
+The easiest way to install is use MySQL Command Line Client. Login as User with DBA Role and execute the following:
 ```
 source yourpath/apacheLogs2MySQL.sql
 ```
-MySQL server must be configured in my.ini, mysqld.cnf or my.cnf file depending on platform: 
+MySQL server must be configured in `my.ini`, `mysqld.cnf` or `my.cnf` depending on platform with following: 
 ```
 [mysqld]
 local-infile=1
@@ -76,6 +76,11 @@ I provide lots of information about required Python modules including install co
 Install all modules:
 ```
 pip install -r requirements.txt
+```
+macOS platform may require installation of pip.
+```
+xcode-select --install
+python3 -m ensurepip --upgrade 
 ```
 ### 6. Run Application
 If MySQL steps completed successfully, renamed file `settings.env` to `.env`, updated variables for MySQL server connection and log folders and successfully installed Python modules it is time to run application. If you have log files in the folders already run the apacheLogs2MySQL.py directly. It will process all the logs in all the folders. If you have empty folders and want to drop files into folders run the watch4logs.py. Once you get all logs processed & get a better understanding of application use PM2 to run application 24/7 waiting to process files on arrival.

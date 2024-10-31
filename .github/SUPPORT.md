@@ -1,7 +1,12 @@
-> **Warning**: Support requests submitted via **GitHub Issues** will be addressed within 24 to 36 hours!
+# Support requests are best submitted via **GitHub Issues** and will be addressed ASAP!
 
-### If you need immediate assistance please email Will Raymond at 👉 farmfreshsoftware@gmail.com
+## Please include Apache Logformat if it is a missing or malformed data issue.
 
-### If I am in the office I will reply within the hour. 
-### My office hours are 'almost always' unless I am asleep which is about every 24 to 48 hours for 6 to 8 hours. 
-### I rarely leave the farm so if I do not reply within an hour I might be outside feeding cows or fixing something too.
+### I will reply within an hour if in office. My office hours are 'almost always' unless I am asleep which is about every 24 to 48 hours for 6 to 8 hours. I rarely leave the farm so if I do not reply within an hour I am outside feeding cows or fixing something.
+
+### I am designer, developer and support staff all in one with vast knowledge of Apache, MySQL and Python capiable of fixing any issue with application.
+
+### Notice: this is my first Open-Source Release and a new Crash Coursed, Self-Taught GitHub.com repository user.
+Please forgive me if I do not have all the GitHub components correct or proper Open-Source etiquette yet.
+
+For more information please visit - https://farmfreshsoftware.com
