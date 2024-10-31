@@ -58,7 +58,7 @@ The application also processes Error Logs with default format for threaded MPMs 
 ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i"
 ```
 ## Installation Instructions
-The steps are very important in making this installation painless. Please follow in the order the instructions are listed.
+The steps are very important to make installation painless. Please follow in the order instructions are listed.
 
 ### 1. MySQL Steps
 Before running `apachLogs2MySQL.sql` open file in your favorite editor and do a ***Find and Replace*** of the following User Account with a User Account with DBA Role on server you are installing on. This will make everything much easier. Copy below:
@@ -74,7 +74,7 @@ MySQL server must be configured in `my.ini`, `mysqld.cnf` or `my.cnf` depending 
 [mysqld]
 local-infile=1
 ```
-After those 3 steps the server should be good to go.
+After these 3 steps MySQL server should be good to go.
 
 ### 2. Settings.env steps
 First rename the settings.env file to .env

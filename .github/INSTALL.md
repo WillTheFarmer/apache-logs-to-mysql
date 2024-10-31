@@ -17,7 +17,7 @@ MySQL server must be configured in `my.ini`, `mysqld.cnf` or `my.cnf` depending 
 [mysqld]
 local-infile=1
 ```
-After those 3 steps the server should be good to go.
+After these 3 steps MySQL server should be good to go.
 
 ### 2. Settings.env steps
 First rename the settings.env file to .env
