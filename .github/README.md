@@ -25,7 +25,7 @@ For Auditability logging of messages, events and errors of processes on client a
 
 Application is developed with Python 3.12, MySQL and 4 Python modules. Modules are listed with Python Package Index link, install command for each platform & GitHub Repository link.
 ## Required Python Modules
-Python module links & install command lines for each platform. I had to email PyMySQL author for correct macOS command line. The normal command line did not work & I could not find the proper one posted anywhere. Yes, the single quotes are required. The simplest option is run the command line under '4. Python Steps'. If that works you are all set. The `requirements.txt` file is included in repository.
+Python module links & install command lines for each platform. Single quotes around module name are required on macOS. The simplest option is run the command line under '4. Python Steps'. If that works you are all set. The `requirements.txt` is included in repository.
 |Python Package|Windows 10 & 11|Ubuntu 24.04|macOS 15.0.1 Darwin 24.0.0|GitHub Repository|
 |--------------|---------------|------------|--------------------------|-----------------|
 |[PyMySQL](https://pypi.org/project/PyMySQL/)|python -m pip install PyMySQL[rsa]|sudo apt-get install python3-pymysql|python3 -m pip install 'PyMySQL[rsa]'|[PyMySQL/PyMySQL](https://github.com/PyMySQL/PyMySQL)|
@@ -103,23 +103,28 @@ WATCH_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\
 WATCH_RECURSIVE=1
 WATCH_INTERVAL=15
 ERROR=1
+ERROR_LOG=2
 ERROR_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\**/*error*.*
 ERROR_RECURSIVE=1
-ERROR_LOG=1
+ERROR_PROCESS=1
 COMBINED=1
+COMBINED_LOG=2
 COMBINED_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\combined\\**/*access*.*
 COMBINED_RECURSIVE=1
-COMBINED_LOG=1
+COMBINED_PROCESS=1
 VHOST=1
+VHOST_LOG=2
 VHOST_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\vhost\\**/*access*.*
 VHOST_RECURSIVE=1
-VHOST_LOG=1
+VHOST_PROCESS=1
 EXTENDED=1
+EXTENDED_LOG=2
 EXTENDED_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\extended\\**/*access*.*
 EXTENDED_RECURSIVE=1
-EXTENDED_LOG=1
+EXTENDED_PROCESS=1
 USERAGENT=1
-USERAGENT_LOG=1
+USERAGENT_LOG=2
+USERAGENT_PROCESS=1
 ```
 ### 4. Python Steps
 Install all modules:

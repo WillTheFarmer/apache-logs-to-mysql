@@ -37,35 +37,40 @@ Lunix & macOS require single frontslash:
 Below is settings.env with default settings for running on my Windows 11 Pro workstation.
 ### 3. Settings.env Variables
 ```
-MYSQL_HOST=localhost
-MYSQL_PORT=3306
-MYSQL_USER=root
-MYSQL_PASSWORD=password
-MYSQL_SCHEMA=apache_logs
-WATCH_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\
-WATCH_RECURSIVE=1
-WATCH_INTERVAL=15
-ERROR=1
-ERROR_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\**/*error*.*
-ERROR_RECURSIVE=1
-ERROR_LOG=1
-COMBINED=1
-COMBINED_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\combined\\**/*access*.*
-COMBINED_RECURSIVE=1
-COMBINED_LOG=1
-VHOST=1
-VHOST_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\vhost\\**/*access*.*
-VHOST_RECURSIVE=1
-VHOST_LOG=1
-EXTENDED=1
-EXTENDED_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\extended\\**/*access*.*
-EXTENDED_RECURSIVE=1
-EXTENDED_LOG=1
-USERAGENT=1
-USERAGENT_LOG=1
+MYSQL_HOST=localhost # MySQL server
+MYSQL_PORT=3306 # MySQL server port
+MYSQL_USER=root # MySQL server User 
+MYSQL_PASSWORD=password # MySQL server User Password
+MYSQL_SCHEMA=apache_logs # MySQL database schema ApacheLogs2MySQL will create
+WATCH_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\  # watch folder for new files
+WATCH_RECURSIVE=1 # watch all subfolders - 0=no 1=yes
+WATCH_INTERVAL=15 # seconds between watching for new files
+ERROR=1 # process error logs - 0=no 1=yes
+ERROR_LOG=2 # display process error processing to console in python - 0=none 1=summary 2=summary & each file being processed
+ERROR_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\**/*error*.* # process folder & file patterns for Error Log files - MUST BE Watch folder and can be Subfolders
+ERROR_RECURSIVE=1 # watch all subfolders - 0=no 1=yes
+ERROR_PROCESS=1 # execute MySQL Stored Procedure to import Error log staging table - 0=no 1=yes
+COMBINED=1 # process Common and Combined Access logs - 0=no 1=yes
+COMBINED_LOG=2 # display Common and Combined Access log processing to console in python - 0=none 1=summary 2=summary & each file being processed
+COMBINED_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\combined\\**/*access*.* # process folder & file patterns for Common and Combined Access files - MUST BE Watch subfolder
+COMBINED_RECURSIVE=1 # watch all subfolders - 0=no 1=yes
+COMBINED_PROCESS=1 # execute MySQL Stored Procedure to import Common and Combined Access staging table - 0=no 1=yes
+VHOST=1 # process Vhost Access logs - 0=no 1=yes
+VHOST_LOG=2 # display Vhost Access log processing to console in python - 0=none 1=summary 2=summary & each file being processed
+VHOST_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\vhost\\**/*access*.* # process folder & file patterns for Vhost Access files - MUST BE Watch subfolder
+VHOST_RECURSIVE=1 # watch all subfolders - 0=no 1=yes
+VHOST_PROCESS=1 # execute MySQL Stored Procedure to import Vhost Access log staging table - 0=no 1=yes
+EXTENDED=1 # process error logs - 0=no 1=yes
+EXTENDED_LOG=2 # display Extended Access log processing to console in python - 0=none 1=summary 2=summary & each file being processed
+EXTENDED_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\extended\\**/*access*.* # process folder & file patterns for Extended Access files - MUST BE Watch subfolder
+EXTENDED_RECURSIVE=1 # watch all subfolders - 0=no 1=yes
+EXTENDED_PROCESS=1 # execute MySQL Stored Procedure to import Extended Access log staging table - 0=no 1=yes
+USERAGENT=1 # process extended Access logs - 0=no 1=yes
+USERAGENT_LOG=2 # display userAgent processing to console in python - 0=none 1=summary 2=summary & each file being processed
+USERAGENT_PROCESS=1 # execute MySQL Stored Procedure process userAgent parsed table into 14 normalized userAgent tables - 0=no 1=yes
 ```
 ### 4. Required Python Modules
-Python module links & install command lines for each platform. I had to email PyMySQL author for correct macOS command line. The normal command line did not work & I could not find the proper one posted anywhere. Yes, the single quotes are required. The simplest option is run the command line under '5. Python Steps'. If that works you are all set. The `requirements.txt` file is included in repository.
+Python module links & install command lines for each platform. Single quotes around module name are required on macOS. The simplest option is run the command line under '5. Python Steps'. If that works you are all set. The `requirements.txt` file is included in repository.
 |Python Package|Windows 10 & 11|Ubuntu 24.04|macOS 15.0.1 Darwin 24.0.0|GitHub Repository|
 |--------------|---------------|------------|--------------------------|-----------------|
 |[PyMySQL](https://pypi.org/project/PyMySQL/)|python -m pip install PyMySQL[rsa]|sudo apt-get install python3-pymysql|python3 -m pip install 'PyMySQL[rsa]'|[PyMySQL/PyMySQL](https://github.com/PyMySQL/PyMySQL)|
