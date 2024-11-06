@@ -1,3 +1,28 @@
+-- # coding: utf-8
+-- # version 1.0.0 - 11/04/2024
+-- # version 1.0.1 - 11/06/2024
+-- #
+-- # Copyright 2024 Will Raymond <farmfreshsoftware@gmail.com>
+-- #
+-- # Licensed under the Apache License, Version 2.0 (the "License");
+-- # you may not use this file except in compliance with the License.
+-- # You may obtain a copy of the License at
+-- #
+-- #     http://www.apache.org/licenses/LICENSE-2.0
+-- #
+-- # Unless required by applicable law or agreed to in writing, software
+-- # distributed under the License is distributed on an "AS IS" BASIS,
+-- # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-- # See the License for the specific language governing permissions and
+-- # limitations under the License.
+-- #
+-- # file: apacheLogs2MySQL.sql 
+-- # synopsis: Data definition language (DDL) for creating MySQL scehma - apache_logs
+-- # Changelog
+-- # [1.0.1] apache_logs.error_systemCodeID corrected line - INTO logsystemCode to INTO logsystemCodeID
+-- # [1.0.1] removed debugging - SELECT statement from apache_logs.import_access_log, import_error_log & normalize_useragent and whitespace on all stored programs
+-- # [1.0.1] set all table AUTO_INCREMENT=1. All future version releases will be the same - AUTO_INCREMENT=1.
+
 CREATE DATABASE  IF NOT EXISTS `apache_logs` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `apache_logs`;
 -- MySQL dump 10.13  Distrib 8.0.40, for Win64 (x86_64)
@@ -125,7 +150,7 @@ CREATE TABLE `access_log` (
   CONSTRAINT `FK_access_requri` FOREIGN KEY (`requriid`) REFERENCES `access_log_requri` (`id`),
   CONSTRAINT `FK_access_session` FOREIGN KEY (`sessionid`) REFERENCES `access_log_session` (`id`),
   CONSTRAINT `FK_access_useragent` FOREIGN KEY (`useragentid`) REFERENCES `access_log_useragent` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=118165 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table is core table for access logs and contains foreign keys to relate to log attribute tables.';
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table is core table for access logs and contains foreign keys to relate to log attribute tables.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -153,7 +178,7 @@ CREATE TABLE `access_log_combined` (
   `import_status` int NOT NULL DEFAULT '0' COMMENT 'used in import process to indicate record processed',
   `id` int NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=64873 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Used for LOAD DATA command for LogFormat combined and common to bring text files into MySQL and start the process.';
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Used for LOAD DATA command for LogFormat combined and common to bring text files into MySQL and start the process.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -185,7 +210,7 @@ CREATE TABLE `access_log_extended` (
   `import_status` int NOT NULL DEFAULT '0' COMMENT 'used in import process to indicate record processed',
   `id` int NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=86041 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Used for LOAD DATA command for LogFormat extended to bring text files into MySQL and start the process.';
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Used for LOAD DATA command for LogFormat extended to bring text files into MySQL and start the process.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -200,7 +225,7 @@ CREATE TABLE `access_log_host` (
   `name` varchar(100) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -215,7 +240,7 @@ CREATE TABLE `access_log_referer` (
   `name` varchar(2000) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=70 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -230,7 +255,7 @@ CREATE TABLE `access_log_remotehost` (
   `name` varchar(50) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1054 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -245,7 +270,7 @@ CREATE TABLE `access_log_remotelogname` (
   `name` varchar(50) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -260,7 +285,7 @@ CREATE TABLE `access_log_remoteuser` (
   `name` varchar(50) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -275,7 +300,7 @@ CREATE TABLE `access_log_reqmethod` (
   `name` varchar(100) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -290,7 +315,7 @@ CREATE TABLE `access_log_reqprotocol` (
   `name` varchar(100) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -305,7 +330,7 @@ CREATE TABLE `access_log_reqstatus` (
   `name` int NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -320,7 +345,7 @@ CREATE TABLE `access_log_requri` (
   `name` varchar(2000) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1305 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -335,7 +360,7 @@ CREATE TABLE `access_log_session` (
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -350,7 +375,7 @@ CREATE TABLE `access_log_ua` (
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=753 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -365,7 +390,7 @@ CREATE TABLE `access_log_ua_browser` (
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=77 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -380,7 +405,7 @@ CREATE TABLE `access_log_ua_browser_family` (
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=77 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -395,7 +420,7 @@ CREATE TABLE `access_log_ua_browser_version` (
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=392 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -410,7 +435,7 @@ CREATE TABLE `access_log_ua_device` (
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=97 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -425,7 +450,7 @@ CREATE TABLE `access_log_ua_device_brand` (
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -440,7 +465,7 @@ CREATE TABLE `access_log_ua_device_family` (
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=96 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -455,7 +480,7 @@ CREATE TABLE `access_log_ua_device_model` (
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=96 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -470,7 +495,7 @@ CREATE TABLE `access_log_ua_os` (
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=162 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -485,7 +510,7 @@ CREATE TABLE `access_log_ua_os_family` (
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -500,7 +525,7 @@ CREATE TABLE `access_log_ua_os_version` (
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=138 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -537,7 +562,7 @@ CREATE TABLE `access_log_useragent` (
   `uadevicemodelid` int DEFAULT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=966 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -566,7 +591,7 @@ CREATE TABLE `access_log_vhost` (
   `import_status` int NOT NULL DEFAULT '0' COMMENT 'used in import process to indicate record processed',
   `id` int NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7669 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Used for LOAD DATA command for LogFormat vhost to bring text files into MySQL and start the process.';
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Used for LOAD DATA command for LogFormat vhost to bring text files into MySQL and start the process.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1133,7 +1158,7 @@ CREATE TABLE `error_log` (
   CONSTRAINT `FK_error_systemcode` FOREIGN KEY (`systemcodeid`) REFERENCES `error_log_systemcode` (`id`),
   CONSTRAINT `FK_error_systemmessage` FOREIGN KEY (`systemmessageid`) REFERENCES `error_log_systemmessage` (`id`),
   CONSTRAINT `FK_error_threadid` FOREIGN KEY (`threadid`) REFERENCES `error_log_threadid` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6513 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1148,7 +1173,7 @@ CREATE TABLE `error_log_apachecode` (
   `name` varchar(400) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1163,7 +1188,7 @@ CREATE TABLE `error_log_apachemessage` (
   `name` varchar(400) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1196,7 +1221,7 @@ CREATE TABLE `error_log_default` (
   `import_status` int NOT NULL DEFAULT '0' COMMENT 'used in import process to indicate record processed',
   `id` int NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11541 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table used for LOAD DATA command to bring text files into MySQL and start the process.';
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table used for LOAD DATA command to bring text files into MySQL and start the process.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1211,7 +1236,7 @@ CREATE TABLE `error_log_level` (
   `name` varchar(100) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1226,7 +1251,7 @@ CREATE TABLE `error_log_message` (
   `name` varchar(500) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1241,7 +1266,7 @@ CREATE TABLE `error_log_module` (
   `name` varchar(100) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1256,7 +1281,7 @@ CREATE TABLE `error_log_processid` (
   `name` varchar(100) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1271,7 +1296,7 @@ CREATE TABLE `error_log_referer` (
   `name` varchar(500) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1286,7 +1311,7 @@ CREATE TABLE `error_log_reqclient` (
   `name` varchar(200) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=239 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1301,7 +1326,7 @@ CREATE TABLE `error_log_systemcode` (
   `name` varchar(400) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1577 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1316,7 +1341,7 @@ CREATE TABLE `error_log_systemmessage` (
   `name` varchar(400) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1331,7 +1356,7 @@ CREATE TABLE `error_log_threadid` (
   `name` varchar(100) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=262 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1473,7 +1498,7 @@ CREATE TABLE `import_client` (
   `platformProcessor` varchar(150) DEFAULT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table keeps track of all application Windows, Linux and Mac clients loading logs to server application and long with logon and IP address information. It is important to know who is loading logs.';
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table keeps track of all application Windows, Linux and Mac clients loading logs to server application and long with logon and IP address information. It is important to know who is loading logs.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1496,7 +1521,7 @@ CREATE TABLE `import_error` (
   `comments` varchar(350) DEFAULT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Application Error log. Any errors that occur in MySQL processes will be here. This is a MyISAM engine table to avoid TRANSACTION ROLLBACKS. Always look in this table for problems!';
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Application Error log. Any errors that occur in MySQL processes will be here. This is a MyISAM engine table to avoid TRANSACTION ROLLBACKS. Always look in this table for problems!';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1519,7 +1544,7 @@ CREATE TABLE `import_file` (
   PRIMARY KEY (`id`),
   KEY `FK_import_importprocess` (`importprocessid`),
   CONSTRAINT `FK_import_importprocess` FOREIGN KEY (`importprocessid`) REFERENCES `import_process` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=711 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table contains all access and error log files loaded and processed. Created, modified and size of each file at time of loading is captured for auditability. Each file processed by Server Application must exist in this table.';
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table contains all access and error log files loaded and processed. Created, modified and size of each file at time of loading is captured for auditability. Each file processed by Server Application must exist in this table.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1550,7 +1575,7 @@ CREATE TABLE `import_load` (
   `started` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `completed` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table has record for everytime the Python processLogs is executed. The has totals for each tyep and file formats were imported.';
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table has record for everytime the Python processLogs is executed. The has totals for each tyep and file formats were imported.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1569,7 +1594,7 @@ CREATE TABLE `import_process` (
   `started` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `completed` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table has record for every MySQL Stored Procedure import execution. If completed column is NULL the process failed. Look in import_error table for error details.';
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table has record for every MySQL Stored Procedure import execution. If completed column is NULL the process failed. Look in import_error table for error details.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1581,15 +1606,15 @@ DROP TABLE IF EXISTS `import_server`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `import_server` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `dbuser` varchar(250) DEFAULT NULL,
-  `dbhost` varchar(250) DEFAULT NULL,
-  `dbversion` varchar(50) DEFAULT NULL,
-  `dbsystem` varchar(50) DEFAULT NULL,
-  `dbmachine` varchar(50) DEFAULT NULL,
-  `serveruuid` varchar(250) DEFAULT NULL,
+  `dbuser` varchar(255) DEFAULT NULL,
+  `dbhost` varchar(255) DEFAULT NULL,
+  `dbversion` varchar(255) DEFAULT NULL,
+  `dbsystem` varchar(255) DEFAULT NULL,
+  `dbmachine` varchar(255) DEFAULT NULL,
+  `serveruuid` varchar(255) DEFAULT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table for keeping track of log processing servers and login information.';
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table for keeping track of log processing servers and login information.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2270,12 +2295,10 @@ BEGIN
     INTO logapacheCodeID
     FROM apache_logs.error_log_apachecode
     WHERE name = logapacheCode;
-
   IF logapacheCodeID IS NULL THEN
       INSERT INTO apache_logs.error_log_apachecode (name) VALUES (logapacheCode);
       SET logapacheCodeID = LAST_INSERT_ID();
   END IF;
-
   RETURN logapacheCodeID;
 END ;;
 DELIMITER ;
@@ -2302,12 +2325,10 @@ BEGIN
     INTO logapacheMessageID
     FROM apache_logs.error_log_apachemessage
     WHERE name = logapacheMessage;
-
   IF logapacheMessageID IS NULL THEN
       INSERT INTO apache_logs.error_log_apachemessage (name) VALUES (logapacheMessage);
       SET logapacheMessageID = LAST_INSERT_ID();
   END IF;
-
   RETURN logapacheMessageID;
 END ;;
 DELIMITER ;
@@ -2334,12 +2355,10 @@ BEGIN
     INTO logLevelID
     FROM apache_logs.error_log_level
     WHERE name = loglevel;
-
   IF logLevelID IS NULL THEN
       INSERT INTO apache_logs.error_log_level (name) VALUES (loglevel);
       SET logLevelID = LAST_INSERT_ID();
   END IF;
-
   RETURN logLevelID;
 END ;;
 DELIMITER ;
@@ -2366,12 +2385,10 @@ BEGIN
     INTO logmessageID
     FROM apache_logs.error_log_message
     WHERE name = logmessage;
-
   IF logmessageID IS NULL THEN
       INSERT INTO apache_logs.error_log_message (name) VALUES (logmessage);
       SET logmessageID = LAST_INSERT_ID();
   END IF;
-
   RETURN logmessageID;
 END ;;
 DELIMITER ;
@@ -2398,12 +2415,10 @@ BEGIN
     INTO logmoduleID
     FROM apache_logs.error_log_module
     WHERE name = logmodule;
-
   IF logmoduleID IS NULL THEN
       INSERT INTO apache_logs.error_log_module (name) VALUES (logmodule);
       SET logmoduleID = LAST_INSERT_ID();
   END IF;
-
   RETURN logmoduleID;
 END ;;
 DELIMITER ;
@@ -2430,12 +2445,10 @@ BEGIN
     INTO logprocessidID
     FROM apache_logs.error_log_processid
     WHERE name = logprocessid;
-
   IF logprocessidID IS NULL THEN
       INSERT INTO apache_logs.error_log_processid (name) VALUES (logprocessid);
       SET logprocessidID = LAST_INSERT_ID();
   END IF;
-
   RETURN logprocessidID;
 END ;;
 DELIMITER ;
@@ -2462,12 +2475,10 @@ BEGIN
     INTO logrefererID
     FROM apache_logs.error_log_referer
     WHERE name = logreferer;
-
   IF logrefererID IS NULL THEN
       INSERT INTO apache_logs.error_log_referer (name) VALUES (logreferer);
       SET logrefererID = LAST_INSERT_ID();
   END IF;
-
   RETURN logrefererID;
 END ;;
 DELIMITER ;
@@ -2494,12 +2505,10 @@ BEGIN
     INTO logreqClientID
     FROM apache_logs.error_log_reqclient
     WHERE name = logreqClient;
-
   IF logreqClientID IS NULL THEN
       INSERT INTO apache_logs.error_log_reqclient (name) VALUES (logreqClient);
       SET logreqClientID = LAST_INSERT_ID();
   END IF;
-
   RETURN logreqClientID;
 END ;;
 DELIMITER ;
@@ -2523,15 +2532,13 @@ BEGIN
   DECLARE logsystemCodeID INTEGER DEFAULT null;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'error_systemCodeID'; 
   SELECT id
-    INTO logsystemCode
+    INTO logsystemCodeID
     FROM apache_logs.error_log_systemcode
     WHERE name = logsystemCode;
-
   IF logsystemCodeID IS NULL THEN
       INSERT INTO apache_logs.error_log_systemcode (name) VALUES (logsystemCode);
       SET logsystemCodeID = LAST_INSERT_ID();
   END IF;
-
   RETURN logsystemCodeID;
 END ;;
 DELIMITER ;
@@ -2558,12 +2565,10 @@ BEGIN
     INTO logsystemMessageID
     FROM apache_logs.error_log_systemmessage
     WHERE name = logsystemMessage;
-
   IF logsystemMessageID IS NULL THEN
       INSERT INTO apache_logs.error_log_systemmessage (name) VALUES (logsystemMessage);
       SET logsystemMessageID = LAST_INSERT_ID();
   END IF;
-
   RETURN logsystemMessageID;
 END ;;
 DELIMITER ;
@@ -2590,12 +2595,10 @@ BEGIN
     INTO logthreadidID
     FROM apache_logs.error_log_threadid
     WHERE name = logthreadid;
-
   IF logthreadidID IS NULL THEN
       INSERT INTO apache_logs.error_log_threadid (name) VALUES (logthreadid);
       SET logthreadidID = LAST_INSERT_ID();
   END IF;
-
   RETURN logthreadidID;
 END ;;
 DELIMITER ;
@@ -2649,7 +2652,6 @@ BEGIN
     AND platformVersion = in_platformVersion
     AND platformMachine = in_platformMachine
     AND platformProcessor = in_platformProcessor;
-
   IF importClientID IS NULL THEN
   	INSERT INTO apache_logs.import_client 
       (ipaddress,
@@ -2673,7 +2675,6 @@ BEGIN
       in_platformVersion,
       in_platformMachine,
       in_platformProcessor);
-  
 	  SET importClientID = LAST_INSERT_ID();
   END IF;
   RETURN importClientID;
@@ -2749,7 +2750,6 @@ BEGIN
     INTO importFileID
     FROM apache_logs.import_file
     WHERE name = importFile;
-
   IF importFileID IS NULL THEN
     IF NOT CONVERT(import_client_id, UNSIGNED) = 0 THEN
 	  SET importclient_id = CONVERT(import_client_id, UNSIGNED);
@@ -2771,7 +2771,6 @@ BEGIN
          STR_TO_DATE(file_Modified,'%a %b %e %H:%i:%s %Y'),
          importclient_id,
          importload_id);
-
 	SET importFileID = LAST_INSERT_ID();
   END IF;
   RETURN importFileID;
@@ -2804,7 +2803,6 @@ BEGIN
          checkProcessID
     FROM apache_logs.import_file
     WHERE id = importfileid;
-
   -- IF none of these things happen all is well. processing records from same file.
   IF importFileName IS NULL THEN
   -- This is an error. Import File must be in table when import processing.
@@ -2814,7 +2812,6 @@ BEGIN
     SET
       MESSAGE_TEXT = `Import File is not found in import_file table. An error has happened.`,
       MYSQL_ERRNO = ER_SIGNAL_EXCEPTION;
-
   ELSEIF processid IS NULL THEN
   -- This is an error. This function is only called when import processing. ProcessID must be valid.
     SET processFile = 0;
@@ -2823,11 +2820,9 @@ BEGIN
     SET
       MESSAGE_TEXT = `ProcessID required when import processing. An error has happpened.`,
       MYSQL_ERRNO = ER_SIGNAL_EXCEPTION;
-
   ELSEIF checkProcessID IS NULL THEN
   -- First time and first record in file being processed. This will happen one time for each file.
     UPDATE apache_logs.import_file SET importprocessid = processid WHERE id = importFileID;
-
   ELSEIF processid != checkProcessID THEN
   -- This is an error. This function is only called when import processing. only ONE ProcessID must be used for each file.
     SET processFile = 0;
@@ -2836,7 +2831,6 @@ BEGIN
     SET
       MESSAGE_TEXT = `File has already been processed in previous import process.  An error has happpened.`,
       MYSQL_ERRNO = ER_SIGNAL_EXCEPTION;
-
   END IF;
   RETURN processFile;
 END ;;
@@ -2862,7 +2856,6 @@ BEGIN
   DECLARE importclient_id INTEGER DEFAULT null;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION 
 		CALL importerror('importLoadID', 'SQLEXCEPTION');
-
   IF NOT CONVERT(import_client_id, UNSIGNED) = 0 THEN
 	  SET importclient_id = CONVERT(import_client_id, UNSIGNED);
   END IF;
@@ -2890,12 +2883,12 @@ CREATE DEFINER=`root`@`%` FUNCTION `importProcessID`(importProcess varchar(300))
 BEGIN
   DECLARE importProcessID INTEGER DEFAULT null;
   DECLARE importServer_ID INTEGER DEFAULT null;
-  DECLARE db_user VARCHAR(250) DEFAULT NULL;
-  DECLARE db_host VARCHAR(250) DEFAULT NULL;
-  DECLARE db_version VARCHAR(50) DEFAULT NULL;
-  DECLARE db_system VARCHAR(50) DEFAULT NULL;
-  DECLARE db_machine VARCHAR(50) DEFAULT NULL;
-  DECLARE db_server VARCHAR(250) DEFAULT NULL;
+  DECLARE db_user VARCHAR(255) DEFAULT NULL;
+  DECLARE db_host VARCHAR(255) DEFAULT NULL;
+  DECLARE db_version VARCHAR(255) DEFAULT NULL;
+  DECLARE db_system VARCHAR(255) DEFAULT NULL;
+  DECLARE db_machine VARCHAR(255) DEFAULT NULL;
+  DECLARE db_server VARCHAR(255) DEFAULT NULL;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
 		IF @error_count=1 THEN RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'importServerID called from importProcessID'; ELSE RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'importProcessID'; END IF;
@@ -2942,11 +2935,11 @@ DELIMITER ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
 CREATE DEFINER=`root`@`%` FUNCTION `importServerID`(in_user VARCHAR(250),
-		in_host VARCHAR(250),
+	in_host VARCHAR(250),
     in_version VARCHAR(50),
     in_system VARCHAR(50),
     in_machine VARCHAR(50),
-		in_server VARCHAR(250)) RETURNS int
+	in_server VARCHAR(250)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE importServerID INTEGER DEFAULT null;
@@ -3048,14 +3041,11 @@ BEGIN
 	DECLARE e1 INT UNSIGNED;
 	DECLARE e2, e3 VARCHAR(128);
 	DECLARE e4, e5 VARCHAR(64);
-
 	DECLARE done BOOL DEFAULT false;
-
 	DECLARE processID INTEGER DEFAULT 0;
 	DECLARE recordsAdded INTEGER DEFAULT 0;
 	DECLARE filesAdded INTEGER DEFAULT 0;
 	DECLARE processFile INTEGER DEFAULT NULL;
-
 	DECLARE logTime VARCHAR(50) DEFAULT NULL;
 	DECLARE logTimeConverted DATETIME DEFAULT now();
 	DECLARE remoteHost VARCHAR(50) DEFAULT NULL;
@@ -3080,7 +3070,6 @@ BEGIN
 	DECLARE logHost VARCHAR(100) DEFAULT NULL;
 	DECLARE importFile VARCHAR(300) DEFAULT NULL;
 	DECLARE importid INTEGER DEFAULT NULL;
-    
 	DECLARE remoteHost_Id, 
 		remoteLogName_Id, 
 		remoteUser_Id, 
@@ -3094,7 +3083,6 @@ BEGIN
 		loghost_Id, 
 		importFile_Id 
 		INTEGER DEFAULT NULL;
-
 	-- declare cursor for extended format
 	DECLARE importExtended CURSOR FOR SELECT 
 		remote_host, 
@@ -3118,7 +3106,6 @@ BEGIN
 		id 
 	FROM apache_logs.access_log_extended
    WHERE import_status=0;
-
 	-- declare cursor for combined format
 	DECLARE importVhost CURSOR FOR SELECT 
 		server_name, 
@@ -3137,7 +3124,6 @@ BEGIN
 		id 
 	FROM apache_logs.access_log_vhost
    WHERE import_status=0;
-
 	-- declare cursor for combined format
 	DECLARE importCombined CURSOR FOR SELECT 
 		remote_host, 
@@ -3155,20 +3141,15 @@ BEGIN
 		id 
 	FROM apache_logs.access_log_combined
    WHERE import_status=0;
-
 	-- declare NOT FOUND handler
 	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
-
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION 
 		BEGIN
 			GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME; 
-			SELECT e1, e2, e3, e4, e5;
  			CALL apache_logs.importerror('import_access_log', e1, e2, e3, e4, e5, null, processid);
  			ROLLBACK;
 		END;
-
     SET processID = apache_logs.importProcessID(CONCAT('access log', ' - ', importTable));
-        
 	START TRANSACTION;
     -- open the cursor
 	IF importTable = 'extended' THEN
@@ -3178,7 +3159,6 @@ BEGIN
 	ELSE
 		OPEN importCombined;
 	END IF;	
-
     process_import: LOOP
 		IF importTable = 'extended' THEN
 			FETCH importExtended INTO 
@@ -3233,17 +3213,14 @@ BEGIN
 			importFile_Id,
             importid; 
 		END IF;
-
 		IF done = true THEN 
 			LEAVE process_import;
 		END IF;
-
 		SET processFile = apache_logs.importFileProcess(importFile_Id, processID);
 		IF processFile = 0 THEN
 			ROLLBACK;
 			LEAVE process_import;
         END IF;
-
 		SET recordsAdded = recordsAdded + 1;
         -- convert import staging columns - log_time, referer and log_session
 		IF POSITION("?" IN referer)>0 THEN
@@ -3334,7 +3311,6 @@ BEGIN
 			logsession_Id,
 			loghost_Id, 
 			importfile_Id);
-
 		IF importTable = 'extended' THEN
 			UPDATE apache_logs.access_log_extended SET import_status=1 WHERE id=importid;
 		ELSEIF importTable = 'vhost' THEN
@@ -3350,13 +3326,11 @@ BEGIN
 	INNER JOIN import_file
 	ON access_log.importfileid = import_file.id
 	WHERE import_file.importprocessid=processid;
-
 	UPDATE apache_logs.import_process 
        SET records = recordsAdded, 
            files = filesAdded, 
            completed = now() 
      WHERE id = processID;
-
 	COMMIT;
     -- close the cursor
 	IF importTable = 'extended' THEN
@@ -3389,14 +3363,11 @@ BEGIN
 	DECLARE e1 INT UNSIGNED;
 	DECLARE e2, e3 VARCHAR(128);
 	DECLARE e4, e5 VARCHAR(64);
-
 	DECLARE done BOOL DEFAULT false;
-
 	DECLARE processID INTEGER DEFAULT 0;
 	DECLARE recordsAdded INTEGER DEFAULT 0;
 	DECLARE filesAdded INTEGER DEFAULT 0;
 	DECLARE processFile INTEGER DEFAULT NULL;
-
 	DECLARE log_time DATETIME DEFAULT now();
 	DECLARE log_level VARCHAR(100) DEFAULT NULL;
 	DECLARE log_module VARCHAR(100) DEFAULT NULL;
@@ -3411,7 +3382,6 @@ BEGIN
 	DECLARE log_referer VARCHAR(500) DEFAULT NULL;
 	DECLARE importFile VARCHAR(300) DEFAULT NULL;
 	DECLARE importid INTEGER DEFAULT NULL;
-
 	DECLARE logLevel_Id,
 		module_Id,
 		process_Id, 
@@ -3425,7 +3395,6 @@ BEGIN
 		referer_Id, 
 		importFile_Id 
 		INTEGER DEFAULT NULL;
-
 	DECLARE importDefault CURSOR FOR SELECT 
 		logtime, 
 		loglevel, 
@@ -3443,21 +3412,15 @@ BEGIN
         id
 	FROM apache_logs.error_log_default
     WHERE import_status = 0;
-
 	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
-
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION 
 		BEGIN
 			GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME; 
-			SELECT e1, e2, e3, e4, e5;
  			CALL apache_logs.importerror('import_error_log', e1, e2, e3, e4, e5, null, processid);
  			ROLLBACK;
 		END;
-
     SET processID = apache_logs.importProcessID(CONCAT('error log', ' - ', importTable));
-
 	OPEN importDefault;
-
 	START TRANSACTION;
     process_import: LOOP
 		FETCH importDefault INTO 
@@ -3475,19 +3438,15 @@ BEGIN
 			log_referer, 
 			importFile_Id,
             importid; 
-        
 		IF done = true THEN 
 			LEAVE process_import;
 		END IF;
-
 		SET processFile = apache_logs.importFileProcess(importFile_Id, processID);
 		IF processFile = 0 THEN
 			ROLLBACK;
 			LEAVE process_import;
         END IF;
-
 		SET recordsAdded = recordsAdded + 1;
-
 		SET logLevel_Id = null,
 		module_Id = null,
 		process_Id = null, 
@@ -3499,7 +3458,6 @@ BEGIN
 		logMessage_Id = null, 
 		reqClient_Id = null, 
 		referer_Id = null;
-
         -- normalize import staging table 
 		IF log_level IS NOT NULL THEN
 			SET logLevel_Id = apache_logs.error_logLevelID(log_level);
@@ -3561,7 +3519,6 @@ BEGIN
 			reqClient_Id, 
 			referer_Id,
             importFile_Id);
-	
 		UPDATE apache_logs.error_log_default SET import_status=1 WHERE id=importid;
     END LOOP;
     -- update import process table
@@ -3571,13 +3528,11 @@ BEGIN
 	INNER JOIN import_file
 	ON error_log.importfileid = import_file.id
 	WHERE import_file.importprocessid=processid;
-
 	UPDATE apache_logs.import_process 
        SET records = recordsAdded, 
            files = filesAdded, 
            completed = now() 
      WHERE id = processID;
-
 	COMMIT;
     -- close the cursor
 	CLOSE importDefault;
@@ -3604,11 +3559,9 @@ CREATE DEFINER=`root`@`%` PROCEDURE `loadError`(IN in_module VARCHAR(100),
 BEGIN
 	DECLARE mysqlerrno INTEGER DEFAULT 0;
 	DECLARE processID INTEGER DEFAULT 0;
-
     IF NOT CONVERT(in_mysqlerrno, UNSIGNED) = 0 THEN
 	  SET mysqlerrno = CONVERT(in_mysqlerrno, UNSIGNED);
     END IF;
-
     IF NOT CONVERT(in_processID, UNSIGNED) = 0 THEN
 	  SET processID = CONVERT(in_processID, UNSIGNED);
     END IF;
@@ -3647,13 +3600,10 @@ BEGIN
 	DECLARE e1 INT UNSIGNED;
 	DECLARE e2, e3 VARCHAR(128);
 	DECLARE e4, e5 VARCHAR(64);
-
 	DECLARE done BOOL DEFAULT false;
-
 	DECLARE processID INTEGER DEFAULT 0;
 	DECLARE recordsProcessed INTEGER DEFAULT 0;
 	DECLARE filesProcessed INTEGER DEFAULT 0;
-
 	DECLARE vua VARCHAR(200) DEFAULT NULL;
 	DECLARE vua_browser VARCHAR(200) DEFAULT NULL;
 	DECLARE vua_browser_family VARCHAR(200) DEFAULT NULL;
@@ -3666,7 +3616,6 @@ BEGIN
 	DECLARE vua_device_brand VARCHAR(200) DEFAULT NULL;
 	DECLARE vua_device_model VARCHAR(200) DEFAULT NULL;
 	DECLARE userAgent_id INTEGER DEFAULT NULL;
-
 	DECLARE ua_id,
     uabrowser_id,
     uabrowserfamily_id,
@@ -3679,7 +3628,6 @@ BEGIN
     uadevicebrand_id,
     uadevicemodel_id
 	INTEGER DEFAULT NULL;
-
 	DECLARE userAgent CURSOR FOR SELECT 
     	 ua,
     	 ua_browser,
@@ -3695,29 +3643,22 @@ BEGIN
 		 id
 	FROM apache_logs.access_log_useragent
    WHERE uaid IS NULL;
-
 	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
-
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION 
 		BEGIN
 			GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME; 
-			SELECT e1, e2, e3, e4, e5;
  			CALL apache_logs.importerror('normalize_useragent', e1, e2, e3, e4, e5, null, processid);
  			ROLLBACK;
 		END;
-
 	SELECT COUNT(DISTINCT(l.id))
 	INTO filesProcessed
 	FROM apache_logs.access_log_useragent lu
     INNER JOIN apache_logs.access_log l
     ON lu.id = l.useragentid
 	WHERE lu.uaid IS NULL;
-
     SET processID = apache_logs.importProcessID(CONCAT('normalize_useragent', ' - ', importProcess));
 	OPEN userAgent;
-
     START TRANSACTION;	
-
     process_normalize: LOOP
 		FETCH userAgent INTO 
 			vua,
@@ -3732,13 +3673,10 @@ BEGIN
 			vua_device_brand,
 			vua_device_model,
 			userAgent_id;
-        
 		IF done = true THEN 
 			LEAVE process_normalize;
 		END IF;
-
 		SET recordsProcessed = recordsProcessed + 1;
-
 		SET ua_id = null,
     		uabrowser_id = null,
 		    uabrowserfamily_id = null,
@@ -3750,7 +3688,6 @@ BEGIN
     		uadevicefamily_id = null,
     		uadevicebrand_id = null,
     		uadevicemodel_id = null;
-
         -- normalize import staging table 
 		IF vua IS NOT NULL THEN
 			SET ua_Id = apache_logs.access_uaID(vua);
@@ -3785,7 +3722,6 @@ BEGIN
 		IF vua_device_model IS NOT NULL THEN
 			SET uadevicemodel_id = apache_logs.access_uaDeviceModelID(vua_device_model);
 		END IF;
-
 		UPDATE apache_logs.access_log_useragent SET uaid = ua_id,
     			uabrowserid = uabrowser_id,
     			uabrowserfamilyid = uabrowserfamily_id,
@@ -3797,7 +3733,6 @@ BEGIN
     			uadevicefamilyid = uadevicefamily_id,
     			uadevicebrandid = uadevicebrand_id,
     			uadevicemodelid = uadevicemodel_id WHERE id = userAgent_id;
-
 		UPDATE apache_logs.access_log SET uaid = ua_id,
     			uabrowserid = uabrowser_id,
     			uabrowserfamilyid = uabrowserfamily_id,
@@ -3809,7 +3744,6 @@ BEGIN
     			uadevicefamilyid = uadevicefamily_id,
     			uadevicebrandid = uadevicebrand_id,
     			uadevicemodelid = uadevicemodel_id WHERE useragentid = userAgent_id;
-	
     END LOOP;
     -- update import process table
 	UPDATE apache_logs.import_process 
@@ -3817,7 +3751,6 @@ BEGIN
            files = filesProcessed, 
            completed = now()
      WHERE id = processID;
-
 	COMMIT;
     -- close the cursor
 	CLOSE userAgent;
@@ -4503,4 +4436,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-11-04 11:31:21
+-- Dump completed on 2024-11-06 10:14:12
