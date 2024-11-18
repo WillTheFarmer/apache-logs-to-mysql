@@ -1,11 +1,11 @@
 # Apache Log Parser and Data Normalization Application
 ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema designed to automate importing Apache Access & Error Log files into a normalized database schema for reporting & data analysis.
 
-Application runs on Windows, Linux and MacOS & tested with MySQL versions 8.0.39, 8.4.3, 9.0.0 & 9.1.0.
+Runs on Windows, Linux and MacOS & tested with MySQL versions 8.0.39, 8.4.3, 9.0.0 & 9.1.0.
 
-Imports Access Logs in Logformats - common, combined and vhost_combined. An extended LogFormat is included below!
+Imports Access Logs in Logformats - common, combined and vhost_combined. See extended LogFormat included below!
 
-Imports Error Logs in default Logformat and separates Error types. See some of the Error Log views below!
+Imports Error Logs in default Logformat and separates Apache & System errors. See Error Log views below!
 
 Follow `INSTALL.md` for easy MySQL database installation. Python executes all MySQL from command prompt or PM2.
 
