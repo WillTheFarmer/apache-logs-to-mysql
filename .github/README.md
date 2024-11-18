@@ -3,9 +3,9 @@ ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema designed to a
 
 Runs on Windows, Linux and MacOS & tested with MySQL versions 8.0.39, 8.4.3, 9.0.0 & 9.1.0.
 
-Imports Access Logs in Logformats - common, combined and vhost_combined. See extended LogFormat included below!
+Imports Access Logs in Apache Logformats - ***common***, ***combined*** and ***vhost_combined***. Plus the ***extended*** LogFormat below.
 
-Imports Error Logs in default Logformat and separates Apache & System errors. See Error Log views below!
+Imports Error Logs in default Logformat and separates Apache & System errors. See Error Log views below.
 
 Follow `INSTALL.md` for easy MySQL database installation. Python executes all MySQL from command prompt or PM2.
 
@@ -34,8 +34,8 @@ Python module links & install command lines for each platform. Single quotes aro
 |[user-agents](https://pypi.org/project/user-agents/)|pip install pyyaml ua-parser user-agents|sudo apt-get install python3-user-agents|python3 -m pip install user-agents|[selwin/python-user-agents](https://github.com/selwin/python-user-agents)|
 |[watchdog](https://pypi.org/project/watchdog/)|pip install watchdog|sudo apt-get install python3-watchdog|python3 -m pip install watchdog|[gorakhargosh/watchdog](https://github.com/gorakhargosh/watchdog/tree/master)|
 |[python-dotenv](https://pypi.org/project/python-dotenv/)|pip install python-dotenv|sudo apt-get install python3-dotenv|python3 -m pip install python-dotenv|[theskumar/python-dotenv](https://github.com/theskumar/python-dotenv)|
-## Supported Log Formats
-Apache uses same 3 Standard Access log formats (common, combined, vhost_combined) on all 3 platforms.
+## 4 Supported Access Log Formats
+Apache uses same Standard Access LogFormats (***common***, ***combined***, ***vhost_combined***) on all 3 platforms.
 ```
 LogFormat "%h %l %u %t \"%r\" %>s %O" common
 ```
@@ -63,7 +63,10 @@ LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" v
 |%v|The canonical ServerName of the server serving the request.|
 |%p|The canonical port of the server serving the request.|
 
-Application is designed to use this extended LogFormat of 6 additions and 2 substractions (%l and %u) from vhost_combined.
+Application is designed to use ***extended*** LogFormat below of 6 added to and 2 deleted (%l and %u) from vhost_combined.
+```
+LogFormat "%v,%p,%h,%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\",\"%q\",\"%{Referer}i\",\"%{User-Agent}i\",\"%{farmwork.app}C\"" extended
+```
 |Format String|Description|
 |-------------|-----------|
 |%v|The canonical ServerName of the server serving the request.|
@@ -85,9 +88,7 @@ Application is designed to use this extended LogFormat of 6 additions and 2 subs
 |%{Referer}i|The "Referer" (sic) HTTP request header. This gives the site that the client reports having been referred from. (This should be the page that links to or includes /apache_pb.gif).|
 |%{User-Agent}i|The User-Agent HTTP request header. This is the identifying information that the client browser reports about itself.|
 |%{VARNAME}C|ADDED - The contents of cookie VARNAME in request sent to server. Only version 0 cookies are fully supported. ie - session ID to relate with login tables on server.|
-```
-LogFormat "%v,%p,%h,%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\",\"%q\",\"%{Referer}i\",\"%{User-Agent}i\",\"%{farmwork.app}C\"" extended
-```
+## Supported Error Log Format
 The application processes Error Logs with default format for threaded MPMs (Multi-Processing Modules). If you're running Apache 2.4 on any platform and ErrorLogFormat is not defined in config files this is the Error Log format.
 ```
 ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i"
