@@ -34,12 +34,6 @@ Python module links & install command lines for each platform. Single quotes aro
 |[user-agents](https://pypi.org/project/user-agents/)|pip install pyyaml ua-parser user-agents|sudo apt-get install python3-user-agents|python3 -m pip install user-agents|[selwin/python-user-agents](https://github.com/selwin/python-user-agents)|
 |[watchdog](https://pypi.org/project/watchdog/)|pip install watchdog|sudo apt-get install python3-watchdog|python3 -m pip install watchdog|[gorakhargosh/watchdog](https://github.com/gorakhargosh/watchdog/tree/master)|
 |[python-dotenv](https://pypi.org/project/python-dotenv/)|pip install python-dotenv|sudo apt-get install python3-dotenv|python3 -m pip install python-dotenv|[theskumar/python-dotenv](https://github.com/theskumar/python-dotenv)|
-## Required MySQL Server Settings
-MySQL server must be configured in `my.ini`, `mysqld.cnf` or `my.cnf` depending on platform with following: 
-```
-[mysqld]
-local-infile=1
-```
 ## Supported Log Formats
 Apache uses same 3 Standard Access log formats (common, combined, vhost_combined) on all 3 platforms.
 ```
@@ -110,7 +104,7 @@ The easiest way to install is use MySQL Command Line Client. Login as User with 
 ```
 source yourpath/apacheLogs2MySQL.sql
 ```
-MySQL server must be configured in `my.ini`, `mysqld.cnf` or `my.cnf` depending on platform: 
+MySQL server must be configured in `my.ini`, `mysqld.cnf` or `my.cnf` depending on platform with following: 
 ```
 [mysqld]
 local-infile=1
