@@ -1,6 +1,7 @@
 -- # coding: utf-8
 -- # version 1.0.0 - 11/04/2024
 -- # version 1.0.1 - 11/06/2024
+-- # version 1.1.0 - 11/18/2024 - major changes
 -- #
 -- # Copyright 2024 Will Raymond <farmfreshsoftware@gmail.com>
 -- #
@@ -17,11 +18,14 @@
 -- # limitations under the License.
 -- #
 -- # file: apacheLogs2MySQL.sql 
--- # synopsis: Data definition language (DDL) for creating MySQL scehma - apache_logs
+-- # synopsis: Data definition language (DDL) for creating MySQL scehma - apache_logs for apachelogs2MySQL application
 -- # Changelog
 -- # [1.0.1] apache_logs.error_systemCodeID corrected line - INTO logsystemCode to INTO logsystemCodeID
 -- # [1.0.1] removed debugging - SELECT statement from apache_logs.import_access_log, import_error_log & normalize_useragent and whitespace on all stored programs
 -- # [1.0.1] set all table AUTO_INCREMENT=1. All future version releases will be the same - AUTO_INCREMENT=1.
+-- # [1.1.0] renamed LOAD DATA TABLES, normalized access_log_useragent TABLE into 11 TABLES, added 13 VIEWS.
+-- # [1.1.0] resized LOAD DATA COLUMNS, added req_query COLUMN and seperated query strings from req_uri COLUMN.
+-- # [1.1.0] added access_log_reqquery TABLE, renamed access_log_session TABLE to access_log_cookie.
 
 CREATE DATABASE  IF NOT EXISTS `apache_logs` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `apache_logs`;
@@ -43,15 +47,15 @@ USE `apache_logs`;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Temporary view structure for view `access_host_list`
+-- Temporary view structure for view `access_cookie_list`
 --
 
-DROP TABLE IF EXISTS `access_host_list`;
-/*!50001 DROP VIEW IF EXISTS `access_host_list`*/;
+DROP TABLE IF EXISTS `access_cookie_list`;
+/*!50001 DROP VIEW IF EXISTS `access_cookie_list`*/;
 SET @saved_cs_client     = @@character_set_client;
 /*!50503 SET character_set_client = utf8mb4 */;
-/*!50001 CREATE VIEW `access_host_list` AS SELECT 
- 1 AS `Access Log Host`,
+/*!50001 CREATE VIEW `access_cookie_list` AS SELECT 
+ 1 AS `Access Log Cookie`,
  1 AS `Log Count`,
  1 AS `HTTP Bytes`,
  1 AS `Bytes Sent`,
@@ -93,6 +97,7 @@ DROP TABLE IF EXISTS `access_log`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `access_log` (
   `id` int NOT NULL AUTO_INCREMENT,
+  `importfileid` int NOT NULL,
   `timeStamp` datetime DEFAULT NULL,
   `bytes_received` int NOT NULL,
   `bytes_sent` int NOT NULL,
@@ -105,40 +110,43 @@ CREATE TABLE `access_log` (
   `reqprotocolid` int DEFAULT NULL,
   `reqmethodid` int DEFAULT NULL,
   `requriid` int DEFAULT NULL,
+  `reqqueryid` int DEFAULT NULL,
   `remotehostid` int DEFAULT NULL,
   `remotelognameid` int DEFAULT NULL,
   `remoteuserid` int DEFAULT NULL,
   `refererid` int DEFAULT NULL,
-  `sessionid` int DEFAULT NULL,
-  `hostid` int DEFAULT NULL,
+  `cookieid` int DEFAULT NULL,
+  `servernameid` int DEFAULT NULL,
+  `serverportid` int DEFAULT NULL,
   `useragentid` int DEFAULT NULL,
   `uaid` int DEFAULT NULL,
   `uabrowserid` int DEFAULT NULL,
   `uabrowserfamilyid` int DEFAULT NULL,
   `uabrowserversionid` int DEFAULT NULL,
-  `uaosid` int DEFAULT NULL,
-  `uaosfamilyid` int DEFAULT NULL,
-  `uaosversionid` int DEFAULT NULL,
   `uadeviceid` int DEFAULT NULL,
   `uadevicefamilyid` int DEFAULT NULL,
   `uadevicebrandid` int DEFAULT NULL,
   `uadevicemodelid` int DEFAULT NULL,
-  `importfileid` int NOT NULL,
+  `uaosid` int DEFAULT NULL,
+  `uaosfamilyid` int DEFAULT NULL,
+  `uaosversionid` int DEFAULT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `FK_access_reqstatus` (`reqstatusid`),
   KEY `FK_access_reqprotocol` (`reqprotocolid`),
   KEY `FK_access_reqmethod` (`reqmethodid`),
   KEY `FK_access_requri` (`requriid`),
+  KEY `FK_access_reqquery` (`reqqueryid`),
   KEY `FK_access_remotehost` (`remotehostid`),
   KEY `FK_access_remotelogname` (`remotelognameid`),
   KEY `FK_access_remoteuser` (`remoteuserid`),
   KEY `FK_access_referer` (`refererid`),
   KEY `FK_access_useragent` (`useragentid`),
-  KEY `FK_access_session` (`sessionid`),
-  KEY `FK_access_host` (`hostid`),
+  KEY `FK_access_cookie` (`cookieid`),
+  KEY `FK_access_servername` (`servernameid`),
+  KEY `FK_access_serverport` (`serverportid`),
   KEY `FK_access_importfile` (`importfileid`),
-  CONSTRAINT `FK_access_host` FOREIGN KEY (`hostid`) REFERENCES `access_log_host` (`id`),
+  CONSTRAINT `FK_access_cookie` FOREIGN KEY (`cookieid`) REFERENCES `access_log_cookie` (`id`),
   CONSTRAINT `FK_access_importfile` FOREIGN KEY (`importfileid`) REFERENCES `import_file` (`id`),
   CONSTRAINT `FK_access_referer` FOREIGN KEY (`refererid`) REFERENCES `access_log_referer` (`id`),
   CONSTRAINT `FK_access_remotehost` FOREIGN KEY (`remotehostid`) REFERENCES `access_log_remotehost` (`id`),
@@ -146,86 +154,29 @@ CREATE TABLE `access_log` (
   CONSTRAINT `FK_access_remoteuser` FOREIGN KEY (`remoteuserid`) REFERENCES `access_log_remoteuser` (`id`),
   CONSTRAINT `FK_access_reqmethod` FOREIGN KEY (`reqmethodid`) REFERENCES `access_log_reqmethod` (`id`),
   CONSTRAINT `FK_access_reqprotocol` FOREIGN KEY (`reqprotocolid`) REFERENCES `access_log_reqprotocol` (`id`),
+  CONSTRAINT `FK_access_reqquery` FOREIGN KEY (`reqqueryid`) REFERENCES `access_log_reqquery` (`id`),
   CONSTRAINT `FK_access_reqstatus` FOREIGN KEY (`reqstatusid`) REFERENCES `access_log_reqstatus` (`id`),
   CONSTRAINT `FK_access_requri` FOREIGN KEY (`requriid`) REFERENCES `access_log_requri` (`id`),
-  CONSTRAINT `FK_access_session` FOREIGN KEY (`sessionid`) REFERENCES `access_log_session` (`id`),
+  CONSTRAINT `FK_access_servername` FOREIGN KEY (`servernameid`) REFERENCES `access_log_servername` (`id`),
+  CONSTRAINT `FK_access_serverport` FOREIGN KEY (`serverportid`) REFERENCES `access_log_serverport` (`id`),
   CONSTRAINT `FK_access_useragent` FOREIGN KEY (`useragentid`) REFERENCES `access_log_useragent` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table is core table for access logs and contains foreign keys to relate to log attribute tables.';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table is core table for access logs and contains foreign keys to relate to log attribute tables.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `access_log_combined`
+-- Table structure for table `access_log_cookie`
 --
 
-DROP TABLE IF EXISTS `access_log_combined`;
+DROP TABLE IF EXISTS `access_log_cookie`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `access_log_combined` (
-  `remote_host` varchar(50) DEFAULT NULL,
-  `remote_logname` varchar(50) DEFAULT NULL COMMENT 'This will return a dash unless mod_ident is present and IdentityCheck is set On.',
-  `remote_user` varchar(50) DEFAULT NULL COMMENT 'Remote user if the request was authenticated. May be bogus if return status (%s) is 401 (unauthorized).',
-  `log_time` varchar(50) DEFAULT NULL COMMENT 'due to MySQL LOAD DATA LOCAL INFILE limitations can not have 2 OPTIONALLY ENCLOSED BY "" and []. It is easier with 2 columns for this data',
-  `log_time_offset` varchar(50) DEFAULT NULL COMMENT 'to simplify import and use MySQL LOAD DATA LOCAL INFILE. I have python script to import standard combined but this keeps it all in MySQL',
-  `first_line_request` varchar(500) DEFAULT NULL COMMENT 'contains req_method, req_uri, req_protocol',
-  `req_status` int DEFAULT NULL,
-  `req_bytes` int DEFAULT NULL,
-  `log_referer` varchar(2000) DEFAULT NULL,
-  `log_useragent` varchar(4000) DEFAULT NULL,
-  `req_protocol` varchar(100) DEFAULT NULL COMMENT 'parsed from first_line_request in import',
-  `req_method` varchar(100) DEFAULT NULL COMMENT 'parsed from first_line_request in import',
-  `req_uri` varchar(2000) DEFAULT NULL COMMENT 'parsed from first_line_request in import',
-  `importfileid` int DEFAULT NULL COMMENT 'used in import process to indicate file record extractedd from',
-  `import_status` int NOT NULL DEFAULT '0' COMMENT 'used in import process to indicate record processed',
+CREATE TABLE `access_log_cookie` (
   `id` int NOT NULL AUTO_INCREMENT,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Used for LOAD DATA command for LogFormat combined and common to bring text files into MySQL and start the process.';
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `access_log_extended`
---
-
-DROP TABLE IF EXISTS `access_log_extended`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `access_log_extended` (
-  `remote_host` varchar(50) DEFAULT NULL,
-  `log_time` varchar(50) DEFAULT NULL,
-  `bytes_received` int DEFAULT NULL,
-  `bytes_sent` int DEFAULT NULL,
-  `bytes_transferred` int DEFAULT NULL,
-  `reqtime_milli` int DEFAULT NULL,
-  `reqtime_micro` int DEFAULT NULL,
-  `reqdelay_milli` int DEFAULT NULL,
-  `req_bytes` int DEFAULT NULL,
-  `req_status` int DEFAULT NULL,
-  `req_protocol` varchar(100) DEFAULT NULL,
-  `req_method` varchar(100) DEFAULT NULL,
-  `req_uri` varchar(2000) DEFAULT NULL,
-  `log_referer` varchar(2000) DEFAULT NULL,
-  `log_useragent` varchar(4000) DEFAULT NULL,
-  `log_session` varchar(300) DEFAULT NULL COMMENT 'Storing Session ID in application cookie to relate with login tables on server.',
-  `log_host` varchar(100) DEFAULT NULL,
-  `importfileid` int DEFAULT NULL COMMENT 'used in import process to indicate file record extractedd from',
-  `import_status` int NOT NULL DEFAULT '0' COMMENT 'used in import process to indicate record processed',
-  `id` int NOT NULL AUTO_INCREMENT,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Used for LOAD DATA command for LogFormat extended to bring text files into MySQL and start the process.';
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `access_log_host`
---
-
-DROP TABLE IF EXISTS `access_log_host`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `access_log_host` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL,
+  `name` varchar(400) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_access_cookie_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -237,10 +188,10 @@ DROP TABLE IF EXISTS `access_log_referer`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `access_log_referer` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(2000) NOT NULL,
+  `name` varchar(1000) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -252,10 +203,11 @@ DROP TABLE IF EXISTS `access_log_remotehost`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `access_log_remotehost` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) NOT NULL,
+  `name` varchar(45) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_access_remotehost_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -267,10 +219,11 @@ DROP TABLE IF EXISTS `access_log_remotelogname`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `access_log_remotelogname` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) NOT NULL,
+  `name` varchar(150) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_access_remotelogname_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -282,10 +235,11 @@ DROP TABLE IF EXISTS `access_log_remoteuser`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `access_log_remoteuser` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) NOT NULL,
+  `name` varchar(150) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_access_remoteuser_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -297,10 +251,11 @@ DROP TABLE IF EXISTS `access_log_reqmethod`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `access_log_reqmethod` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL,
+  `name` varchar(50) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_access_reqmethod_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -312,10 +267,26 @@ DROP TABLE IF EXISTS `access_log_reqprotocol`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `access_log_reqprotocol` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL,
+  `name` varchar(30) NOT NULL,
+  `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_access_reqprotocol_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `access_log_reqquery`
+--
+
+DROP TABLE IF EXISTS `access_log_reqquery`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `access_log_reqquery` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(2000) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -329,8 +300,9 @@ CREATE TABLE `access_log_reqstatus` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` int NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_access_reqstatus_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -345,22 +317,39 @@ CREATE TABLE `access_log_requri` (
   `name` varchar(2000) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `access_log_session`
+-- Table structure for table `access_log_servername`
 --
 
-DROP TABLE IF EXISTS `access_log_session`;
+DROP TABLE IF EXISTS `access_log_servername`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `access_log_session` (
+CREATE TABLE `access_log_servername` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(300) NOT NULL,
+  `name` varchar(253) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_access_servername_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `access_log_serverport`
+--
+
+DROP TABLE IF EXISTS `access_log_serverport`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `access_log_serverport` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` int NOT NULL,
+  `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_access_serverport_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -374,8 +363,9 @@ CREATE TABLE `access_log_ua` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_access_ua_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -389,8 +379,9 @@ CREATE TABLE `access_log_ua_browser` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_access_ua_browser_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -404,8 +395,9 @@ CREATE TABLE `access_log_ua_browser_family` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_access_ua_browser_family_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -419,8 +411,9 @@ CREATE TABLE `access_log_ua_browser_version` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_access_ua_browser_version_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -434,8 +427,9 @@ CREATE TABLE `access_log_ua_device` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_access_ua_device_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -449,8 +443,9 @@ CREATE TABLE `access_log_ua_device_brand` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_access_ua_device_brand_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -464,8 +459,9 @@ CREATE TABLE `access_log_ua_device_family` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_access_ua_device_family_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -479,8 +475,9 @@ CREATE TABLE `access_log_ua_device_model` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_access_ua_device_model_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -494,8 +491,9 @@ CREATE TABLE `access_log_ua_os` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_access_ua_os_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -509,8 +507,9 @@ CREATE TABLE `access_log_ua_os_family` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_access_ua_os_family_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -524,8 +523,9 @@ CREATE TABLE `access_log_ua_os_version` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_access_ua_os_version_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -537,61 +537,32 @@ DROP TABLE IF EXISTS `access_log_useragent`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `access_log_useragent` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(4000) NOT NULL,
-  `ua` varchar(200) DEFAULT NULL,
-  `ua_browser` varchar(200) DEFAULT NULL,
-  `ua_browser_family` varchar(200) DEFAULT NULL,
-  `ua_browser_version` varchar(200) DEFAULT NULL,
-  `ua_os` varchar(200) DEFAULT NULL,
-  `ua_os_family` varchar(200) DEFAULT NULL,
-  `ua_os_version` varchar(200) DEFAULT NULL,
-  `ua_device` varchar(200) DEFAULT NULL,
-  `ua_device_family` varchar(200) DEFAULT NULL,
-  `ua_device_brand` varchar(200) DEFAULT NULL,
-  `ua_device_model` varchar(200) DEFAULT NULL,
+  `name` varchar(2000) NOT NULL,
+  `ua` varchar(300) DEFAULT NULL,
+  `ua_browser` varchar(300) DEFAULT NULL,
+  `ua_browser_family` varchar(300) DEFAULT NULL,
+  `ua_browser_version` varchar(300) DEFAULT NULL,
+  `ua_device` varchar(300) DEFAULT NULL,
+  `ua_device_family` varchar(300) DEFAULT NULL,
+  `ua_device_brand` varchar(300) DEFAULT NULL,
+  `ua_device_model` varchar(300) DEFAULT NULL,
+  `ua_os` varchar(300) DEFAULT NULL,
+  `ua_os_family` varchar(300) DEFAULT NULL,
+  `ua_os_version` varchar(300) DEFAULT NULL,
   `uaid` int DEFAULT NULL,
   `uabrowserid` int DEFAULT NULL,
   `uabrowserfamilyid` int DEFAULT NULL,
   `uabrowserversionid` int DEFAULT NULL,
-  `uaosid` int DEFAULT NULL,
-  `uaosfamilyid` int DEFAULT NULL,
-  `uaosversionid` int DEFAULT NULL,
   `uadeviceid` int DEFAULT NULL,
   `uadevicefamilyid` int DEFAULT NULL,
   `uadevicebrandid` int DEFAULT NULL,
   `uadevicemodelid` int DEFAULT NULL,
+  `uaosid` int DEFAULT NULL,
+  `uaosfamilyid` int DEFAULT NULL,
+  `uaosversionid` int DEFAULT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `access_log_vhost`
---
-
-DROP TABLE IF EXISTS `access_log_vhost`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `access_log_vhost` (
-  `server_name` varchar(75) DEFAULT NULL,
-  `remote_host` varchar(50) DEFAULT NULL,
-  `remote_logname` varchar(50) DEFAULT NULL COMMENT 'This will return a dash unless mod_ident is present and IdentityCheck is set On.',
-  `remote_user` varchar(50) DEFAULT NULL COMMENT 'Remote user if the request was authenticated. May be bogus if return status (%s) is 401 (unauthorized).',
-  `log_time` varchar(50) DEFAULT NULL COMMENT 'due to MySQL LOAD DATA LOCAL INFILE limitations can not have 2 OPTIONALLY ENCLOSED BY "" and []. It is easier with 2 columns for this data',
-  `log_time_offset` varchar(50) DEFAULT NULL COMMENT 'to simplify import and use MySQL LOAD DATA LOCAL INFILE. I have python script to import standard combined but this keeps it all in MySQL',
-  `first_line_request` varchar(500) DEFAULT NULL COMMENT 'contains req_method, req_uri, req_protocol',
-  `req_status` int DEFAULT NULL,
-  `req_bytes` int DEFAULT NULL,
-  `log_referer` varchar(2000) DEFAULT NULL,
-  `log_useragent` varchar(4000) DEFAULT NULL,
-  `req_protocol` varchar(100) DEFAULT NULL COMMENT 'parsed from first_line_request in import',
-  `req_method` varchar(100) DEFAULT NULL COMMENT 'parsed from first_line_request in import',
-  `req_uri` varchar(2000) DEFAULT NULL COMMENT 'parsed from first_line_request in import',
-  `importfileid` int DEFAULT NULL COMMENT 'used in import process to indicate file record extractedd from',
-  `import_status` int NOT NULL DEFAULT '0' COMMENT 'used in import process to indicate record processed',
-  `id` int NOT NULL AUTO_INCREMENT,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Used for LOAD DATA command for LogFormat vhost to bring text files into MySQL and start the process.';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -721,6 +692,27 @@ SET @saved_cs_client     = @@character_set_client;
 SET character_set_client = @saved_cs_client;
 
 --
+-- Temporary view structure for view `access_reqquery_list`
+--
+
+DROP TABLE IF EXISTS `access_reqquery_list`;
+/*!50001 DROP VIEW IF EXISTS `access_reqquery_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `access_reqquery_list` AS SELECT 
+ 1 AS `Access Log Query String`,
+ 1 AS `Log Count`,
+ 1 AS `HTTP Bytes`,
+ 1 AS `Bytes Sent`,
+ 1 AS `Bytes Received`,
+ 1 AS `Bytes Transferred`,
+ 1 AS `Max Request Time`,
+ 1 AS `Min Request Time`,
+ 1 AS `Max Delay Time`,
+ 1 AS `Min Delay Time`*/;
+SET character_set_client = @saved_cs_client;
+
+--
 -- Temporary view structure for view `access_reqstatus_list`
 --
 
@@ -763,15 +755,267 @@ SET @saved_cs_client     = @@character_set_client;
 SET character_set_client = @saved_cs_client;
 
 --
--- Temporary view structure for view `access_session_list`
+-- Temporary view structure for view `access_servername_list`
 --
 
-DROP TABLE IF EXISTS `access_session_list`;
-/*!50001 DROP VIEW IF EXISTS `access_session_list`*/;
+DROP TABLE IF EXISTS `access_servername_list`;
+/*!50001 DROP VIEW IF EXISTS `access_servername_list`*/;
 SET @saved_cs_client     = @@character_set_client;
 /*!50503 SET character_set_client = utf8mb4 */;
-/*!50001 CREATE VIEW `access_session_list` AS SELECT 
- 1 AS `Access Log Session`,
+/*!50001 CREATE VIEW `access_servername_list` AS SELECT 
+ 1 AS `Access Log Server Name`,
+ 1 AS `Log Count`,
+ 1 AS `HTTP Bytes`,
+ 1 AS `Bytes Sent`,
+ 1 AS `Bytes Received`,
+ 1 AS `Bytes Transferred`,
+ 1 AS `Max Request Time`,
+ 1 AS `Min Request Time`,
+ 1 AS `Max Delay Time`,
+ 1 AS `Min Delay Time`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `access_serverport_list`
+--
+
+DROP TABLE IF EXISTS `access_serverport_list`;
+/*!50001 DROP VIEW IF EXISTS `access_serverport_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `access_serverport_list` AS SELECT 
+ 1 AS `Access Log Server Port`,
+ 1 AS `Log Count`,
+ 1 AS `HTTP Bytes`,
+ 1 AS `Bytes Sent`,
+ 1 AS `Bytes Received`,
+ 1 AS `Bytes Transferred`,
+ 1 AS `Max Request Time`,
+ 1 AS `Min Request Time`,
+ 1 AS `Max Delay Time`,
+ 1 AS `Min Delay Time`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `access_ua_browser_family_list`
+--
+
+DROP TABLE IF EXISTS `access_ua_browser_family_list`;
+/*!50001 DROP VIEW IF EXISTS `access_ua_browser_family_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `access_ua_browser_family_list` AS SELECT 
+ 1 AS `Browser Family`,
+ 1 AS `Log Count`,
+ 1 AS `HTTP Bytes`,
+ 1 AS `Bytes Sent`,
+ 1 AS `Bytes Received`,
+ 1 AS `Bytes Transferred`,
+ 1 AS `Max Request Time`,
+ 1 AS `Min Request Time`,
+ 1 AS `Max Delay Time`,
+ 1 AS `Min Delay Time`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `access_ua_browser_list`
+--
+
+DROP TABLE IF EXISTS `access_ua_browser_list`;
+/*!50001 DROP VIEW IF EXISTS `access_ua_browser_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `access_ua_browser_list` AS SELECT 
+ 1 AS `Browser`,
+ 1 AS `Log Count`,
+ 1 AS `HTTP Bytes`,
+ 1 AS `Bytes Sent`,
+ 1 AS `Bytes Received`,
+ 1 AS `Bytes Transferred`,
+ 1 AS `Max Request Time`,
+ 1 AS `Min Request Time`,
+ 1 AS `Max Delay Time`,
+ 1 AS `Min Delay Time`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `access_ua_browser_version_list`
+--
+
+DROP TABLE IF EXISTS `access_ua_browser_version_list`;
+/*!50001 DROP VIEW IF EXISTS `access_ua_browser_version_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `access_ua_browser_version_list` AS SELECT 
+ 1 AS `Browser Version`,
+ 1 AS `Log Count`,
+ 1 AS `HTTP Bytes`,
+ 1 AS `Bytes Sent`,
+ 1 AS `Bytes Received`,
+ 1 AS `Bytes Transferred`,
+ 1 AS `Max Request Time`,
+ 1 AS `Min Request Time`,
+ 1 AS `Max Delay Time`,
+ 1 AS `Min Delay Time`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `access_ua_device_brand_list`
+--
+
+DROP TABLE IF EXISTS `access_ua_device_brand_list`;
+/*!50001 DROP VIEW IF EXISTS `access_ua_device_brand_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `access_ua_device_brand_list` AS SELECT 
+ 1 AS `Device Brand`,
+ 1 AS `Log Count`,
+ 1 AS `HTTP Bytes`,
+ 1 AS `Bytes Sent`,
+ 1 AS `Bytes Received`,
+ 1 AS `Bytes Transferred`,
+ 1 AS `Max Request Time`,
+ 1 AS `Min Request Time`,
+ 1 AS `Max Delay Time`,
+ 1 AS `Min Delay Time`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `access_ua_device_family_list`
+--
+
+DROP TABLE IF EXISTS `access_ua_device_family_list`;
+/*!50001 DROP VIEW IF EXISTS `access_ua_device_family_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `access_ua_device_family_list` AS SELECT 
+ 1 AS `Device Family`,
+ 1 AS `Log Count`,
+ 1 AS `HTTP Bytes`,
+ 1 AS `Bytes Sent`,
+ 1 AS `Bytes Received`,
+ 1 AS `Bytes Transferred`,
+ 1 AS `Max Request Time`,
+ 1 AS `Min Request Time`,
+ 1 AS `Max Delay Time`,
+ 1 AS `Min Delay Time`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `access_ua_device_list`
+--
+
+DROP TABLE IF EXISTS `access_ua_device_list`;
+/*!50001 DROP VIEW IF EXISTS `access_ua_device_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `access_ua_device_list` AS SELECT 
+ 1 AS `Device`,
+ 1 AS `Log Count`,
+ 1 AS `HTTP Bytes`,
+ 1 AS `Bytes Sent`,
+ 1 AS `Bytes Received`,
+ 1 AS `Bytes Transferred`,
+ 1 AS `Max Request Time`,
+ 1 AS `Min Request Time`,
+ 1 AS `Max Delay Time`,
+ 1 AS `Min Delay Time`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `access_ua_device_model_list`
+--
+
+DROP TABLE IF EXISTS `access_ua_device_model_list`;
+/*!50001 DROP VIEW IF EXISTS `access_ua_device_model_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `access_ua_device_model_list` AS SELECT 
+ 1 AS `Device Model`,
+ 1 AS `Log Count`,
+ 1 AS `HTTP Bytes`,
+ 1 AS `Bytes Sent`,
+ 1 AS `Bytes Received`,
+ 1 AS `Bytes Transferred`,
+ 1 AS `Max Request Time`,
+ 1 AS `Min Request Time`,
+ 1 AS `Max Delay Time`,
+ 1 AS `Min Delay Time`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `access_ua_list`
+--
+
+DROP TABLE IF EXISTS `access_ua_list`;
+/*!50001 DROP VIEW IF EXISTS `access_ua_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `access_ua_list` AS SELECT 
+ 1 AS `Access Log User Agent`,
+ 1 AS `Log Count`,
+ 1 AS `HTTP Bytes`,
+ 1 AS `Bytes Sent`,
+ 1 AS `Bytes Received`,
+ 1 AS `Bytes Transferred`,
+ 1 AS `Max Request Time`,
+ 1 AS `Min Request Time`,
+ 1 AS `Max Delay Time`,
+ 1 AS `Min Delay Time`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `access_ua_os_family_list`
+--
+
+DROP TABLE IF EXISTS `access_ua_os_family_list`;
+/*!50001 DROP VIEW IF EXISTS `access_ua_os_family_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `access_ua_os_family_list` AS SELECT 
+ 1 AS `Operating System Family`,
+ 1 AS `Log Count`,
+ 1 AS `HTTP Bytes`,
+ 1 AS `Bytes Sent`,
+ 1 AS `Bytes Received`,
+ 1 AS `Bytes Transferred`,
+ 1 AS `Max Request Time`,
+ 1 AS `Min Request Time`,
+ 1 AS `Max Delay Time`,
+ 1 AS `Min Delay Time`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `access_ua_os_list`
+--
+
+DROP TABLE IF EXISTS `access_ua_os_list`;
+/*!50001 DROP VIEW IF EXISTS `access_ua_os_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `access_ua_os_list` AS SELECT 
+ 1 AS `Operating System`,
+ 1 AS `Log Count`,
+ 1 AS `HTTP Bytes`,
+ 1 AS `Bytes Sent`,
+ 1 AS `Bytes Received`,
+ 1 AS `Bytes Transferred`,
+ 1 AS `Max Request Time`,
+ 1 AS `Min Request Time`,
+ 1 AS `Max Delay Time`,
+ 1 AS `Min Delay Time`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `access_ua_os_version_list`
+--
+
+DROP TABLE IF EXISTS `access_ua_os_version_list`;
+/*!50001 DROP VIEW IF EXISTS `access_ua_os_version_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `access_ua_os_version_list` AS SELECT 
+ 1 AS `Operating System Version`,
  1 AS `Log Count`,
  1 AS `HTTP Bytes`,
  1 AS `Bytes Sent`,
@@ -1119,6 +1363,7 @@ DROP TABLE IF EXISTS `error_log`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `error_log` (
   `id` int NOT NULL AUTO_INCREMENT,
+  `importfileid` int NOT NULL,
   `timeStamp` datetime NOT NULL,
   `loglevelid` int DEFAULT NULL,
   `moduleid` int DEFAULT NULL,
@@ -1128,10 +1373,9 @@ CREATE TABLE `error_log` (
   `apachemessageid` int DEFAULT NULL,
   `systemcodeid` int DEFAULT NULL,
   `systemmessageid` int DEFAULT NULL,
-  `logmessageid` int DEFAULT NULL COMMENT 'comment',
-  `reqclientid` int DEFAULT NULL COMMENT 'comment',
-  `refererid` int DEFAULT NULL COMMENT 'comment',
-  `importfileid` int NOT NULL,
+  `logmessageid` int DEFAULT NULL,
+  `reqclientid` int DEFAULT NULL,
+  `refererid` int DEFAULT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `FK_error_level` (`loglevelid`),
@@ -1158,7 +1402,7 @@ CREATE TABLE `error_log` (
   CONSTRAINT `FK_error_systemcode` FOREIGN KEY (`systemcodeid`) REFERENCES `error_log_systemcode` (`id`),
   CONSTRAINT `FK_error_systemmessage` FOREIGN KEY (`systemmessageid`) REFERENCES `error_log_systemmessage` (`id`),
   CONSTRAINT `FK_error_threadid` FOREIGN KEY (`threadid`) REFERENCES `error_log_threadid` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1170,10 +1414,11 @@ DROP TABLE IF EXISTS `error_log_apachecode`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `error_log_apachecode` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(400) NOT NULL,
+  `name` varchar(200) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_error_apachecode_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1185,43 +1430,11 @@ DROP TABLE IF EXISTS `error_log_apachemessage`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `error_log_apachemessage` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(400) NOT NULL,
+  `name` varchar(500) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `error_log_default`
---
-
-DROP TABLE IF EXISTS `error_log_default`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `error_log_default` (
-  `log_time` varchar(50) DEFAULT NULL,
-  `log_mod_level` varchar(1000) DEFAULT NULL,
-  `log_processid_threadid` varchar(1000) DEFAULT NULL,
-  `log_parse1` varchar(2000) DEFAULT NULL,
-  `log_parse2` varchar(2000) DEFAULT NULL,
-  `log_message_nocode` varchar(500) DEFAULT NULL,
-  `logtime` datetime DEFAULT NULL,
-  `loglevel` varchar(100) DEFAULT NULL,
-  `module` varchar(100) DEFAULT NULL,
-  `processid` varchar(100) DEFAULT NULL,
-  `threadid` varchar(100) DEFAULT NULL,
-  `apachecode` varchar(400) DEFAULT NULL,
-  `apachemessage` varchar(400) DEFAULT NULL,
-  `systemcode` varchar(400) DEFAULT NULL,
-  `systemmessage` varchar(400) DEFAULT NULL,
-  `logmessage` varchar(500) DEFAULT NULL,
-  `reqclient` varchar(200) DEFAULT NULL,
-  `referer` varchar(500) DEFAULT NULL,
-  `importfileid` int DEFAULT NULL COMMENT 'used in import process to indicate file record extractedd from',
-  `import_status` int NOT NULL DEFAULT '0' COMMENT 'used in import process to indicate record processed',
-  `id` int NOT NULL AUTO_INCREMENT,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table used for LOAD DATA command to bring text files into MySQL and start the process.';
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_error_apachemessage_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1235,8 +1448,9 @@ CREATE TABLE `error_log_level` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_error_level_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1250,8 +1464,9 @@ CREATE TABLE `error_log_message` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(500) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_error_message_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1263,10 +1478,11 @@ DROP TABLE IF EXISTS `error_log_module`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `error_log_module` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL,
+  `name` varchar(200) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_error_module_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1280,8 +1496,9 @@ CREATE TABLE `error_log_processid` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_error_processid_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1293,10 +1510,11 @@ DROP TABLE IF EXISTS `error_log_referer`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `error_log_referer` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(500) NOT NULL,
+  `name` varchar(750) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_error_referer_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1308,10 +1526,11 @@ DROP TABLE IF EXISTS `error_log_reqclient`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `error_log_reqclient` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(200) NOT NULL,
+  `name` varchar(500) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_error_reqclient_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1323,10 +1542,11 @@ DROP TABLE IF EXISTS `error_log_systemcode`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `error_log_systemcode` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(400) NOT NULL,
+  `name` varchar(200) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_error_systemcode_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1338,10 +1558,11 @@ DROP TABLE IF EXISTS `error_log_systemmessage`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `error_log_systemmessage` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(400) NOT NULL,
+  `name` varchar(500) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_error_systemmessage_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1355,8 +1576,9 @@ CREATE TABLE `error_log_threadid` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_error_threadid_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1498,7 +1720,7 @@ CREATE TABLE `import_client` (
   `platformProcessor` varchar(150) DEFAULT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table keeps track of all application Windows, Linux and Mac clients loading logs to server application and long with logon and IP address information. It is important to know who is loading logs.';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table keeps track of all application Windows, Linux and Mac clients loading logs to server application and long with logon and IP address information. It is important to know who is loading logs.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1542,9 +1764,14 @@ CREATE TABLE `import_file` (
   `filemodified` datetime NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `FK_import_importprocess` (`importprocessid`),
-  CONSTRAINT `FK_import_importprocess` FOREIGN KEY (`importprocessid`) REFERENCES `import_process` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table contains all access and error log files loaded and processed. Created, modified and size of each file at time of loading is captured for auditability. Each file processed by Server Application must exist in this table.';
+  UNIQUE KEY `UC_import_file_name` (`name`),
+  KEY `FK_importfile_importclient` (`importclientid`),
+  KEY `FK_importfile_importload` (`importloadid`),
+  KEY `FK_importfile_importprocess` (`importprocessid`),
+  CONSTRAINT `FK_importfile_importclient` FOREIGN KEY (`importclientid`) REFERENCES `import_client` (`id`),
+  CONSTRAINT `FK_importfile_importload` FOREIGN KEY (`importloadid`) REFERENCES `import_load` (`id`),
+  CONSTRAINT `FK_importfile_importprocess` FOREIGN KEY (`importprocessid`) REFERENCES `import_process` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table contains all access and error log files loaded and processed. Created, modified and size of each file at time of loading is captured for auditability. Each file processed by Server Application must exist in this table.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1574,8 +1801,10 @@ CREATE TABLE `import_load` (
   `processSeconds` int DEFAULT '0',
   `started` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `completed` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table has record for everytime the Python processLogs is executed. The has totals for each tyep and file formats were imported.';
+  PRIMARY KEY (`id`),
+  KEY `FK_importload_importclient` (`importClientid`),
+  CONSTRAINT `FK_importload_importclient` FOREIGN KEY (`importClientid`) REFERENCES `import_client` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table has record for everytime the Python processLogs is executed. The has totals for each tyep and file formats were imported.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1593,8 +1822,10 @@ CREATE TABLE `import_process` (
   `files` int DEFAULT '0',
   `started` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `completed` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table has record for every MySQL Stored Procedure import execution. If completed column is NULL the process failed. Look in import_error table for error details.';
+  PRIMARY KEY (`id`),
+  KEY `FK_importprocess_importserver` (`importserverid`),
+  CONSTRAINT `FK_importprocess_importserver` FOREIGN KEY (`importserverid`) REFERENCES `import_server` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table has record for every MySQL Stored Procedure import execution. If completed column is NULL the process failed. Look in import_error table for error details.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1614,13 +1845,143 @@ CREATE TABLE `import_server` (
   `serveruuid` varchar(255) DEFAULT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table for keeping track of log processing servers and login information.';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table for keeping track of log processing servers and login information.';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `load_access_combined`
+--
+
+DROP TABLE IF EXISTS `load_access_combined`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `load_access_combined` (
+  `remote_host` varchar(45) DEFAULT NULL COMMENT 'IPv4-mapped IPv6 (45 characters):ABCD:ABCD:ABCD:ABCD:ABCD:ABCD:192.168.158.190',
+  `remote_logname` varchar(150) DEFAULT NULL COMMENT 'This will return a dash unless mod_ident is present and IdentityCheck is set On.',
+  `remote_user` varchar(150) DEFAULT NULL COMMENT 'Remote user if the request was authenticated. May be bogus if return status (%s) is 401 (unauthorized).',
+  `log_time_a` varchar(21) DEFAULT NULL COMMENT 'due to MySQL LOAD DATA LOCAL INFILE limitations can not have 2 OPTIONALLY ENCLOSED BY "" and []. It is easier with 2 columns for this data',
+  `log_time_b` varchar(6) DEFAULT NULL COMMENT 'to simplify import and use MySQL LOAD DATA LOCAL INFILE. I have python script to import standard combined but this keeps it all in MySQL',
+  `first_line_request` varchar(4000) DEFAULT NULL COMMENT 'contains req_method, req_uri, req_query, req_protocol',
+  `req_status` int DEFAULT NULL,
+  `req_bytes` int DEFAULT NULL,
+  `log_referer` varchar(1000) DEFAULT NULL COMMENT '1000 characters should be more than enough for domain.',
+  `log_useragent` varchar(2000) DEFAULT NULL COMMENT 'No strict size limit of User-Agent string is defined by official standards or specifications. 2 years of production logs found useragents longer than 1000 are hack attempts.',
+  `log_time` varchar(28) DEFAULT NULL,
+  `req_protocol` varchar(30) DEFAULT NULL COMMENT 'parsed from first_line_request in import',
+  `req_method` varchar(50) DEFAULT NULL COMMENT 'parsed from first_line_request in import',
+  `req_uri` varchar(2000) DEFAULT NULL COMMENT 'parsed from first_line_request in import. URLs under 2000 characters work in any combination of client and server software and search engines.',
+  `req_query` varchar(2000) DEFAULT NULL COMMENT 'parsed from first_line_request in import. URLs under 2000 characters work in any combination of client and server software and search engines.',
+  `importfileid` int DEFAULT NULL COMMENT 'used in import process to indicate file record extractedd from',
+  `import_status` int NOT NULL DEFAULT '0' COMMENT 'used in import process to indicate record processed',
+  `id` int NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Used for LOAD DATA command for LogFormat combined and common to bring text files into MySQL and start the process.';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `load_access_extended`
+--
+
+DROP TABLE IF EXISTS `load_access_extended`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `load_access_extended` (
+  `server_name` varchar(253) DEFAULT NULL COMMENT '253 characters is the maximum length of full domain name, including dots: e.g. www.example.com = 15 characters.',
+  `server_port` int DEFAULT NULL,
+  `remote_host` varchar(45) DEFAULT NULL COMMENT 'IPv4-mapped IPv6 (45 characters):ABCD:ABCD:ABCD:ABCD:ABCD:ABCD:192.168.158.190',
+  `log_time` varchar(28) DEFAULT NULL,
+  `bytes_received` int DEFAULT NULL,
+  `bytes_sent` int DEFAULT NULL,
+  `bytes_transferred` int DEFAULT NULL,
+  `reqtime_milli` int DEFAULT NULL,
+  `reqtime_micro` int DEFAULT NULL,
+  `reqdelay_milli` int DEFAULT NULL,
+  `req_bytes` int DEFAULT NULL,
+  `req_status` int DEFAULT NULL,
+  `req_protocol` varchar(30) DEFAULT NULL,
+  `req_method` varchar(50) DEFAULT NULL,
+  `req_uri` varchar(2000) DEFAULT NULL COMMENT 'URLs under 2000 characters work in any combination of client and server software and search engines.',
+  `req_query` varchar(2000) DEFAULT NULL COMMENT 'URLs under 2000 characters work in any combination of client and server software and search engines.',
+  `log_referer` varchar(1000) DEFAULT NULL COMMENT '1000 characters should be more than enough for domain.',
+  `log_useragent` varchar(2000) DEFAULT NULL COMMENT 'No strict size limit of User-Agent string is defined by official standards or specifications. 2 years of production logs found useragents longer than 1000 are hack attempts.',
+  `log_cookie` varchar(400) DEFAULT NULL COMMENT 'Use to store any Cookie VARNAME. ie - session ID in application cookie to relate with login tables on server.',
+  `importfileid` int DEFAULT NULL COMMENT 'used in import process to indicate file record extractedd from',
+  `import_status` int NOT NULL DEFAULT '0' COMMENT 'used in import process to indicate record processed',
+  `id` int NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Used for LOAD DATA command for LogFormat extended to bring text files into MySQL and start the process.';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `load_access_vhost`
+--
+
+DROP TABLE IF EXISTS `load_access_vhost`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `load_access_vhost` (
+  `log_server` varchar(300) DEFAULT NULL COMMENT '253 characters is the maximum length of full domain name, including dots: e.g. www.example.com = 15 characters. plus : plus 6 for port',
+  `remote_host` varchar(45) DEFAULT NULL COMMENT 'IPv4-mapped IPv6 (45 characters):ABCD:ABCD:ABCD:ABCD:ABCD:ABCD:192.168.158.190',
+  `remote_logname` varchar(150) DEFAULT NULL COMMENT 'This will return a dash unless mod_ident is present and IdentityCheck is set On.',
+  `remote_user` varchar(150) DEFAULT NULL COMMENT 'Remote user if the request was authenticated. May be bogus if return status (%s) is 401 (unauthorized).',
+  `log_time_a` varchar(21) DEFAULT NULL COMMENT 'due to MySQL LOAD DATA LOCAL INFILE limitations can not have 2 OPTIONALLY ENCLOSED BY "" and []. It is easier with 2 columns for this data',
+  `log_time_b` varchar(6) DEFAULT NULL COMMENT 'to simplify import and use MySQL LOAD DATA LOCAL INFILE. I have python script to import standard combined but this keeps it all in MySQL',
+  `first_line_request` varchar(4000) DEFAULT NULL COMMENT 'contains req_method, req_uri, req_query, req_protocol',
+  `req_status` int DEFAULT NULL,
+  `req_bytes` int DEFAULT NULL,
+  `log_referer` varchar(1000) DEFAULT NULL COMMENT '1000 characters should be more than enough for domain.',
+  `log_useragent` varchar(2000) DEFAULT NULL COMMENT 'No strict size limit of User-Agent string is defined by official standards or specifications. 2 years of production logs found useragents longer than 1000 are hack attempts.',
+  `log_time` varchar(28) DEFAULT NULL,
+  `server_name` varchar(253) DEFAULT NULL COMMENT '253 characters is the maximum length of full domain name, including dots: e.g. www.example.com = 15 characters.',
+  `server_port` int DEFAULT NULL,
+  `req_protocol` varchar(30) DEFAULT NULL COMMENT 'parsed from first_line_request in import',
+  `req_method` varchar(50) DEFAULT NULL COMMENT 'parsed from first_line_request in import',
+  `req_uri` varchar(2000) DEFAULT NULL COMMENT 'parsed from first_line_request in import. URLs under 2000 characters work in any combination of client and server software and search engines.',
+  `req_query` varchar(2000) DEFAULT NULL COMMENT 'parsed from first_line_request in import. URLs under 2000 characters work in any combination of client and server software and search engines.',
+  `importfileid` int DEFAULT NULL COMMENT 'used in import process to indicate file record extractedd from',
+  `import_status` int NOT NULL DEFAULT '0' COMMENT 'used in import process to indicate record processed',
+  `id` int NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Used for LOAD DATA command for LogFormat vhost to bring text files into MySQL and start the process.';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `load_error_default`
+--
+
+DROP TABLE IF EXISTS `load_error_default`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `load_error_default` (
+  `log_time` varchar(50) DEFAULT NULL,
+  `log_mod_level` varchar(200) DEFAULT NULL,
+  `log_processid_threadid` varchar(200) DEFAULT NULL,
+  `log_parse1` varchar(2000) DEFAULT NULL,
+  `log_parse2` varchar(2000) DEFAULT NULL,
+  `log_message_nocode` varchar(500) DEFAULT NULL,
+  `logtime` datetime DEFAULT NULL,
+  `loglevel` varchar(100) DEFAULT NULL,
+  `module` varchar(200) DEFAULT NULL,
+  `processid` varchar(100) DEFAULT NULL,
+  `threadid` varchar(100) DEFAULT NULL,
+  `apachecode` varchar(200) DEFAULT NULL,
+  `apachemessage` varchar(500) DEFAULT NULL,
+  `systemcode` varchar(200) DEFAULT NULL,
+  `systemmessage` varchar(500) DEFAULT NULL,
+  `logmessage` varchar(500) DEFAULT NULL,
+  `reqclient` varchar(500) DEFAULT NULL,
+  `referer` varchar(750) DEFAULT NULL,
+  `importfileid` int DEFAULT NULL COMMENT 'used in import process to indicate file record extractedd from',
+  `import_status` int NOT NULL DEFAULT '0' COMMENT 'used in import process to indicate record processed',
+  `id` int NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table used for LOAD DATA command to bring text files into MySQL and start the process.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping routines for database 'apache_logs'
 --
-/*!50003 DROP FUNCTION IF EXISTS `access_hostID` */;
+/*!50003 DROP FUNCTION IF EXISTS `access_cookieID` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
@@ -1630,19 +1991,20 @@ CREATE TABLE `import_server` (
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_hostID`(tcHost varchar(100)) RETURNS int
+CREATE DEFINER=`root`@`%` FUNCTION `access_cookieID`(tcCookie varchar(400)) RETURNS int
     READS SQL DATA
 BEGIN
-    DECLARE host_ID INTEGER DEFAULT null;
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_hostID'; 
-    SELECT id INTO host_ID
-    FROM apache_logs.access_log_host
-    WHERE name = tcHost;
-    IF host_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_host (name) VALUES (tcHost);
-        SET host_ID = LAST_INSERT_ID();
+    DECLARE cookie_ID INTEGER DEFAULT null;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_cookieID'; 
+    SELECT id 
+    INTO cookie_ID
+    FROM apache_logs.access_log_cookie
+    WHERE name = tcCookie;
+    IF cookie_ID IS NULL THEN
+        INSERT INTO apache_logs.access_log_cookie (name) VALUES (tcCookie);
+        SET cookie_ID = LAST_INSERT_ID();
     END IF;
-    RETURN host_ID;
+    RETURN cookie_ID;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -1659,7 +2021,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_refererID`(tcReferer varchar(2000)) RETURNS int
+CREATE DEFINER=`root`@`%` FUNCTION `access_refererID`(tcReferer varchar(1000)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE referer_ID INTEGER DEFAULT null;
@@ -1689,7 +2051,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_remoteHostID`(tcRemoteHost varchar(50)) RETURNS int
+CREATE DEFINER=`root`@`%` FUNCTION `access_remoteHostID`(tcRemoteHost varchar(45)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE remoteHost_ID INTEGER DEFAULT null;
@@ -1719,12 +2081,13 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_remoteLogNameID`(tcRemoteLogName varchar(50)) RETURNS int
+CREATE DEFINER=`root`@`%` FUNCTION `access_remoteLogNameID`(tcRemoteLogName varchar(150)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE remoteLogName_ID INTEGER DEFAULT null;
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_remoteLogNameID'; 
-    SELECT id INTO remoteLogName_ID
+    SELECT id 
+    INTO remoteLogName_ID
     FROM apache_logs.access_log_remotelogname
     WHERE name = tcRemoteLogName;
     IF remoteLogName_ID IS NULL THEN
@@ -1748,7 +2111,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_remoteUserID`(tcRemoteUser varchar(50)) RETURNS int
+CREATE DEFINER=`root`@`%` FUNCTION `access_remoteUserID`(tcRemoteUser varchar(150)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE remoteUser_ID INTEGER DEFAULT null;
@@ -1778,7 +2141,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_reqMethodID`(tcReqMethod varchar(100)) RETURNS int
+CREATE DEFINER=`root`@`%` FUNCTION `access_reqMethodID`(tcReqMethod varchar(40)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE reqMethod_ID INTEGER DEFAULT null;
@@ -1808,12 +2171,13 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_reqProtocolID`(tcReqProtocol varchar(100)) RETURNS int
+CREATE DEFINER=`root`@`%` FUNCTION `access_reqProtocolID`(tcReqProtocol varchar(20)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE reqProtocol_ID INTEGER DEFAULT null;
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_reqProtocolID'; 
-    SELECT id INTO reqProtocol_ID
+    SELECT id 
+    INTO reqProtocol_ID
     FROM apache_logs.access_log_reqprotocol
     WHERE name = tcReqProtocol;
     IF reqProtocol_ID IS NULL THEN
@@ -1822,6 +2186,36 @@ BEGIN
         SET reqProtocol_ID = LAST_INSERT_ID();
     END IF;
     RETURN reqProtocol_ID;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP FUNCTION IF EXISTS `access_reqQueryID` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` FUNCTION `access_reqQueryID`(tcReqQuery varchar(2000)) RETURNS int
+    READS SQL DATA
+BEGIN
+    DECLARE reqQuery_ID INTEGER DEFAULT null;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_reqQueryID'; 
+    SELECT id 
+    INTO reqQuery_ID
+    FROM apache_logs.access_log_reqquery
+    WHERE name = tcReqQuery;
+    IF reqQuery_ID IS NULL THEN
+        INSERT INTO apache_logs.access_log_reqquery (name) VALUES (tcReqQuery);
+        SET reqQuery_ID = LAST_INSERT_ID();
+    END IF;
+    RETURN reqQuery_ID;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -1843,7 +2237,8 @@ CREATE DEFINER=`root`@`%` FUNCTION `access_reqStatusID`(tnReqStatus INTEGER) RET
 BEGIN
     DECLARE reqStatus_ID INTEGER DEFAULT null;
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_reqStatusID'; 
-    SELECT id INTO reqStatus_ID
+    SELECT id 
+    INTO reqStatus_ID
     FROM apache_logs.access_log_reqstatus
     WHERE name = tnReqStatus;
     IF reqStatus_ID IS NULL THEN
@@ -1867,12 +2262,13 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_reqUriID`(tcReqUri varchar(4000)) RETURNS int
+CREATE DEFINER=`root`@`%` FUNCTION `access_reqUriID`(tcReqUri varchar(2000)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE reqUri_ID INTEGER DEFAULT null;
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_reqUriID'; 
-    SELECT id INTO reqUri_ID
+    SELECT id 
+    INTO reqUri_ID
     FROM apache_logs.access_log_requri
     WHERE name = tcReqUri;
     IF reqUri_ID IS NULL THEN
@@ -1886,7 +2282,7 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP FUNCTION IF EXISTS `access_sessionID` */;
+/*!50003 DROP FUNCTION IF EXISTS `access_serverNameID` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
@@ -1896,20 +2292,50 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_sessionID`(tcSession varchar(300)) RETURNS int
+CREATE DEFINER=`root`@`%` FUNCTION `access_serverNameID`(tcServerName varchar(253)) RETURNS int
     READS SQL DATA
 BEGIN
-    DECLARE session_ID INTEGER DEFAULT null;
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_sessionID'; 
+    DECLARE serverName_ID INTEGER DEFAULT null;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_serverNameID'; 
     SELECT id 
-    INTO session_ID
-    FROM apache_logs.access_log_session
-    WHERE name = tcSession;
-    IF session_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_session (name) VALUES (tcSession);
-        SET session_ID = LAST_INSERT_ID();
+    INTO serverName_ID
+    FROM apache_logs.access_log_servername
+    WHERE name = tcServerName;
+    IF serverName_ID IS NULL THEN
+        INSERT INTO apache_logs.access_log_servername (name) VALUES (tcServerName);
+        SET serverName_ID = LAST_INSERT_ID();
     END IF;
-    RETURN session_ID;
+    RETURN serverName_ID;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP FUNCTION IF EXISTS `access_serverPortID` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` FUNCTION `access_serverPortID`(tnServerPort INTEGER) RETURNS int
+    READS SQL DATA
+BEGIN
+    DECLARE serverPort_ID INTEGER DEFAULT null;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_serverPortID'; 
+    SELECT id 
+    INTO serverPort_ID
+    FROM apache_logs.access_log_serverport
+    WHERE name = tnServerPort;
+    IF serverPort_ID IS NULL THEN
+        INSERT INTO apache_logs.access_log_serverport (name) VALUES (tnServerPort);
+        SET serverPort_ID = LAST_INSERT_ID();
+    END IF;
+    RETURN serverPort_ID;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -1926,7 +2352,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_uaBrowserFamilyID`(tcUa_browser_family varchar(400)) RETURNS int
+CREATE DEFINER=`root`@`%` FUNCTION `access_uaBrowserFamilyID`(tcUa_browser_family varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_browser_family_ID INTEGER DEFAULT null;
@@ -1956,7 +2382,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_uaBrowserID`(tcUa_browser varchar(400)) RETURNS int
+CREATE DEFINER=`root`@`%` FUNCTION `access_uaBrowserID`(tcUa_browser varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_browser_ID INTEGER DEFAULT null;
@@ -1986,7 +2412,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_uaBrowserVersionID`(tcUa_browser_version varchar(400)) RETURNS int
+CREATE DEFINER=`root`@`%` FUNCTION `access_uaBrowserVersionID`(tcUa_browser_version varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_browser_version_ID INTEGER DEFAULT null;
@@ -2016,7 +2442,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_uaDeviceBrandID`(tcUa_device_brand varchar(400)) RETURNS int
+CREATE DEFINER=`root`@`%` FUNCTION `access_uaDeviceBrandID`(tcUa_device_brand varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_device_brand_ID INTEGER DEFAULT null;
@@ -2046,7 +2472,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_uaDeviceFamilyID`(tcUa_device_family varchar(400)) RETURNS int
+CREATE DEFINER=`root`@`%` FUNCTION `access_uaDeviceFamilyID`(tcUa_device_family varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_device_family_ID INTEGER DEFAULT null;
@@ -2076,7 +2502,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_uaDeviceID`(tcUa_device varchar(400)) RETURNS int
+CREATE DEFINER=`root`@`%` FUNCTION `access_uaDeviceID`(tcUa_device varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_device_ID INTEGER DEFAULT null;
@@ -2106,7 +2532,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_uaDeviceModelID`(tcUa_device_model varchar(400)) RETURNS int
+CREATE DEFINER=`root`@`%` FUNCTION `access_uaDeviceModelID`(tcUa_device_model varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_device_model_ID INTEGER DEFAULT null;
@@ -2136,7 +2562,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_uaID`(tcUa varchar(400)) RETURNS int
+CREATE DEFINER=`root`@`%` FUNCTION `access_uaID`(tcUa varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_ID INTEGER DEFAULT null;
@@ -2166,7 +2592,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_uaOsFamilyID`(tcUa_os_family varchar(400)) RETURNS int
+CREATE DEFINER=`root`@`%` FUNCTION `access_uaOsFamilyID`(tcUa_os_family varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_os_family_ID INTEGER DEFAULT null;
@@ -2196,7 +2622,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_uaOsID`(tcUa_os varchar(400)) RETURNS int
+CREATE DEFINER=`root`@`%` FUNCTION `access_uaOsID`(tcUa_os varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_os_ID INTEGER DEFAULT null;
@@ -2226,7 +2652,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_uaOsVersionID`(tcUa_os_version varchar(400)) RETURNS int
+CREATE DEFINER=`root`@`%` FUNCTION `access_uaOsVersionID`(tcUa_os_version varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_os_version_ID INTEGER DEFAULT null;
@@ -2256,7 +2682,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_userAgentID`(tcUserAgent varchar(4000)) RETURNS int
+CREATE DEFINER=`root`@`%` FUNCTION `access_userAgentID`(tcUserAgent varchar(2000)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE userAgent_ID INTEGER DEFAULT null;
@@ -3048,9 +3474,9 @@ BEGIN
 	DECLARE processFile INTEGER DEFAULT NULL;
 	DECLARE logTime VARCHAR(50) DEFAULT NULL;
 	DECLARE logTimeConverted DATETIME DEFAULT now();
-	DECLARE remoteHost VARCHAR(50) DEFAULT NULL;
-	DECLARE remoteLogName VARCHAR(50) DEFAULT NULL;
-	DECLARE remoteUser VARCHAR(50) DEFAULT NULL;
+	DECLARE remoteHost VARCHAR(45) DEFAULT NULL;
+	DECLARE remoteLogName VARCHAR(150) DEFAULT NULL;
+	DECLARE remoteUser VARCHAR(150) DEFAULT NULL;
 	DECLARE bytesReceived INTEGER DEFAULT 0;
 	DECLARE bytesSent INTEGER DEFAULT 0;
 	DECLARE bytesTransferred INTEGER DEFAULT 0;
@@ -3059,15 +3485,18 @@ BEGIN
 	DECLARE reqDelayMilli INTEGER DEFAULT 0;
 	DECLARE reqBytes INTEGER DEFAULT 0;
 	DECLARE reqStatus INTEGER DEFAULT 0;
-	DECLARE reqProtocol VARCHAR(100) DEFAULT NULL;
-	DECLARE reqMethod VARCHAR(100) DEFAULT NULL;
+	DECLARE reqProtocol VARCHAR(30) DEFAULT NULL;
+	DECLARE reqMethod VARCHAR(50) DEFAULT NULL;
 	DECLARE reqUri VARCHAR(2000) DEFAULT NULL;
-	DECLARE referer VARCHAR(2000) DEFAULT NULL;
+	DECLARE reqQuery VARCHAR(2000) DEFAULT NULL;
+	DECLARE reqQueryConverted VARCHAR(2000) DEFAULT NULL;
+	DECLARE referer VARCHAR(1000) DEFAULT NULL;
 	DECLARE refererConverted VARCHAR(2000) DEFAULT NULL;
-	DECLARE userAgent VARCHAR(4000) DEFAULT NULL;
-	DECLARE logSession VARCHAR(300) DEFAULT NULL;
-	DECLARE logSessionConverted VARCHAR(300) DEFAULT NULL;
-	DECLARE logHost VARCHAR(100) DEFAULT NULL;
+	DECLARE userAgent VARCHAR(2000) DEFAULT NULL;
+	DECLARE logCookie VARCHAR(400) DEFAULT NULL;
+	DECLARE logCookieConverted VARCHAR(400) DEFAULT NULL;
+	DECLARE serverName VARCHAR(253) DEFAULT NULL;
+	DECLARE serverPort INTEGER DEFAULT NULL;
 	DECLARE importFile VARCHAR(300) DEFAULT NULL;
 	DECLARE importid INTEGER DEFAULT NULL;
 	DECLARE remoteHost_Id, 
@@ -3077,10 +3506,12 @@ BEGIN
 		reqProtocol_Id, 
 		reqMethod_Id, 
 		reqUri_Id, 
+		reqQuery_Id, 
 		referer_Id, 
 		userAgent_Id, 
-		logsession_Id, 
-		loghost_Id, 
+		logCookie_Id, 
+		serverName_Id, 
+		serverPort_Id, 
 		importFile_Id 
 		INTEGER DEFAULT NULL;
 	-- declare cursor for extended format
@@ -3098,17 +3529,18 @@ BEGIN
 		req_protocol, 
 		req_method, 
 		req_uri, 
+		req_query, 
 		log_referer, 
 		log_useragent,
-		log_session,
-		log_host, 
+		log_cookie,
+		server_name, 
+		server_port, 
 		importfileid,
 		id 
-	FROM apache_logs.access_log_extended
+	FROM apache_logs.load_access_extended
    WHERE import_status=0;
 	-- declare cursor for combined format
 	DECLARE importVhost CURSOR FOR SELECT 
-		server_name, 
 		remote_host, 
 		remote_logname, 
 		remote_user, 
@@ -3118,11 +3550,14 @@ BEGIN
 		req_protocol, 
 		req_method, 
 		req_uri, 
+		req_query, 
 		log_referer, 
 		log_useragent,
+		server_name, 
+		server_port, 
 		importfileid,
 		id 
-	FROM apache_logs.access_log_vhost
+	FROM apache_logs.load_access_vhost
    WHERE import_status=0;
 	-- declare cursor for combined format
 	DECLARE importCombined CURSOR FOR SELECT 
@@ -3135,11 +3570,12 @@ BEGIN
 		req_protocol, 
 		req_method, 
 		req_uri, 
+		req_query, 
 		log_referer, 
 		log_useragent,
 		importfileid,
 		id 
-	FROM apache_logs.access_log_combined
+	FROM apache_logs.load_access_combined
    WHERE import_status=0;
 	-- declare NOT FOUND handler
 	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
@@ -3175,15 +3611,16 @@ BEGIN
 			reqProtocol, 
 			reqMethod, 
 			reqUri, 
+			reqQuery, 
 			referer, 
 			userAgent,
-			logSession,
-			logHost, 
+			logCookie,
+			serverName, 
+			serverPort, 
 			importFile_Id,
             importid; 
 		ELSEIF importTable = 'vhost' THEN
 			FETCH importVhost INTO 
-			logHost, 
 			remoteHost, 
 			remoteUser, 
 			remoteLogName, 
@@ -3193,8 +3630,11 @@ BEGIN
 			reqProtocol, 
 			reqMethod, 
 			reqUri, 
+			reqQuery, 
 			referer, 
 			userAgent,
+			serverName, 
+			serverPort, 
 			importFile_Id,
             importid; 
 		ELSE
@@ -3208,6 +3648,7 @@ BEGIN
 			reqProtocol, 
 			reqMethod, 
 			reqUri, 
+			reqQuery, 
 			referer, 
 			userAgent,
 			importFile_Id,
@@ -3222,7 +3663,13 @@ BEGIN
 			LEAVE process_import;
         END IF;
 		SET recordsAdded = recordsAdded + 1;
-        -- convert import staging columns - log_time, referer and log_session
+		-- any customizing for business needs should be done here before normalization functions called.
+        -- convert import staging columns - reqQuery, referer, log_time and log_cookie in import for audit purposes
+		IF POSITION("?" IN reqQuery)>0 THEN
+			SET reqQueryConverted = SUBSTR(reqQuery,(POSITION("?" IN reqQuery)+1));
+		ELSE
+			SET reqQueryConverted = reqQuery;
+		END IF;
 		IF POSITION("?" IN referer)>0 THEN
 			SET refererConverted = SUBSTR(referer,1,(POSITION("?" IN referer)-1));
 		ELSE
@@ -3233,12 +3680,12 @@ BEGIN
 		ELSE
 			SET logTimeConverted = STR_TO_DATE(SUBSTR(logTime,1,20),'%d/%b/%Y:%H:%i:%s');
 		END IF;
-		IF logSession IS NULL THEN
-			SET logSessionConverted = NULL;
-		ELSEIF logSession != '-' THEN
-			SET logSessionConverted = SUBSTR(logSession,3,POSITION('.' IN logSession)-3);
+		IF logCookie IS NULL THEN
+			SET logCookieConverted = NULL;
+		ELSEIF logCookie != '-' THEN
+			SET logCookieConverted = SUBSTR(logCookie,3,POSITION('.' IN logCookie)-3);
 		ELSE
-			SET logSessionConverted = 'Empty Session';
+			SET logCookieConverted = 'Empty Cookie';
 		END IF;
         -- normalize import staging table 
 		IF reqProtocol IS NOT NULL THEN
@@ -3252,6 +3699,9 @@ BEGIN
         END IF;
 		IF reqUri IS NOT NULL THEN
 			SET reqUri_Id = apache_logs.access_reqUriID(reqUri);
+        END IF;
+		IF reqQueryConverted IS NOT NULL THEN
+			SET reqQuery_Id = apache_logs.access_reqQueryID(reqQueryConverted);
         END IF;
 		IF remoteHost IS NOT NULL THEN
 			SET remoteHost_Id = apache_logs.access_remoteHostID(remoteHost);
@@ -3268,11 +3718,14 @@ BEGIN
 		IF userAgent IS NOT NULL THEN
 			SET userAgent_Id = apache_logs.access_userAgentID(userAgent);
         END IF;
-		IF logHost IS NOT NULL THEN
-			SET loghost_Id = apache_logs.access_hostID(logHost);
+		IF serverName IS NOT NULL THEN
+			SET serverName_Id = apache_logs.access_serverNameID(serverName);
         END IF;
-		IF logSessionConverted IS NOT NULL THEN
-			SET logsession_Id = apache_logs.access_sessionID(logSessionConverted);
+		IF serverPort IS NOT NULL THEN
+			SET serverPort_Id = apache_logs.access_serverPortID(serverPort);
+        END IF;
+		IF logCookieConverted IS NOT NULL THEN
+			SET logCookie_Id = apache_logs.access_cookieID(logCookieConverted);
         END IF;
 		INSERT INTO apache_logs.access_log (timeStamp, 
 		    bytes_received,
@@ -3286,11 +3739,15 @@ BEGIN
 			reqprotocolid, 
 			reqmethodid, 
 			requriid, 
-			remotehostid, 
+			reqqueryid, 
+			remotehostid,
+			remotelognameid,
+			remoteuserid, 
 			refererid, 
 			useragentid,
-			sessionid,
-			hostid, 
+			cookieid,
+			servernameid, 
+			serverportid, 
 			importfileid) 
 		VALUES
 			(logTimeConverted,
@@ -3305,18 +3762,22 @@ BEGIN
 			reqProtocol_Id,
 			reqMethod_Id,
 			reqUri_Id,
+			reqQuery_Id,
 			remoteHost_Id,
+			remoteLogName_Id,
+			remoteUser_Id,
 			referer_Id,
 			userAgent_Id,
-			logsession_Id,
-			loghost_Id, 
+			logCookie_Id,
+			serverName_Id, 
+			serverPort_Id, 
 			importfile_Id);
 		IF importTable = 'extended' THEN
-			UPDATE apache_logs.access_log_extended SET import_status=1 WHERE id=importid;
+			UPDATE apache_logs.load_access_extended SET import_status=1 WHERE id=importid;
 		ELSEIF importTable = 'vhost' THEN
-			UPDATE apache_logs.access_log_vhost SET import_status=1 WHERE id=importid;
+			UPDATE apache_logs.load_access_vhost SET import_status=1 WHERE id=importid;
 		ELSE
-			UPDATE apache_logs.access_log_combined SET import_status=1 WHERE id=importid;
+			UPDATE apache_logs.load_access_combined SET import_status=1 WHERE id=importid;
 		END IF;	
 	END LOOP;
     -- update import process table
@@ -3379,7 +3840,8 @@ BEGIN
 	DECLARE log_systemMessage VARCHAR(400) DEFAULT NULL;
 	DECLARE log_message VARCHAR(500) DEFAULT NULL;
 	DECLARE log_reqClient VARCHAR(200) DEFAULT NULL;
-	DECLARE log_referer VARCHAR(500) DEFAULT NULL;
+	DECLARE log_referer VARCHAR(1000) DEFAULT NULL;
+	DECLARE refererConverted VARCHAR(1000) DEFAULT NULL;
 	DECLARE importFile VARCHAR(300) DEFAULT NULL;
 	DECLARE importid INTEGER DEFAULT NULL;
 	DECLARE logLevel_Id,
@@ -3410,7 +3872,7 @@ BEGIN
 		referer,
         importfileid,
         id
-	FROM apache_logs.error_log_default
+	FROM apache_logs.load_error_default
     WHERE import_status = 0;
 	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION 
@@ -3458,6 +3920,13 @@ BEGIN
 		logMessage_Id = null, 
 		reqClient_Id = null, 
 		referer_Id = null;
+		-- any customizing for business needs should be done here before normalization functions called.
+        -- convert staging columns - log_referer in import for audit purposes
+		IF POSITION("?" IN log_referer)>0 THEN
+			SET refererConverted = SUBSTR(log_referer,1,(POSITION("?" IN log_referer)-1));
+		ELSE
+			SET refererConverted = log_referer;
+		END IF;
         -- normalize import staging table 
 		IF log_level IS NOT NULL THEN
 			SET logLevel_Id = apache_logs.error_logLevelID(log_level);
@@ -3489,8 +3958,8 @@ BEGIN
 		IF log_reqClient IS NOT NULL THEN
 			SET reqClient_id = apache_logs.error_reqClientID(log_reqClient);
 		END IF;
-		IF log_referer IS NOT NULL THEN
-			SET referer_Id = apache_logs.error_refererID(log_referer);
+		IF refererConverted IS NOT NULL THEN
+			SET referer_Id = apache_logs.error_refererID(refererConverted);
 		END IF;
 		INSERT INTO apache_logs.error_log (timeStamp, 
 			loglevelid,
@@ -3519,7 +3988,7 @@ BEGIN
 			reqClient_Id, 
 			referer_Id,
             importFile_Id);
-		UPDATE apache_logs.error_log_default SET import_status=1 WHERE id=importid;
+		UPDATE apache_logs.load_error_default SET import_status=1 WHERE id=importid;
     END LOOP;
     -- update import process table
 	SELECT COUNT(DISTINCT(importfileid))
@@ -3762,10 +4231,10 @@ DELIMITER ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
--- Final view structure for view `access_host_list`
+-- Final view structure for view `access_cookie_list`
 --
 
-/*!50001 DROP VIEW IF EXISTS `access_host_list`*/;
+/*!50001 DROP VIEW IF EXISTS `access_cookie_list`*/;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
@@ -3774,7 +4243,7 @@ DELIMITER ;
 /*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
-/*!50001 VIEW `access_host_list` AS select `ln`.`name` AS `Access Log Host`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_host` `ln` join `access_log` `l` on((`l`.`hostid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 VIEW `access_cookie_list` AS select `ln`.`name` AS `Access Log Cookie`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_cookie` `ln` join `access_log` `l` on((`l`.`cookieid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -3906,6 +4375,24 @@ DELIMITER ;
 /*!50001 SET collation_connection      = @saved_col_connection */;
 
 --
+-- Final view structure for view `access_reqquery_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `access_reqquery_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50001 VIEW `access_reqquery_list` AS select `ln`.`name` AS `Access Log Query String`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_reqquery` `ln` join `access_log` `l` on((`l`.`reqqueryid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
 -- Final view structure for view `access_reqstatus_list`
 --
 
@@ -3942,10 +4429,10 @@ DELIMITER ;
 /*!50001 SET collation_connection      = @saved_col_connection */;
 
 --
--- Final view structure for view `access_session_list`
+-- Final view structure for view `access_servername_list`
 --
 
-/*!50001 DROP VIEW IF EXISTS `access_session_list`*/;
+/*!50001 DROP VIEW IF EXISTS `access_servername_list`*/;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
@@ -3954,7 +4441,223 @@ DELIMITER ;
 /*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
-/*!50001 VIEW `access_session_list` AS select `ln`.`name` AS `Access Log Session`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_session` `ln` join `access_log` `l` on((`l`.`sessionid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 VIEW `access_servername_list` AS select `ln`.`name` AS `Access Log Server Name`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_servername` `ln` join `access_log` `l` on((`l`.`servernameid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `access_serverport_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `access_serverport_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50001 VIEW `access_serverport_list` AS select `ln`.`name` AS `Access Log Server Port`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_serverport` `ln` join `access_log` `l` on((`l`.`serverportid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `access_ua_browser_family_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `access_ua_browser_family_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50001 VIEW `access_ua_browser_family_list` AS select `ln`.`name` AS `Browser Family`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_browser_family` `ln` join `access_log` `l` on((`l`.`uabrowserfamilyid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `access_ua_browser_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `access_ua_browser_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50001 VIEW `access_ua_browser_list` AS select `ln`.`name` AS `Browser`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_browser` `ln` join `access_log` `l` on((`l`.`uabrowserid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `access_ua_browser_version_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `access_ua_browser_version_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50001 VIEW `access_ua_browser_version_list` AS select `ln`.`name` AS `Browser Version`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_browser_version` `ln` join `access_log` `l` on((`l`.`uabrowserversionid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `access_ua_device_brand_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `access_ua_device_brand_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50001 VIEW `access_ua_device_brand_list` AS select `ln`.`name` AS `Device Brand`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_device_brand` `ln` join `access_log` `l` on((`l`.`uadevicebrandid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `access_ua_device_family_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `access_ua_device_family_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50001 VIEW `access_ua_device_family_list` AS select `ln`.`name` AS `Device Family`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_device_family` `ln` join `access_log` `l` on((`l`.`uadevicefamilyid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `access_ua_device_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `access_ua_device_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50001 VIEW `access_ua_device_list` AS select `ln`.`name` AS `Device`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_device` `ln` join `access_log` `l` on((`l`.`uadeviceid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `access_ua_device_model_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `access_ua_device_model_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50001 VIEW `access_ua_device_model_list` AS select `ln`.`name` AS `Device Model`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_device_model` `ln` join `access_log` `l` on((`l`.`uadevicemodelid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `access_ua_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `access_ua_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50001 VIEW `access_ua_list` AS select `ln`.`name` AS `Access Log User Agent`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua` `ln` join `access_log` `l` on((`l`.`uaid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `access_ua_os_family_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `access_ua_os_family_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50001 VIEW `access_ua_os_family_list` AS select `ln`.`name` AS `Operating System Family`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_os_family` `ln` join `access_log` `l` on((`l`.`uaosfamilyid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `access_ua_os_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `access_ua_os_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50001 VIEW `access_ua_os_list` AS select `ln`.`name` AS `Operating System`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_os` `ln` join `access_log` `l` on((`l`.`uaosid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `access_ua_os_version_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `access_ua_os_version_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50001 VIEW `access_ua_os_version_list` AS select `ln`.`name` AS `Operating System Version`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_os_version` `ln` join `access_log` `l` on((`l`.`uaosversionid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -4436,4 +5139,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-11-06 10:14:12
+-- Dump completed on 2024-11-18  4:48:10

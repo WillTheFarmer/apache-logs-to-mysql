@@ -1,5 +1,6 @@
 # coding: utf-8
-# version 1.0.0 - 11/04/2024 - http://farmfreshsoftware.com
+# version 1.0.0 - 10/31/2024
+# version 1.1.0 - 11/18/2024 - major changes
 #
 # Copyright 2024 Will Raymond <farmfreshsoftware@gmail.com>
 #
@@ -14,12 +15,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-:module: apacheLogs2MySQL
-:function: processLogs()
-:synopsis: processes apache access and error logs into MySQL.
-:author: farmfreshsoftware@gmail.com (Will Raymond)
-"""
+#
+# file: apacheLogs2MySQL.py 
+# module: apacheLogs2MySQL
+# function: processLogs()
+# synopsis: processes apache access and error logs into MySQL for apachelogs2MySQL application.
+# Changelog
+# [1.1.0] renamed LOAD DATA TABLES, normalized access_log_useragent TABLE into 11 TABLES, added 13 VIEWS.
+# [1.1.0] resized LOAD DATA COLUMNS, added req_query COLUMN and seperated query strings from req_uri COLUMN.
+# [1.1.0] added access_log_reqquery TABLE, renamed access_log_session TABLE to access_log_cookie.
+# [1.1.0] added UPDATE TRIM statements for apachemessage COLUMNS.
 import os
 import platform
 import socket
@@ -179,14 +184,14 @@ def processLogs():
                 errorLoadCreated = time.ctime(os.path.getctime(errorFile))
                 errorLoadModified = time.ctime(os.path.getmtime(errorFile))
                 errorLoadSize     = str(os.path.getsize(errorFile))
-                errorLoadSQL = "LOAD DATA LOCAL INFILE '" + errorLoadFile + "' INTO TABLE error_log_default FIELDS TERMINATED BY ']' ESCAPED BY '\\\\'"
+                errorLoadSQL = "LOAD DATA LOCAL INFILE '" + errorLoadFile + "' INTO TABLE load_error_default FIELDS TERMINATED BY ']' ESCAPED BY '\\\\'"
                 try:
                     errorLoadCursor.execute( errorLoadSQL )
                 except:
-                    print("ERROR - LOAD DATA LOCAL INFILE INTO TABLE error_log_default Statement execution on Server failed")
+                    print("ERROR - LOAD DATA LOCAL INFILE INTO TABLE load_error_default Statement execution on Server failed")
                     showWarnings = conn.show_warnings()
                     print(showWarnings)
-                    importClientCursor.callproc("loadError",["LOAD DATA LOCAL INFILE INTO TABLE error_log_default",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
+                    importClientCursor.callproc("loadError",["LOAD DATA LOCAL INFILE INTO TABLE load_error_default",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
                 errorInsertSQL = ("SELECT apache_logs.importFileID('" + 
                                   errorLoadFile + 
                                   "', '" + errorLoadSize + 
@@ -204,41 +209,41 @@ def processLogs():
                 errorInsertTupleID = errorInsertCursor.fetchall()
                 errorInsertFileID = errorInsertTupleID[0][0]
                 try:
-                    errorLoadCursor.execute("UPDATE error_log_default SET importfileid=" + str(errorInsertFileID) + " WHERE importfileid IS NULL")
+                    errorLoadCursor.execute("UPDATE load_error_default SET importfileid=" + str(errorInsertFileID) + " WHERE importfileid IS NULL")
                 except:
-                    print("ERROR - UPDATE error_log_default SET importfileid= Statement execution on Server failed")
+                    print("ERROR - UPDATE load_error_default SET importfileid= Statement execution on Server failed")
                     showWarnings = conn.show_warnings()
                     print(showWarnings)
-                    importClientCursor.callproc("loadError",["UPDATE error_log_default SET importfileid=",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
+                    importClientCursor.callproc("loadError",["UPDATE load_error_default SET importfileid=",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
                 conn.commit()
         if errorDataLoaded == 1:
             try:
-                errorLoadCursor.execute("UPDATE apache_logs.error_log_default SET module = SUBSTR(log_mod_level,3,(POSITION(':' IN log_mod_level)-3))")
-                errorLoadCursor.execute("UPDATE apache_logs.error_log_default SET loglevel = SUBSTR(log_mod_level,(POSITION(':' IN log_mod_level)+1))")
-                errorLoadCursor.execute("UPDATE apache_logs.error_log_default SET processid = SUBSTR(log_processid_threadid,(POSITION('pid' IN log_processid_threadid)+4),(POSITION(':' IN log_processid_threadid)-(POSITION('pid' IN log_processid_threadid)+4)))")
-                errorLoadCursor.execute("UPDATE apache_logs.error_log_default SET threadid = SUBSTR(log_processid_threadid,(POSITION('tid' IN log_processid_threadid)+4))")
-                errorLoadCursor.execute("UPDATE apache_logs.error_log_default SET apachecode = SUBSTR(log_parse1,2,(POSITION(':' IN log_parse1)-2)) WHERE LEFT(log_parse1,2)=' A'")
-                errorLoadCursor.execute("UPDATE apache_logs.error_log_default SET apachemessage = SUBSTR(log_parse1,(POSITION(':' IN log_parse1)+1)) WHERE LEFT(log_parse1,2)=' A'")
-                errorLoadCursor.execute("UPDATE apache_logs.error_log_default SET apachecode = SUBSTR(log_parse2,2,(POSITION(':' IN log_parse2)-2)) WHERE LEFT(log_parse2,2)=' A'")
-                errorLoadCursor.execute("UPDATE apache_logs.error_log_default SET apachemessage = SUBSTR(log_parse2,(POSITION(':' IN log_parse2)+1)) WHERE LEFT(log_parse2,2)=' A' and POSITION('referer:' IN log_parse2)=0")
-                errorLoadCursor.execute("UPDATE apache_logs.error_log_default SET apachemessage = SUBSTR(log_parse2,(POSITION(':' IN log_parse2)+1),POSITION(', referer:' IN log_parse2)-(POSITION(':' IN log_parse2)+1)) WHERE LEFT(log_parse2,2)=' A' and POSITION(', referer:' IN log_parse2)>0")
-                errorLoadCursor.execute("UPDATE apache_logs.error_log_default SET apachecode = SUBSTR(log_parse1,(POSITION(': AH' IN log_parse1)+2),LOCATE(':',log_parse1,(POSITION(': AH' IN log_parse1)+2))-(POSITION(': AH' IN log_parse1)+2)) WHERE POSITION(': AH' IN log_parse1)>0")
-                errorLoadCursor.execute("UPDATE apache_logs.error_log_default SET apachemessage = SUBSTR(log_parse1,LOCATE(':',log_parse1,POSITION(': AH' IN log_parse1)+2)+2) WHERE POSITION(': AH' IN log_parse1)>0")
-                errorLoadCursor.execute("UPDATE apache_logs.error_log_default SET reqclient = SUBSTR(log_parse1,(POSITION('[client' IN log_parse1)+8)) WHERE POSITION('[client' IN log_parse1)>0")
-                errorLoadCursor.execute("UPDATE apache_logs.error_log_default SET systemcode = SUBSTR(log_parse1,POSITION('(' IN log_parse1),LOCATE(':',log_parse1,POSITION('(' IN log_parse1))-POSITION('(' IN log_parse1)) WHERE POSITION('(' IN log_parse1)>0 AND LOCATE(':',log_parse1,POSITION('(' IN log_parse1))-POSITION('(' IN log_parse1)>0")
-                errorLoadCursor.execute("UPDATE apache_logs.error_log_default SET systemmessage = SUBSTR(log_parse1,POSITION(':' IN log_parse1) + 1) WHERE POSITION('(' IN log_parse1)>0 AND LOCATE(':',log_parse1,POSITION('(' IN log_parse1))-POSITION('(' IN log_parse1)>0 AND apachecode IS NULL")
-                errorLoadCursor.execute("UPDATE apache_logs.error_log_default SET log_message_nocode = log_parse1 WHERE systemcode IS NULL and apachecode IS NULL")
-                errorLoadCursor.execute("UPDATE apache_logs.error_log_default SET module = SUBSTR(log_parse1,2,(POSITION(':' IN log_parse1)-2)) WHERE systemcode IS NULL and apachecode IS NULL and LENGTH(module)=0 AND POSITION(':' IN log_parse1)>0 AND LOCATE(' ',log_parse1,2)>POSITION(':' IN log_parse1)")
-                errorLoadCursor.execute("UPDATE apache_logs.error_log_default SET logmessage = SUBSTR(log_parse1,(POSITION(':' IN log_parse1)+1)) WHERE systemcode IS NULL and apachecode IS NULL AND POSITION(':' IN log_parse1)>0 AND LOCATE(' ',log_parse1,2)>POSITION(':' IN log_parse1)")
-                errorLoadCursor.execute("UPDATE apache_logs.error_log_default SET logmessage = log_message_nocode WHERE logmessage IS NULL and log_message_nocode IS NOT NULL")
-                errorLoadCursor.execute("UPDATE apache_logs.error_log_default SET referer = SUBSTR(log_parse2,(POSITION('referer:' IN log_parse2)+8)) WHERE POSITION('referer:' IN log_parse2)>0")
-                errorLoadCursor.execute("UPDATE apache_logs.error_log_default SET logtime = STR_TO_DATE(SUBSTR(log_time,2,31),'%a %b %d %H:%i:%s.%f %Y')")
-                errorLoadCursor.execute("UPDATE apache_logs.error_log_default SET module=TRIM(module), loglevel=TRIM(loglevel), processid=TRIM(processid), threadid=TRIM(threadid), apachecode=TRIM(apachecode), systemcode=TRIM(systemcode), systemmessage = TRIM(systemmessage), logmessage=TRIM(logmessage), reqclient=TRIM(reqclient), referer=TRIM(referer)")
+                errorLoadCursor.execute("UPDATE apache_logs.load_error_default SET module = SUBSTR(log_mod_level,3,(POSITION(':' IN log_mod_level)-3))")
+                errorLoadCursor.execute("UPDATE apache_logs.load_error_default SET loglevel = SUBSTR(log_mod_level,(POSITION(':' IN log_mod_level)+1))")
+                errorLoadCursor.execute("UPDATE apache_logs.load_error_default SET processid = SUBSTR(log_processid_threadid,(POSITION('pid' IN log_processid_threadid)+4),(POSITION(':' IN log_processid_threadid)-(POSITION('pid' IN log_processid_threadid)+4)))")
+                errorLoadCursor.execute("UPDATE apache_logs.load_error_default SET threadid = SUBSTR(log_processid_threadid,(POSITION('tid' IN log_processid_threadid)+4))")
+                errorLoadCursor.execute("UPDATE apache_logs.load_error_default SET apachecode = SUBSTR(log_parse1,2,(POSITION(':' IN log_parse1)-2)) WHERE LEFT(log_parse1,2)=' A'")
+                errorLoadCursor.execute("UPDATE apache_logs.load_error_default SET apachemessage = SUBSTR(log_parse1,(POSITION(':' IN log_parse1)+1)) WHERE LEFT(log_parse1,2)=' A'")
+                errorLoadCursor.execute("UPDATE apache_logs.load_error_default SET apachecode = SUBSTR(log_parse2,2,(POSITION(':' IN log_parse2)-2)) WHERE LEFT(log_parse2,2)=' A'")
+                errorLoadCursor.execute("UPDATE apache_logs.load_error_default SET apachemessage = SUBSTR(log_parse2,(POSITION(':' IN log_parse2)+1)) WHERE LEFT(log_parse2,2)=' A' and POSITION('referer:' IN log_parse2)=0")
+                errorLoadCursor.execute("UPDATE apache_logs.load_error_default SET apachemessage = SUBSTR(log_parse2,(POSITION(':' IN log_parse2)+1),POSITION(', referer:' IN log_parse2)-(POSITION(':' IN log_parse2)+1)) WHERE LEFT(log_parse2,2)=' A' and POSITION(', referer:' IN log_parse2)>0")
+                errorLoadCursor.execute("UPDATE apache_logs.load_error_default SET apachecode = SUBSTR(log_parse1,(POSITION(': AH' IN log_parse1)+2),LOCATE(':',log_parse1,(POSITION(': AH' IN log_parse1)+2))-(POSITION(': AH' IN log_parse1)+2)) WHERE POSITION(': AH' IN log_parse1)>0")
+                errorLoadCursor.execute("UPDATE apache_logs.load_error_default SET apachemessage = SUBSTR(log_parse1,LOCATE(':',log_parse1,POSITION(': AH' IN log_parse1)+2)+2) WHERE POSITION(': AH' IN log_parse1)>0")
+                errorLoadCursor.execute("UPDATE apache_logs.load_error_default SET reqclient = SUBSTR(log_parse1,(POSITION('[client' IN log_parse1)+8)) WHERE POSITION('[client' IN log_parse1)>0")
+                errorLoadCursor.execute("UPDATE apache_logs.load_error_default SET systemcode = SUBSTR(log_parse1,POSITION('(' IN log_parse1),LOCATE(':',log_parse1,POSITION('(' IN log_parse1))-POSITION('(' IN log_parse1)) WHERE POSITION('(' IN log_parse1)>0 AND LOCATE(':',log_parse1,POSITION('(' IN log_parse1))-POSITION('(' IN log_parse1)>0")
+                errorLoadCursor.execute("UPDATE apache_logs.load_error_default SET systemmessage = SUBSTR(log_parse1,POSITION(':' IN log_parse1) + 1) WHERE POSITION('(' IN log_parse1)>0 AND LOCATE(':',log_parse1,POSITION('(' IN log_parse1))-POSITION('(' IN log_parse1)>0 AND apachecode IS NULL")
+                errorLoadCursor.execute("UPDATE apache_logs.load_error_default SET log_message_nocode = log_parse1 WHERE systemcode IS NULL and apachecode IS NULL")
+                errorLoadCursor.execute("UPDATE apache_logs.load_error_default SET module = SUBSTR(log_parse1,2,(POSITION(':' IN log_parse1)-2)) WHERE systemcode IS NULL and apachecode IS NULL and LENGTH(module)=0 AND POSITION(':' IN log_parse1)>0 AND LOCATE(' ',log_parse1,2)>POSITION(':' IN log_parse1)")
+                errorLoadCursor.execute("UPDATE apache_logs.load_error_default SET logmessage = SUBSTR(log_parse1,(POSITION(':' IN log_parse1)+1)) WHERE systemcode IS NULL and apachecode IS NULL AND POSITION(':' IN log_parse1)>0 AND LOCATE(' ',log_parse1,2)>POSITION(':' IN log_parse1)")
+                errorLoadCursor.execute("UPDATE apache_logs.load_error_default SET logmessage = log_message_nocode WHERE logmessage IS NULL and log_message_nocode IS NOT NULL")
+                errorLoadCursor.execute("UPDATE apache_logs.load_error_default SET referer = SUBSTR(log_parse2,(POSITION('referer:' IN log_parse2)+8)) WHERE POSITION('referer:' IN log_parse2)>0")
+                errorLoadCursor.execute("UPDATE apache_logs.load_error_default SET logtime = STR_TO_DATE(SUBSTR(log_time,2,31),'%a %b %d %H:%i:%s.%f %Y')")
+                errorLoadCursor.execute("UPDATE apache_logs.load_error_default SET module=TRIM(module), loglevel=TRIM(loglevel), processid=TRIM(processid), threadid=TRIM(threadid), apachecode=TRIM(apachecode), apachemessage=TRIM(apachemessage), systemcode=TRIM(systemcode), systemmessage = TRIM(systemmessage), logmessage=TRIM(logmessage), reqclient=TRIM(reqclient), referer=TRIM(referer)")
             except:
-                print("ERROR - UPDATE apache_logs.error_log_default SET Statements execution on Server failed")
+                print("ERROR - UPDATE apache_logs.load_error_default SET Statements execution on Server failed")
                 showWarnings = conn.show_warnings()
                 print(showWarnings)
-                importClientCursor.callproc("loadError",["UPDATE apache_logs.error_log_default SET Statements",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
+                importClientCursor.callproc("loadError",["UPDATE apache_logs.load_error_default SET Statements",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
             conn.commit()
             # Processing loaded data
             if errorlog_process == 1:
@@ -288,14 +293,14 @@ def processLogs():
                 combinedLoadCreated = time.ctime(os.path.getctime(combinedFile))
                 combinedLoadModified = time.ctime(os.path.getmtime(combinedFile))
                 combinedLoadSize     = str(os.path.getsize(combinedFile))
-                combinedLoadSQL = "LOAD DATA LOCAL INFILE '" + combinedLoadFile + "' INTO TABLE access_log_combined FIELDS TERMINATED BY ' ' OPTIONALLY ENCLOSED BY '\"' ESCAPED BY '\\\\'"
+                combinedLoadSQL = "LOAD DATA LOCAL INFILE '" + combinedLoadFile + "' INTO TABLE load_access_combined FIELDS TERMINATED BY ' ' OPTIONALLY ENCLOSED BY '\"' ESCAPED BY '\\\\'"
                 try:
                     combinedLoadCursor.execute( combinedLoadSQL )
                 except:
-                    print("ERROR - LOAD DATA LOCAL INFILE INTO TABLE access_log_combined Statement execution on Server failed")
+                    print("ERROR - LOAD DATA LOCAL INFILE INTO TABLE load_access_combined Statement execution on Server failed")
                     showWarnings = conn.show_warnings()
                     print(showWarnings)
-                    importClientCursor.callproc("loadError",["LOAD DATA LOCAL INFILE INTO TABLE access_log_combined",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
+                    importClientCursor.callproc("loadError",["LOAD DATA LOCAL INFILE INTO TABLE load_access_combined",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
                 combinedInsertSQL = ("SELECT apache_logs.importFileID('" + 
                                   combinedLoadFile + 
                                   "', '" + combinedLoadSize + 
@@ -313,26 +318,29 @@ def processLogs():
                 combinedInsertTupleID = combinedInsertCursor.fetchall()
                 combinedInsertFileID = combinedInsertTupleID[0][0]
                 try:
-                    combinedLoadCursor.execute("UPDATE access_log_combined SET importfileid=" + str(combinedInsertFileID) + " WHERE importfileid IS NULL")
+                    combinedLoadCursor.execute("UPDATE load_access_combined SET importfileid=" + str(combinedInsertFileID) + " WHERE importfileid IS NULL")
                 except:
-                    print("ERROR - UPDATE access_log_combined SET importfileid= Statement execution on Server failed")
+                    print("ERROR - UPDATE load_access_combined SET importfileid= Statement execution on Server failed")
                     showWarnings = conn.show_warnings()
                     print(showWarnings)
-                    importClientCursor.callproc("loadError",["UPDATE access_log_combined SET importfileid=",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
+                    importClientCursor.callproc("loadError",["UPDATE load_access_combined SET importfileid=",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
                 conn.commit()
         if combinedDataLoaded == 1:
             try:
-                combinedLoadCursor.execute("UPDATE apache_logs.access_log_combined SET req_method = SUBSTR(first_line_request,1,(POSITION(' ' IN first_line_request)-1)) WHERE LEFT(first_line_request,1) RLIKE '^[A-Z]'")
-                combinedLoadCursor.execute("UPDATE apache_logs.access_log_combined SET req_uri = SUBSTR(first_line_request,(POSITION(' ' IN first_line_request)+1),LOCATE(' ',first_line_request,(POSITION(' ' IN first_line_request)+1))-(POSITION(' ' IN first_line_request)+1)) WHERE LEFT(first_line_request,1) RLIKE '^[A-Z]'")
-                combinedLoadCursor.execute("UPDATE apache_logs.access_log_combined SET req_protocol = SUBSTR(first_line_request,LOCATE(' ',first_line_request,(POSITION(' ' IN first_line_request)+1))) WHERE LEFT(first_line_request,1) RLIKE '^[A-Z]'")
-                combinedLoadCursor.execute("UPDATE apache_logs.access_log_combined SET req_uri = SUBSTR(req_uri,1,(POSITION('?' IN req_uri)-1)) WHERE POSITION('?' IN req_uri)>0")
-                combinedLoadCursor.execute("UPDATE apache_logs.access_log_combined SET req_protocol = 'Invalid Request', req_method = 'Invalid Request', req_uri = 'Invalid Request' WHERE LEFT(first_line_request,1) NOT RLIKE '^[A-Z]|-'")
-                combinedLoadCursor.execute("UPDATE apache_logs.access_log_combined SET req_protocol = 'Empty Request', req_method = 'Empty Request', req_uri = 'Empty Request' WHERE LEFT(first_line_request,1) RLIKE '^-'")
+                combinedLoadCursor.execute("UPDATE apache_logs.load_access_combined SET req_method = SUBSTR(first_line_request,1,(POSITION(' ' IN first_line_request)-1)) WHERE LEFT(first_line_request,1) RLIKE '^[A-Z]'")
+                combinedLoadCursor.execute("UPDATE apache_logs.load_access_combined SET req_uri = SUBSTR(first_line_request,(POSITION(' ' IN first_line_request)+1),LOCATE(' ',first_line_request,(POSITION(' ' IN first_line_request)+1))-(POSITION(' ' IN first_line_request)+1)) WHERE LEFT(first_line_request,1) RLIKE '^[A-Z]'")
+                combinedLoadCursor.execute("UPDATE apache_logs.load_access_combined SET req_protocol = SUBSTR(first_line_request,LOCATE(' ',first_line_request,(POSITION(' ' IN first_line_request)+1))) WHERE LEFT(first_line_request,1) RLIKE '^[A-Z]'")
+                combinedLoadCursor.execute("UPDATE apache_logs.load_access_combined SET req_query = SUBSTR(req_uri,POSITION('?' IN req_uri)) WHERE POSITION('?' IN req_uri)>0")
+                combinedLoadCursor.execute("UPDATE apache_logs.load_access_combined SET req_uri = SUBSTR(req_uri,1,(POSITION('?' IN req_uri)-1)) WHERE POSITION('?' IN req_uri)>0")
+                combinedLoadCursor.execute("UPDATE apache_logs.load_access_combined SET req_protocol = 'Invalid Request', req_method = 'Invalid Request', req_uri = 'Invalid Request' WHERE LEFT(first_line_request,1) NOT RLIKE '^[A-Z]|-'")
+                combinedLoadCursor.execute("UPDATE apache_logs.load_access_combined SET req_protocol = 'Empty Request', req_method = 'Empty Request', req_uri = 'Empty Request' WHERE LEFT(first_line_request,1) RLIKE '^-'")
+                combinedLoadCursor.execute("UPDATE apache_logs.load_access_combined SET req_protocol = TRIM(req_protocol)")
+                combinedLoadCursor.execute("UPDATE apache_logs.load_access_combined SET log_time = CONCAT(log_time_a,' ',log_time_b)")
             except:
-                print("ERROR - UPDATE apache_logs.access_log_combined SET Statements execution on Server failed")
+                print("ERROR - UPDATE apache_logs.load_access_combined SET Statements execution on Server failed")
                 showWarnings = conn.show_warnings()
                 print(showWarnings)
-                importClientCursor.callproc("loadError",["UPDATE apache_logs.access_log_combined SET",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
+                importClientCursor.callproc("loadError",["UPDATE apache_logs.load_access_combined SET",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
             conn.commit()
             # Processing loaded data
             if combined_process == 1:
@@ -382,14 +390,14 @@ def processLogs():
                 vhostLoadCreated = time.ctime(os.path.getctime(vhostFile))
                 vhostLoadModified = time.ctime(os.path.getmtime(vhostFile))
                 vhostLoadSize     = str(os.path.getsize(vhostFile))
-                vhostLoadSQL = "LOAD DATA LOCAL INFILE '" + vhostLoadFile + "' INTO TABLE access_log_vhost FIELDS TERMINATED BY ' ' OPTIONALLY ENCLOSED BY '\"' ESCAPED BY '\\\\'"
+                vhostLoadSQL = "LOAD DATA LOCAL INFILE '" + vhostLoadFile + "' INTO TABLE load_access_vhost FIELDS TERMINATED BY ' ' OPTIONALLY ENCLOSED BY '\"' ESCAPED BY '\\\\'"
                 try:
                     vhostLoadCursor.execute( vhostLoadSQL )
                 except:
-                    print("ERROR - LOAD DATA LOCAL INFILE INTO TABLE access_log_vhost Statement execution on Server failed")
+                    print("ERROR - LOAD DATA LOCAL INFILE INTO TABLE load_access_vhost Statement execution on Server failed")
                     showWarnings = conn.show_warnings()
                     print(showWarnings)
-                    importClientCursor.callproc("loadError",["LOAD DATA LOCAL INFILE INTO TABLE access_log_vhost",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
+                    importClientCursor.callproc("loadError",["LOAD DATA LOCAL INFILE INTO TABLE load_access_vhost",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
                 vhostInsertSQL = ("SELECT apache_logs.importFileID('" + 
                                   vhostLoadFile + 
                                   "', '" + vhostLoadSize + 
@@ -407,27 +415,31 @@ def processLogs():
                 vhostInsertTupleID = vhostInsertCursor.fetchall()
                 vhostInsertFileID = vhostInsertTupleID[0][0]
                 try:
-                    vhostLoadCursor.execute("UPDATE access_log_vhost SET importfileid=" + str(vhostInsertFileID) + " WHERE importfileid IS NULL")
+                    vhostLoadCursor.execute("UPDATE load_access_vhost SET importfileid=" + str(vhostInsertFileID) + " WHERE importfileid IS NULL")
                 except:
-                    print("ERROR - UPDATE access_log_vhost SET importfileid= Statement execution on Server failed")
+                    print("ERROR - UPDATE load_access_vhost SET importfileid= Statement execution on Server failed")
                     showWarnings = conn.show_warnings()
                     print(showWarnings)
-                    importClientCursor.callproc("loadError",["UPDATE access_log_vhost SET importfileid=",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
+                    importClientCursor.callproc("loadError",["UPDATE load_access_vhost SET importfileid=",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
                 conn.commit()
         if vhostDataLoaded == 1:
             try:
-                vhostLoadCursor.execute("UPDATE apache_logs.access_log_vhost SET server_name = SUBSTR(server_name,1,(POSITION(':' IN server_name)-1)) WHERE POSITION(':' IN server_name)>0")
-                vhostLoadCursor.execute("UPDATE apache_logs.access_log_vhost SET req_method = SUBSTR(first_line_request,1,(POSITION(' ' IN first_line_request)-1)) WHERE LEFT(first_line_request,1) RLIKE '^[A-Z]'")
-                vhostLoadCursor.execute("UPDATE apache_logs.access_log_vhost SET req_uri = SUBSTR(first_line_request,(POSITION(' ' IN first_line_request)+1),LOCATE(' ',first_line_request,(POSITION(' ' IN first_line_request)+1))-(POSITION(' ' IN first_line_request)+1)) WHERE LEFT(first_line_request,1) RLIKE '^[A-Z]'")
-                vhostLoadCursor.execute("UPDATE apache_logs.access_log_vhost SET req_protocol = SUBSTR(first_line_request,LOCATE(' ',first_line_request,(POSITION(' ' IN first_line_request)+1))) WHERE LEFT(first_line_request,1) RLIKE '^[A-Z]'")
-                vhostLoadCursor.execute("UPDATE apache_logs.access_log_vhost SET req_uri = SUBSTR(req_uri,1,(POSITION('?' IN req_uri)-1)) WHERE POSITION('?' IN req_uri)>0")
-                vhostLoadCursor.execute("UPDATE apache_logs.access_log_vhost SET req_protocol = 'Invalid Request', req_method = 'Invalid Request', req_uri = 'Invalid Request' WHERE LEFT(first_line_request,1) NOT RLIKE '^[A-Z]|-'")
-                vhostLoadCursor.execute("UPDATE apache_logs.access_log_vhost SET req_protocol = 'Empty Request', req_method = 'Empty Request', req_uri = 'Empty Request' WHERE LEFT(first_line_request,1) RLIKE '^-'")
+                vhostLoadCursor.execute("UPDATE apache_logs.load_access_vhost SET server_name = SUBSTR(log_server,1,(POSITION(':' IN log_server)-1)) WHERE POSITION(':' IN log_server)>0")
+                vhostLoadCursor.execute("UPDATE apache_logs.load_access_vhost SET server_port = SUBSTR(log_server,(POSITION(':' IN log_server)+1)) WHERE POSITION(':' IN log_server)>0")
+                vhostLoadCursor.execute("UPDATE apache_logs.load_access_vhost SET req_method = SUBSTR(first_line_request,1,(POSITION(' ' IN first_line_request)-1)) WHERE LEFT(first_line_request,1) RLIKE '^[A-Z]'")
+                vhostLoadCursor.execute("UPDATE apache_logs.load_access_vhost SET req_uri = SUBSTR(first_line_request,(POSITION(' ' IN first_line_request)+1),LOCATE(' ',first_line_request,(POSITION(' ' IN first_line_request)+1))-(POSITION(' ' IN first_line_request)+1)) WHERE LEFT(first_line_request,1) RLIKE '^[A-Z]'")
+                vhostLoadCursor.execute("UPDATE apache_logs.load_access_vhost SET req_protocol = SUBSTR(first_line_request,LOCATE(' ',first_line_request,(POSITION(' ' IN first_line_request)+1))) WHERE LEFT(first_line_request,1) RLIKE '^[A-Z]'")
+                vhostLoadCursor.execute("UPDATE apache_logs.load_access_vhost SET req_query = SUBSTR(req_uri,POSITION('?' IN req_uri)) WHERE POSITION('?' IN req_uri)>0")
+                vhostLoadCursor.execute("UPDATE apache_logs.load_access_vhost SET req_uri = SUBSTR(req_uri,1,(POSITION('?' IN req_uri)-1)) WHERE POSITION('?' IN req_uri)>0")
+                vhostLoadCursor.execute("UPDATE apache_logs.load_access_vhost SET req_protocol = 'Invalid Request', req_method = 'Invalid Request', req_uri = 'Invalid Request' WHERE LEFT(first_line_request,1) NOT RLIKE '^[A-Z]|-'")
+                vhostLoadCursor.execute("UPDATE apache_logs.load_access_vhost SET req_protocol = 'Empty Request', req_method = 'Empty Request', req_uri = 'Empty Request' WHERE LEFT(first_line_request,1) RLIKE '^-'")
+                vhostLoadCursor.execute("UPDATE apache_logs.load_access_vhost SET req_protocol = TRIM(req_protocol)")
+                vhostLoadCursor.execute("UPDATE apache_logs.load_access_vhost SET log_time = CONCAT(log_time_a,' ',log_time_b)")
             except:
-                print("ERROR - UPDATE apache_logs.access_log_vhost SET Statements execution on Server failed")
+                print("ERROR - UPDATE apache_logs.load_access_vhost SET Statements execution on Server failed")
                 showWarnings = conn.show_warnings()
                 print(showWarnings)
-                importClientCursor.callproc("loadError",["UPDATE apache_logs.access_log_vhost SET Statements",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
+                importClientCursor.callproc("loadError",["UPDATE apache_logs.load_access_vhost SET Statements",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
             conn.commit()
             # Processing loaded data
             if vhost_process == 1:
@@ -477,14 +489,14 @@ def processLogs():
                 extendedLoadCreated = time.ctime(os.path.getctime(extendedFile))
                 extendedLoadModified = time.ctime(os.path.getmtime(extendedFile))
                 extendedLoadSize     = str(os.path.getsize(extendedFile))
-                extendedLoadSQL = "LOAD DATA LOCAL INFILE '" + extendedLoadFile + "' INTO TABLE access_log_extended FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' ESCAPED BY '\\\\'"
+                extendedLoadSQL = "LOAD DATA LOCAL INFILE '" + extendedLoadFile + "' INTO TABLE load_access_extended FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' ESCAPED BY '\\\\'"
                 try:
                     extendedLoadCursor.execute( extendedLoadSQL )
                 except:
-                    print("ERROR - LOAD DATA LOCAL INFILE INTO TABLE access_log_extended Statement execution on Server failed")
+                    print("ERROR - LOAD DATA LOCAL INFILE INTO TABLE load_access_extended Statement execution on Server failed")
                     showWarnings = conn.show_warnings()
                     print(showWarnings)
-                    importClientCursor.callproc("loadError",["LOAD DATA LOCAL INFILE INTO TABLE access_log_extended",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
+                    importClientCursor.callproc("loadError",["LOAD DATA LOCAL INFILE INTO TABLE load_access_extended",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
                 extendedInsertSQL = ("SELECT apache_logs.importFileID('" + 
                                   extendedLoadFile + 
                                   "', '" + extendedLoadSize + 
@@ -502,12 +514,12 @@ def processLogs():
                 extendedInsertTupleID = extendedInsertCursor.fetchall()
                 extendedInsertFileID = extendedInsertTupleID[0][0]
                 try:
-                    extendedLoadCursor.execute("UPDATE access_log_extended SET importfileid=" + str(extendedInsertFileID) + " WHERE importfileid IS NULL")
+                    extendedLoadCursor.execute("UPDATE load_access_extended SET importfileid=" + str(extendedInsertFileID) + " WHERE importfileid IS NULL")
                 except:
-                    print("ERROR - UPDATE access_log_extended SET importfileid= Statement execution on Server failed")
+                    print("ERROR - UPDATE load_access_extended SET importfileid= Statement execution on Server failed")
                     showWarnings = conn.show_warnings()
                     print(showWarnings)
-                    importClientCursor.callproc("loadError",["UPDATE access_log_extended SET importfileid=",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
+                    importClientCursor.callproc("loadError",["UPDATE load_access_extended SET importfileid=",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
             conn.commit()
         # Commit and close
         if extendedDataLoaded == 1:

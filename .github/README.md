@@ -1,12 +1,12 @@
 # Apache Log Parser and Data Normalization Application
-ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema designed to automate importing Apache Access & Error Log files into a normalized database schema for reporting & data analysis. 
+ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema designed to automate importing Apache Access & Error Log files into a normalized database schema for reporting & data analysis.
 
 Application runs on Windows, Linux and MacOS & tested with MySQL versions 8.0.39, 8.4.3, 9.0.0 & 9.1.0.
 
-For hassle-free installation follow `INSTALL.md` step by step. Install information is also in `README.md` for reference but `INSTALL.md` a concise list of installation steps. 
+For easy installation follow `INSTALL.md` step by step. Install information is also in `README.md` for reference but `INSTALL.md` a concise list of installation steps. 
 
-## MySQL view logs totalled by Browsers
-MySQL View - apache_logs.access_log_browser_list - data from LogFormat: extended
+## MySQL Access Log View by Browser - 1 of 50 schema views
+MySQL View - apache_logs.access_log_browser_list - data from LogFormat: combined & extended
 ![view-access_useragent_browser_list](https://github.com/user-attachments/assets/1550daf7-e591-47c4-a70a-cb4fc5fdefd9)
 ## Application Description
 ApacheLogs2MySQL processes the 3 standard Apache Access Logformats - vhost_combined, combined and common
@@ -39,21 +39,60 @@ MySQL server must be configured in `my.ini`, `mysqld.cnf` or `my.cnf` depending 
 local-infile=1
 ```
 ## Supported Log Formats
-Apache uses the same Standard Access log formats on all 3 platforms.
-```
-LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" vhost_combined
-```
-```
-LogFormat "%h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" combined
-```
+Apache uses same 3 Standard Access log formats (common, combined, vhost_combined) on all 3 platforms.
 ```
 LogFormat "%h %l %u %t \"%r\" %>s %O" common
 ```
-Application is designed to use this extended format in Apache configuration to get more information from your servers.
+|Format String|Description|
+|-------------|-----------|
+|%h|Remote hostname. Will log IP address if HostnameLookups is set to Off, which is default. If it logs hostname for only a few hosts, you probably have access control directives mentioning them by name.|
+|%l|Remote logname. Returns dash unless "mod_ident" is present and IdentityCheck is set On. This can cause serious latency problems accessing server since every request requires a lookup be performed.| 
+|%u|Remote user if the request was authenticated. May be bogus if return status (%s) is 401 (unauthorized).|
+|%t|Time the request was received, in the format [18/Sep/2011:19:18:28 -0400]. The last number indicates the timezone offset from GMT|
+|%r|First line of request. Contains 4 format strings (%m - The request method, %U - The URL path requested not including any query string, %q - The query string, %H - The request protocol)|
+|%s|Status. For requests that have been internally redirected, this is the status of the original request. Use %>s for the final status.|
+|%O|Bytes sent, including headers. May be zero in rare cases such as when a request is aborted before a response is sent. You need to enable mod_logio to use this.|
 ```
-LogFormat "\"%h\",%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\",\"%{Referer}i\",\"%{User-Agent}i\",\"%{farmwork.app}C\",%v" extended
+LogFormat "%h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" combined
 ```
-The application also processes Error Logs with default format for threaded MPMs (Multi-Processing Modules). If you're running Apache 2.4 on any platform and ErrorLogFormat is not defined in config files this is the Error Log format.
+|Format String|Description - additional format strings|
+|-------------|-----------|
+|"%{Referer}i|The "Referer" (sic) HTTP request header. This gives the site that the client reports having been referred from.|
+|%{User-Agent}i|The User-Agent HTTP request header. This is the identifying information that the client browser reports about itself.|
+```
+LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" vhost_combined
+```
+|Format String|Description - additional format strings|
+|-------------|-----------|
+|%v|The canonical ServerName of the server serving the request.|
+|%p|The canonical port of the server serving the request.|
+
+Application is designed to use this extended LogFormat of 6 additions and 2 substractions (%l and %u) from vhost_combined.
+|Format String|Description|
+|-------------|-----------|
+|%v|The canonical ServerName of the server serving the request.|
+|%p|The canonical port of the server serving the request.|
+|%h|Remote hostname. Will log the IP address if HostnameLookups is set to Off, which is the default.|
+|%t|Time the request was received, in the format [18/Sep/2011:19:18:28 -0400]. The last number indicates the timezone offset from GMT|
+|%I|ADDED - Bytes received, including request and headers. Enable "mod_logio" to use this.|
+|%O|Bytes sent, including headers. The %O format provided by mod_logio will log the actual number of bytes sent over the network. Enable "mod_logio" to use this.|
+|%S|ADDED - Bytes transferred (received and sent), including request and headers, cannot be zero. This is the combination of %I and %O. Enable "mod_logio" to use this.|
+|%B|ADDED - Size of response in bytes, excluding HTTP headers. Does not represent number of bytes sent to client, but size in bytes of HTTP response (will differ, if connection is aborted, or if SSL is used).|
+|%{ms}T|ADDED - The time taken to serve the request, in milliseconds. Combining %T with a unit is available in 2.4.13 and later.|
+|%D|ADDED - The time taken to serve the request, in microseconds.|
+|%^FB|ADDED - Delay in microseconds between when the request arrived and the first byte of the response headers are written. Only available if LogIOTrackTTFB is set to ON. Available in Apache 2.4.13 and later.|
+|%s|Status. For requests that have been internally redirected, this is the status of the original request.|
+|%H|The request protocol. Included in %r - First line of request.|
+|%m|The request method. Included in %r - First line of request.|
+|%U|The URL path requested, not including any query string. Included in %r - First line of request.|
+|%q|The query string (prepended with a ? if a query string exists, otherwise an empty string).  Included in %r - First line of request.|
+|%{Referer}i|The "Referer" (sic) HTTP request header. This gives the site that the client reports having been referred from. (This should be the page that links to or includes /apache_pb.gif).|
+|%{User-Agent}i|The User-Agent HTTP request header. This is the identifying information that the client browser reports about itself.|
+|%{VARNAME}C|ADDED - The contents of cookie VARNAME in request sent to server. Only version 0 cookies are fully supported. ie - session ID to relate with login tables on server.|
+```
+LogFormat "%v,%p,%h,%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\",\"%q\",\"%{Referer}i\",\"%{User-Agent}i\",\"%{farmwork.app}C\"" extended
+```
+The application processes Error Logs with default format for threaded MPMs (Multi-Processing Modules). If you're running Apache 2.4 on any platform and ErrorLogFormat is not defined in config files this is the Error Log format.
 ```
 ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i"
 ```
@@ -155,11 +194,11 @@ pm2 start watch4logs.py
 Database normalization is the process of organizing data in a relational database to improve data integrity and reduce redundancy. Normalization ensures that data is organized in a way that makes sense for the data model and attributes, and that the database functions efficiently.
 
 View Data images are from 2 views in the apache_logs schema. Database normalization at work. There are 35 more schema views.
-## MySQL view logs totalled by URIs
-MySQL View - apache_logs.access_log_requri_list - data from LogFormat: extended
+## MySQL Access Log View by URI
+MySQL View - apache_logs.access_log_requri_list - data from LogFormat: combined & extended
 ![view-access_requri_list](https://github.com/user-attachments/assets/7cf9ff89-a1d7-4e93-ae93-deeca87175f9)
-## Error Log Views
-MySQL Error Views - most of the verbiage above is about Access Logs. The application also does the same normalization with error logs. These are many of the views in apache_logs Schema. The error log attribute is the name of the first column. Each attribute has associated table in apache_logs Schema.
+## MySQL Error Log Views
+MySQL Error Log Views - The application imports and normalizes error log data as well. Some of the schema views. Error log attribute is name of first column. Each attribute has associated table in apache_logs Schema.
 ![Screenshot 2024-10-26 164911](https://github.com/user-attachments/assets/11094e41-9897-44ab-8c23-e8b75cb5916f)
 ![Screenshot 2024-10-26 164842](https://github.com/user-attachments/assets/c1fcfb1a-2c45-4525-80ce-11702b0c609a)
 ![Screenshot 2024-10-26 164449](https://github.com/user-attachments/assets/9bcf7ffe-c72f-43cb-8011-2cdf2978934a)
@@ -170,7 +209,7 @@ MySQL Error Views - most of the verbiage above is about Access Logs. The applica
 ![Screenshot 2024-10-26 164805](https://github.com/user-attachments/assets/d8fae147-69f2-4995-b800-f8c8bf14308e)
 ![Screenshot 2024-10-26 164828](https://github.com/user-attachments/assets/485d24ea-2c34-4c01-8452-bd43e0993aab)
 
-## Schema Objects - Tables, Views, Store Procedures and Stored Functions
-Images of the apache_logs schema objects. Access and Error log attributes have been broken into separate entity tables. Each table populated with unique values of the entity. Entity Relationship Diagram will be posted soon.
+## MySQL Schema Objects - Tables, Stored Procedures, Functions and Views
+Images of the apache_logs schema objects. Access and Error log attributes are normalized into separate entity tables. Each table is populated with unique values of the attribute. Entity Relationship Diagram will be posted soon.
 
-![alt text](<Screenshot 2024-11-04 142923.png>) ![alt text](<Screenshot 2024-11-04 142851.png>) ![alt text](<Screenshot 2024-11-04 142957.png>)
+![apache_logs.tables](<Screenshot 2024-11-18 025434.png>) ![apache_logs.stored_programs](<Screenshot 2024-11-18 025629.png>) ![apache_logs.views](<Screenshot 2024-11-18 025758.png>)
