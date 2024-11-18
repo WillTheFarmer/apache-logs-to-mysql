@@ -3,14 +3,16 @@ ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema designed to a
 
 Application runs on Windows, Linux and MacOS & tested with MySQL versions 8.0.39, 8.4.3, 9.0.0 & 9.1.0.
 
-For easy installation follow `INSTALL.md` step by step. Install information is also in `README.md` for reference but `INSTALL.md` a concise list of installation steps. 
+Imports Access Logs in Logformats - common, combined and vhost_combined. An extended LogFormat is included below!
+
+Imports Error Logs in default Logformat and separates Error types. See some of the Error Log views below!
+
+Follow `INSTALL.md` for easy MySQL database installation. Python executes all MySQL from command prompt or PM2.
 
 ## MySQL Access Log View by Browser - 1 of 50 schema views
 MySQL View - apache_logs.access_log_browser_list - data from LogFormat: combined & extended
 ![view-access_useragent_browser_list](https://github.com/user-attachments/assets/1550daf7-e591-47c4-a70a-cb4fc5fdefd9)
 ## Application Description
-ApacheLogs2MySQL processes the 3 standard Apache Access Logformats - vhost_combined, combined and common
-
 This is a fast, reliable processing application with detailed event-logging and two-staged data conversation. Data manipulation can be fine tuned in second conversion stage if required for customizing LogFormats. Log-levels can be set to capture every process step, info messages and errors of the import process from log file to schema import_log table.
 
 The logging functionality, database design and table relationship contraints produce both physical integrity and logical integrity. This enables a complete audit trail providing the ability to determine when, where and what file each record originated from.
