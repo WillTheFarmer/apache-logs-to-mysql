@@ -7,10 +7,9 @@ Imports Access Logs in Apache Logformats - ***common***, ***combined*** and ***v
 
 Imports Error Logs in default Logformat and separates Apache & System errors. See Error Log views below.
 
-Follow `INSTALL.md` for easy MySQL database installation. Python executes all MySQL from command prompt or PM2.
-
+Python executes all MySQL from command prompt or PM2. Easy MySQL database installation with 3 simple steps.
 ## MySQL Access Log View by Browser - 1 of 50 schema views
-MySQL View - apache_logs.access_log_browser_list - data from LogFormat: combined & extended
+MySQL View - apache_logs.access_ua_browser_list - data from LogFormat: combined & extended
 ![view-access_useragent_browser_list](https://github.com/user-attachments/assets/1550daf7-e591-47c4-a70a-cb4fc5fdefd9)
 ## Application Description
 This is a fast, reliable processing application with detailed event-logging and two-staged data conversation. Data manipulation can be fine tuned in second conversion stage if required for customizing LogFormats. Log-levels can be set to capture every process step, info messages and errors of the import process from log file to schema import_log table.
@@ -199,10 +198,10 @@ Database normalization is the process of organizing data in a relational databas
 
 Below are View Data and Schema Object images. There are currently 47 tables, 724 columns, 110 indexes, 50 views, 5 stored procedures and 42 functions in ***apache_logs*** schema. Database normalization at work!
 ## MySQL Access Log View by URI
-MySQL View - apache_logs.access_log_requri_list - data from LogFormat: combined & extended
+MySQL View - apache_logs.access_requri_list - data from LogFormat: combined & extended
 ![view-access_requri_list](https://github.com/user-attachments/assets/7cf9ff89-a1d7-4e93-ae93-deeca87175f9)
 ## MySQL Error Log Views
-MySQL Error Log Views - The application imports and normalizes error log data as well. Here are some of the schema views. Error log attribute is name of first column. Each attribute has associated table in apache_logs Schema.
+The application imports and normalizes error log data as well. Here are some of the Error Log schema views. Error log attribute is name of first column or first and second column. Each attribute has an associated table in ***apache_logs*** Schema. Using these views it is quick and easy to identify the origin of errors.
 ![Screenshot 2024-10-26 164911](https://github.com/user-attachments/assets/11094e41-9897-44ab-8c23-e8b75cb5916f)
 ![Screenshot 2024-10-26 164842](https://github.com/user-attachments/assets/c1fcfb1a-2c45-4525-80ce-11702b0c609a)
 ![Screenshot 2024-10-26 164449](https://github.com/user-attachments/assets/9bcf7ffe-c72f-43cb-8011-2cdf2978934a)
