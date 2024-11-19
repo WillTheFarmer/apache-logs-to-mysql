@@ -213,6 +213,8 @@ The application imports and normalizes error log data as well. Here are some of 
 ![Screenshot 2024-10-26 164828](https://github.com/user-attachments/assets/485d24ea-2c34-4c01-8452-bd43e0993aab)
 
 ## MySQL Schema Objects - Tables, Stored Procedures, Functions and Views
-Images of the apache_logs schema objects. Access and Error log attributes are normalized into separate entity tables. Each table is populated with unique values of the attribute. Entity Relationship Diagram will be posted soon.
+Images of the ***apache_logs*** schema objects. Access and Error log attributes are normalized into separate entity tables. Each table is populated with unique values of the attribute. Entity Relationship Diagram will be posted in future.
+
+Database normalization is a critical process in database design with objectives of optimizing data storage, improving data integrity, and reducing data anomalies. Organizing data into normalized tables greatly enhances efficiency and maintainability of a database system.
 
 ![apache_logs.tables](<Screenshot 2024-11-18 025434.png>) ![apache_logs.stored_programs](<Screenshot 2024-11-18 025629.png>) ![apache_logs.views](<Screenshot 2024-11-18 025758.png>)
