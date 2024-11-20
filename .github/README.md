@@ -5,11 +5,11 @@ Runs on Windows, Linux and MacOS & tested with MySQL versions 8.0.39, 8.4.3, 9.0
 
 Imports Access Logs in Apache LogFormats - ***common***, ***combined*** and ***vhost_combined***. Plus a ***csv2mysql*** LogFormat defined below.
 
-Imports Error Logs in default Logformat and preforms data harmonization on Apache Codes & Messages, System Codes & Messages, and Log Messages to create unified, standardized dataset. See Error Log views below.
+Imports Error Logs in default LogFormat preforming data harmonization on Apache Codes & Messages, System Codes & Messages, and Log Messages to create a unified and standardized dataset. See Error Log views below.
 
 Python executes all MySQL from command prompt or PM2. Easy MySQL database installation with 3 simple steps.
 ## MySQL Access Log View by Browser - 1 of 50 schema views
-MySQL View - apache_logs.access_ua_browser_list - data from LogFormat: combined & extended
+MySQL View - apache_logs.access_ua_browser_list - data from LogFormat: combined & csv2mysql
 ![view-access_useragent_browser_list](https://github.com/user-attachments/assets/1550daf7-e591-47c4-a70a-cb4fc5fdefd9)
 ## Application Description
 This is a fast, reliable processing application with detailed event-logging and two-staged data conversation. Data manipulation can be fine tuned in second conversion stage if required for customizing LogFormats. Log-levels can be set to capture every process step, info messages and errors of the import process from log file to schema import_log table.
@@ -62,7 +62,7 @@ LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" v
 |%v|The canonical ServerName of the server serving the request.|
 |%p|The canonical port of the server serving the request.|
 
-Application is designed to use this ***extended*** LogFormat. LogFormat has comma-separated values and adds 7 Format Strings. A complete list of Format Strings with descriptions indicating added Format Strings below.
+Application is designed to use the ***csv2mysql*** LogFormat. LogFormat has comma-separated values and adds 7 Format Strings. A complete list of Format Strings with descriptions indicating added Format Strings below.
 ```
 LogFormat "%v,%p,%h,%l,%u,%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\",\"%q\",\"%{Referer}i\",\"%{User-Agent}i\",\"%{farmwork.app}C\"" csv2mysql
 ```
@@ -88,7 +88,7 @@ LogFormat "%v,%p,%h,%l,%u,%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\"
 |%q|The query string (prepended with a ? if a query string exists, otherwise an empty string).  Included in %r - First line of request.|
 |%{Referer}i|The "Referer" (sic) HTTP request header. This gives the site that the client reports having been referred from. (This should be the page that links to or includes /apache_pb.gif).|
 |%{User-Agent}i|The User-Agent HTTP request header. This is the identifying information that the client browser reports about itself.|
-|%{VARNAME}C|ADDED - The contents of cookie VARNAME in request sent to server. Only version 0 cookies are fully supported.|
+|%{VARNAME}C|ADDED - The contents of cookie VARNAME in request sent to server. Only version 0 cookies are fully supported. Format String is optional.|
 ## Supported Error Log Format
 The application processes Error Logs with default format for threaded MPMs (Multi-Processing Modules). If you're running Apache 2.4 on any platform and ErrorLogFormat is not defined in config files this is the Error Log format.
 ```
@@ -168,11 +168,11 @@ VHOST_LOG=2
 VHOST_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\vhost\\**/*access*.*
 VHOST_RECURSIVE=1
 VHOST_PROCESS=1
-EXTENDED=1
-EXTENDED_LOG=2
-EXTENDED_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\extended\\**/*access*.*
-EXTENDED_RECURSIVE=1
-EXTENDED_PROCESS=1
+CSV2MYSQL=1
+CSV2MYSQL_LOG=2
+CSV2MYSQL_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\csv2mysql\\**/*access*.*
+CSV2MYSQL_RECURSIVE=1
+CSV2MYSQL_PROCESS=1
 USERAGENT=1
 USERAGENT_LOG=2
 USERAGENT_PROCESS=1
@@ -200,7 +200,7 @@ Database normalization is the process of organizing data in a relational databas
 
 Below are View Data and Schema Object images. There are currently 47 tables, 724 columns, 110 indexes, 50 views, 5 stored procedures and 42 functions in ***apache_logs*** schema. Database normalization at work!
 ## MySQL Access Log View by URI
-MySQL View - apache_logs.access_requri_list - data from LogFormat: combined & extended
+MySQL View - apache_logs.access_requri_list - data from LogFormat: combined & csv2mysql
 ![view-access_requri_list](https://github.com/user-attachments/assets/7cf9ff89-a1d7-4e93-ae93-deeca87175f9)
 ## MySQL Error Log Views
 The application imports and normalizes error log data as well. Here are some of the Error Log schema views. Error log attribute is name of first column or first and second column. Each attribute has an associated table in ***apache_logs*** Schema. Using these views it is quick and easy to identify the origin of errors.
@@ -219,4 +219,4 @@ Images of the ***apache_logs*** schema objects. Access and Error log attributes 
 
 Database normalization is a critical process in database design with objectives of optimizing data storage, improving data integrity, and reducing data anomalies. Organizing data into normalized tables greatly enhances efficiency and maintainability of a database system.
 
-![apache_logs.tables](<Screenshot 2024-11-18 025434.png>) ![apache_logs.stored_programs](<Screenshot 2024-11-18 025629.png>) ![apache_logs.views](<Screenshot 2024-11-18 025758.png>)
+![apache_logs.tables](<Screenshot 2024-11-20 053225.png>) ![apache_logs.stored_programs](<Screenshot 2024-11-18 025629.png>) ![apache_logs.views](<Screenshot 2024-11-18 025758.png>)

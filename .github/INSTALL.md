@@ -81,12 +81,12 @@ VHOST_LOG=2 # display Vhost Access log processing to console in python - 0=none 
 VHOST_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\vhost\\**/*access*.* # process folder & file patterns for Vhost Access files - MUST BE Watch subfolder
 VHOST_RECURSIVE=1 # watch all subfolders - 0=no 1=yes
 VHOST_PROCESS=1 # execute MySQL Stored Procedure to import Vhost Access log staging table - 0=no 1=yes
-EXTENDED=1 # process error logs - 0=no 1=yes
-EXTENDED_LOG=2 # display Extended Access log processing to console in python - 0=none 1=summary 2=summary & each file being processed
-EXTENDED_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\extended\\**/*access*.* # process folder & file patterns for Extended Access files - MUST BE Watch subfolder
-EXTENDED_RECURSIVE=1 # watch all subfolders - 0=no 1=yes
-EXTENDED_PROCESS=1 # execute MySQL Stored Procedure to import Extended Access log staging table - 0=no 1=yes
-USERAGENT=1 # process extended Access logs - 0=no 1=yes
+CSV2MYSQL=1 # process error logs - 0=no 1=yes
+CSV2MYSQL_LOG=2 # display Csv2mysql Access log processing to console in python - 0=none 1=summary 2=summary & each file being processed
+CSV2MYSQL_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\csv2mysql\\**/*access*.* # process folder & file patterns for Csv2mysql Access files - MUST BE Watch subfolder
+CSV2MYSQL_RECURSIVE=1 # watch all subfolders - 0=no 1=yes
+CSV2MYSQL_PROCESS=1 # execute MySQL Stored Procedure to import Csv2mysql Access log staging table - 0=no 1=yes
+USERAGENT=1 # process csv2mysql Access logs - 0=no 1=yes
 USERAGENT_LOG=2 # display userAgent processing to console in python - 0=none 1=summary 2=summary & each file being processed
 USERAGENT_PROCESS=1 # execute MySQL Stored Procedure process userAgent parsed table into 14 normalized userAgent tables - 0=no 1=yes
 ```

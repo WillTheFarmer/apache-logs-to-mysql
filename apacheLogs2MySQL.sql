@@ -2,6 +2,7 @@
 -- # version 1.0.0 - 11/04/2024
 -- # version 1.0.1 - 11/06/2024
 -- # version 1.1.0 - 11/18/2024 - major changes
+-- # version 1.1.1 - 11/20/2024 - keyword change
 -- #
 -- # Copyright 2024 Will Raymond <farmfreshsoftware@gmail.com>
 -- #
@@ -26,6 +27,7 @@
 -- # [1.1.0] renamed LOAD DATA TABLES, normalized access_log_useragent TABLE into 11 TABLES, added 13 VIEWS.
 -- # [1.1.0] resized LOAD DATA COLUMNS, added req_query COLUMN and seperated query strings from req_uri COLUMN.
 -- # [1.1.0] added access_log_reqquery TABLE, renamed access_log_session TABLE to access_log_cookie.
+-- # [1.1.1] changed word 'extended' to 'csv2mysql'
 
 CREATE DATABASE  IF NOT EXISTS `apache_logs` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `apache_logs`;
@@ -1794,9 +1796,9 @@ CREATE TABLE `import_load` (
   `vhostLogCount` int DEFAULT '0',
   `vhostLogLoaded` int DEFAULT '0',
   `vhostLogProcessed` int DEFAULT '0',
-  `extendedLogCount` int DEFAULT '0',
-  `extendedLogLoaded` int DEFAULT '0',
-  `extendedLogProcessed` int DEFAULT '0',
+  `csv2mysqlLogCount` int DEFAULT '0',
+  `csv2mysqlLogLoaded` int DEFAULT '0',
+  `csv2mysqlLogProcessed` int DEFAULT '0',
   `userAgentProcessed` int DEFAULT '0',
   `processSeconds` int DEFAULT '0',
   `started` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1879,16 +1881,18 @@ CREATE TABLE `load_access_combined` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `load_access_extended`
+-- Table structure for table `load_access_csv2mysql`
 --
 
-DROP TABLE IF EXISTS `load_access_extended`;
+DROP TABLE IF EXISTS `load_access_csv2mysql`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `load_access_extended` (
+CREATE TABLE `load_access_csv2mysql` (
   `server_name` varchar(253) DEFAULT NULL COMMENT '253 characters is the maximum length of full domain name, including dots: e.g. www.example.com = 15 characters.',
   `server_port` int DEFAULT NULL,
   `remote_host` varchar(45) DEFAULT NULL COMMENT 'IPv4-mapped IPv6 (45 characters):ABCD:ABCD:ABCD:ABCD:ABCD:ABCD:192.168.158.190',
+  `remote_logname` varchar(150) DEFAULT NULL COMMENT 'This will return a dash unless mod_ident is present and IdentityCheck is set On.',
+  `remote_user` varchar(150) DEFAULT NULL COMMENT 'Remote user if the request was authenticated. May be bogus if return status (%s) is 401 (unauthorized).',
   `log_time` varchar(28) DEFAULT NULL,
   `bytes_received` int DEFAULT NULL,
   `bytes_sent` int DEFAULT NULL,
@@ -1909,7 +1913,7 @@ CREATE TABLE `load_access_extended` (
   `import_status` int NOT NULL DEFAULT '0' COMMENT 'used in import process to indicate record processed',
   `id` int NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Used for LOAD DATA command for LogFormat extended to bring text files into MySQL and start the process.';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Used for LOAD DATA command for LogFormat csv2mysql to bring text files into MySQL and start the process.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -3514,9 +3518,11 @@ BEGIN
 		serverPort_Id, 
 		importFile_Id 
 		INTEGER DEFAULT NULL;
-	-- declare cursor for extended format
-	DECLARE importExtended CURSOR FOR SELECT 
+	-- declare cursor for csv2mysql format
+	DECLARE importCsv2mysql CURSOR FOR SELECT 
 		remote_host, 
+		remote_logname, 
+		remote_user, 
 		log_time, 
 		bytes_received, 
 		bytes_sent, 
@@ -3537,7 +3543,7 @@ BEGIN
 		server_port, 
 		importfileid,
 		id 
-	FROM apache_logs.load_access_extended
+	FROM apache_logs.load_access_csv2mysql
    WHERE import_status=0;
 	-- declare cursor for combined format
 	DECLARE importVhost CURSOR FOR SELECT 
@@ -3588,17 +3594,19 @@ BEGIN
     SET processID = apache_logs.importProcessID(CONCAT('access log', ' - ', importTable));
 	START TRANSACTION;
     -- open the cursor
-	IF importTable = 'extended' THEN
-		OPEN importExtended;
+	IF importTable = 'csv2mysql' THEN
+		OPEN importCsv2mysql;
 	ELSEIF importTable = 'vhost' THEN
 		OPEN importVhost;
 	ELSE
 		OPEN importCombined;
 	END IF;	
     process_import: LOOP
-		IF importTable = 'extended' THEN
-			FETCH importExtended INTO 
+		IF importTable = 'csv2mysql' THEN
+			FETCH importCsv2mysql INTO 
 			remoteHost, 
+			remoteUser, 
+			remoteLogName, 
 			logTime, 
 			bytesReceived, 
 			bytesSent, 
@@ -3772,8 +3780,8 @@ BEGIN
 			serverName_Id, 
 			serverPort_Id, 
 			importfile_Id);
-		IF importTable = 'extended' THEN
-			UPDATE apache_logs.load_access_extended SET import_status=1 WHERE id=importid;
+		IF importTable = 'csv2mysql' THEN
+			UPDATE apache_logs.load_access_csv2mysql SET import_status=1 WHERE id=importid;
 		ELSEIF importTable = 'vhost' THEN
 			UPDATE apache_logs.load_access_vhost SET import_status=1 WHERE id=importid;
 		ELSE
@@ -3794,8 +3802,8 @@ BEGIN
      WHERE id = processID;
 	COMMIT;
     -- close the cursor
-	IF importTable = 'extended' THEN
-		CLOSE importExtended;
+	IF importTable = 'csv2mysql' THEN
+		CLOSE importCsv2mysql;
 	ELSEIF importTable = 'vhost' THEN
 		CLOSE importVhost;
 	ELSE
@@ -5139,4 +5147,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-11-18  4:48:10
+-- Dump completed on 2024-11-20  6:35:50

@@ -1,6 +1,7 @@
 # coding: utf-8
 # version 1.0.0 - 10/31/2024
 # version 1.1.0 - 11/18/2024 - major changes
+# version 1.1.1 - 11/20/2024 - keyword replacement
 #
 # Copyright 2024 Will Raymond <farmfreshsoftware@gmail.com>
 #
@@ -25,6 +26,7 @@
 # [1.1.0] resized LOAD DATA COLUMNS, added req_query COLUMN and seperated query strings from req_uri COLUMN.
 # [1.1.0] added access_log_reqquery TABLE, renamed access_log_session TABLE to access_log_cookie.
 # [1.1.0] added UPDATE TRIM statements for apachemessage COLUMNS.
+# [1.1.1] changed word 'extended' to 'csv2mysql'
 import os
 import platform
 import socket
@@ -54,11 +56,11 @@ vhost_path = os.getenv('VHOST_PATH')
 vhost_recursive = bool(int(os.getenv('VHOST_RECURSIVE')))
 vhost_log = int(os.getenv('VHOST_LOG'))
 vhost_process = int(os.getenv('VHOST_PROCESS'))
-extended = int(os.getenv('EXTENDED'))
-extended_path = os.getenv('EXTENDED_PATH')
-extended_recursive = bool(int(os.getenv('EXTENDED_RECURSIVE')))
-extended_log = int(os.getenv('EXTENDED_LOG'))
-extended_process = int(os.getenv('EXTENDED_PROCESS'))
+csv2mysql = int(os.getenv('CSV2MYSQL'))
+csv2mysql_path = os.getenv('CSV2MYSQL_PATH')
+csv2mysql_recursive = bool(int(os.getenv('CSV2MYSQL_RECURSIVE')))
+csv2mysql_log = int(os.getenv('CSV2MYSQL_LOG'))
+csv2mysql_process = int(os.getenv('CSV2MYSQL_PROCESS'))
 useragent = int(os.getenv('USERAGENT'))
 useragent_log = int(os.getenv('USERAGENT_LOG'))
 useragent_process = int(os.getenv('USERAGENT_PROCESS'))
@@ -152,10 +154,10 @@ def processLogs():
     vhostFileCount = 0
     vhostFileLoaded = 0
     vhostFileProcessed = 0
-    extendedDataLoaded = 0
-    extendedFileCount = 0
-    extendedFileLoaded = 0
-    extendedFileProcessed = 0
+    csv2mysqlDataLoaded = 0
+    csv2mysqlFileCount = 0
+    csv2mysqlFileLoaded = 0
+    csv2mysqlFileProcessed = 0
     useragentFileProcessed = 0 
     if errorlog == 1:
         if errorlog_log >= 1:
@@ -461,92 +463,92 @@ def processLogs():
         vhostInsertCursor.close()
         vhostLoadCursor.close()
         vhostExistsCursor.close()
-    if extended == 1:
-        # starting load and process of access logs - extended
-        if extended_log >= 1:
-            print('Checking for Extended Access Logs to Import... Import Process started %s seconds ago!' % (time.time() - start_time))
-        extendedExistsCursor = conn.cursor()
-        extendedInsertCursor = conn.cursor()
-        extendedLoadCursor = conn.cursor()
-        for extendedFile in glob.glob(extended_path, recursive=extended_recursive):
-            extendedFileCount += 1
-            extendedLoadFile = extendedFile.replace(os.sep, os.sep+os.sep)
-            extendedExistsSQL = "SELECT apache_logs.importFileExists('" + extendedLoadFile + "');"
+    if csv2mysql == 1:
+        # starting load and process of access logs - csv2mysql
+        if csv2mysql_log >= 1:
+            print('Checking for Csv2mysql Access Logs to Import... Import Process started %s seconds ago!' % (time.time() - start_time))
+        csv2mysqlExistsCursor = conn.cursor()
+        csv2mysqlInsertCursor = conn.cursor()
+        csv2mysqlLoadCursor = conn.cursor()
+        for csv2mysqlFile in glob.glob(csv2mysql_path, recursive=csv2mysql_recursive):
+            csv2mysqlFileCount += 1
+            csv2mysqlLoadFile = csv2mysqlFile.replace(os.sep, os.sep+os.sep)
+            csv2mysqlExistsSQL = "SELECT apache_logs.importFileExists('" + csv2mysqlLoadFile + "');"
             try:
-                extendedExistsCursor.execute( extendedExistsSQL )
+                csv2mysqlExistsCursor.execute( csv2mysqlExistsSQL )
             except:
-                print("ERROR - SELECT apache_logs.importFileExists(extended_log) Statement execution on Server failed")
+                print("ERROR - SELECT apache_logs.importFileExists(csv2mysql_log) Statement execution on Server failed")
                 showWarnings = conn.show_warnings()
                 print(showWarnings)
-                importClientCursor.callproc("loadError",["SELECT apache_logs.importFileExists(extended_log)",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
-            extendedExistsTuple = extendedExistsCursor.fetchall()
-            extendedExists = extendedExistsTuple[0][0]
-            if extendedExists == 0:
-                extendedFileLoaded += 1
-                if extended_log >= 2:
-                    print('Loading Extended Access Log - ' + extendedFile )
-                extendedDataLoaded = 1
-                extendedLoadCreated = time.ctime(os.path.getctime(extendedFile))
-                extendedLoadModified = time.ctime(os.path.getmtime(extendedFile))
-                extendedLoadSize     = str(os.path.getsize(extendedFile))
-                extendedLoadSQL = "LOAD DATA LOCAL INFILE '" + extendedLoadFile + "' INTO TABLE load_access_extended FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' ESCAPED BY '\\\\'"
+                importClientCursor.callproc("loadError",["SELECT apache_logs.importFileExists(csv2mysql_log)",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
+            csv2mysqlExistsTuple = csv2mysqlExistsCursor.fetchall()
+            csv2mysqlExists = csv2mysqlExistsTuple[0][0]
+            if csv2mysqlExists == 0:
+                csv2mysqlFileLoaded += 1
+                if csv2mysql_log >= 2:
+                    print('Loading Csv2mysql Access Log - ' + csv2mysqlFile )
+                csv2mysqlDataLoaded = 1
+                csv2mysqlLoadCreated = time.ctime(os.path.getctime(csv2mysqlFile))
+                csv2mysqlLoadModified = time.ctime(os.path.getmtime(csv2mysqlFile))
+                csv2mysqlLoadSize     = str(os.path.getsize(csv2mysqlFile))
+                csv2mysqlLoadSQL = "LOAD DATA LOCAL INFILE '" + csv2mysqlLoadFile + "' INTO TABLE load_access_csv2mysql FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' ESCAPED BY '\\\\'"
                 try:
-                    extendedLoadCursor.execute( extendedLoadSQL )
+                    csv2mysqlLoadCursor.execute( csv2mysqlLoadSQL )
                 except:
-                    print("ERROR - LOAD DATA LOCAL INFILE INTO TABLE load_access_extended Statement execution on Server failed")
+                    print("ERROR - LOAD DATA LOCAL INFILE INTO TABLE load_access_csv2mysql Statement execution on Server failed")
                     showWarnings = conn.show_warnings()
                     print(showWarnings)
-                    importClientCursor.callproc("loadError",["LOAD DATA LOCAL INFILE INTO TABLE load_access_extended",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
-                extendedInsertSQL = ("SELECT apache_logs.importFileID('" + 
-                                  extendedLoadFile + 
-                                  "', '" + extendedLoadSize + 
-                                  "', '"  + extendedLoadCreated + 
-                                  "', '"  + extendedLoadModified + 
+                    importClientCursor.callproc("loadError",["LOAD DATA LOCAL INFILE INTO TABLE load_access_csv2mysql",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
+                csv2mysqlInsertSQL = ("SELECT apache_logs.importFileID('" + 
+                                  csv2mysqlLoadFile + 
+                                  "', '" + csv2mysqlLoadSize + 
+                                  "', '"  + csv2mysqlLoadCreated + 
+                                  "', '"  + csv2mysqlLoadModified + 
                                   "', '"  + str(importClientID) + 
                                   "', '"  + str(importLoadID) + "' );")
                 try:
-                    extendedInsertCursor.execute( extendedInsertSQL )
+                    csv2mysqlInsertCursor.execute( csv2mysqlInsertSQL )
                 except:
-                    print("ERROR - SELECT apache_logs.importFileID(extended_log) Statement execution on Server failed")
+                    print("ERROR - SELECT apache_logs.importFileID(csv2mysql_log) Statement execution on Server failed")
                     showWarnings = conn.show_warnings()
                     print(showWarnings)
-                    importClientCursor.callproc("loadError",["SELECT apache_logs.importFileID(extended_log)",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
-                extendedInsertTupleID = extendedInsertCursor.fetchall()
-                extendedInsertFileID = extendedInsertTupleID[0][0]
+                    importClientCursor.callproc("loadError",["SELECT apache_logs.importFileID(csv2mysql_log)",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
+                csv2mysqlInsertTupleID = csv2mysqlInsertCursor.fetchall()
+                csv2mysqlInsertFileID = csv2mysqlInsertTupleID[0][0]
                 try:
-                    extendedLoadCursor.execute("UPDATE load_access_extended SET importfileid=" + str(extendedInsertFileID) + " WHERE importfileid IS NULL")
+                    csv2mysqlLoadCursor.execute("UPDATE load_access_csv2mysql SET importfileid=" + str(csv2mysqlInsertFileID) + " WHERE importfileid IS NULL")
                 except:
-                    print("ERROR - UPDATE load_access_extended SET importfileid= Statement execution on Server failed")
+                    print("ERROR - UPDATE load_access_csv2mysql SET importfileid= Statement execution on Server failed")
                     showWarnings = conn.show_warnings()
                     print(showWarnings)
-                    importClientCursor.callproc("loadError",["UPDATE load_access_extended SET importfileid=",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
+                    importClientCursor.callproc("loadError",["UPDATE load_access_csv2mysql SET importfileid=",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
             conn.commit()
         # Commit and close
-        if extendedDataLoaded == 1:
+        if csv2mysqlDataLoaded == 1:
             # this is where additional parsing would be done if needed prior to importing
             # Processing loaded data
-            if extended_process == 1:
-                extendedFileProcessed += 1
-                if extended_log >= 1:
-                    print('Processing Extended Access Logs... Import Process started %s seconds ago!' % (time.time() - start_time))
-                extendedProcedureCursor = conn.cursor()
+            if csv2mysql_process == 1:
+                csv2mysqlFileProcessed += 1
+                if csv2mysql_log >= 1:
+                    print('Processing Csv2mysql Access Logs... Import Process started %s seconds ago!' % (time.time() - start_time))
+                csv2mysqlProcedureCursor = conn.cursor()
                 try:
-                    extendedProcedureCursor.callproc("import_access_log",["extended"])
+                    csv2mysqlProcedureCursor.callproc("import_access_log",["csv2mysql"])
                 except:
-                    print("ERROR - Stored Procedure 'import_access_log(extended)' execution on Server failed")
+                    print("ERROR - Stored Procedure 'import_access_log(csv2mysql)' execution on Server failed")
                     showWarnings = conn.show_warnings()
                     print(showWarnings)
-                    importClientCursor.callproc("loadError",["Stored Procedure 'import_access_log(extended)'",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
+                    importClientCursor.callproc("loadError",["Stored Procedure 'import_access_log(csv2mysql)'",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
                 conn.commit()
-                extendedProcedureCursor.close()
-                if extended_log >= 1:
-                    print('Extended Access Logs import completed. Import Process started %s seconds ago!' % (time.time() - start_time))
-        extendedExistsCursor.close()
-        extendedInsertCursor.close()
-        extendedLoadCursor.close()
+                csv2mysqlProcedureCursor.close()
+                if csv2mysql_log >= 1:
+                    print('Csv2mysql Access Logs import completed. Import Process started %s seconds ago!' % (time.time() - start_time))
+        csv2mysqlExistsCursor.close()
+        csv2mysqlInsertCursor.close()
+        csv2mysqlLoadCursor.close()
     # done with load and process of access and error logs
     # if any access logs were processed check to update useragent if any records added
-    if  useragent == 1 and (combinedDataLoaded == 1 or vhostDataLoaded == 1 or extendedDataLoaded ==1):
+    if  useragent == 1 and (combinedDataLoaded == 1 or vhostDataLoaded == 1 or csv2mysqlDataLoaded ==1):
         if useragent_log >= 1:
             print('Checking for access_log_useragent data parsing to process... Import Process started %s seconds ago!' % (time.time() - start_time))
         selectUserAgentCursor = conn.cursor()
@@ -629,9 +631,9 @@ def processLogs():
                   ', vhostLogCount=' + str(vhostFileCount) + 
                   ', vhostLogLoaded=' + str(vhostFileLoaded) + 
                   ', vhostLogProcessed=' + str(vhostFileProcessed) + 
-                  ', extendedLogCount=' + str(extendedFileCount) + 
-                  ', extendedLogLoaded=' + str(extendedFileLoaded) + 
-                  ', extendedLogProcessed=' + str(extendedFileProcessed) + 
+                  ', csv2mysqlLogCount=' + str(csv2mysqlFileCount) + 
+                  ', csv2mysqlLogLoaded=' + str(csv2mysqlFileLoaded) + 
+                  ', csv2mysqlLogProcessed=' + str(csv2mysqlFileProcessed) + 
                   ', userAgentProcessed=' + str(useragentFileProcessed) + 
                   ', processSeconds=' + str(processSeconds) + ' WHERE id=' + str(importLoadID) +';')
     importLoadCursor = conn.cursor()
