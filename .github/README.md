@@ -34,7 +34,7 @@ Python module links & install command lines for each platform. Single quotes aro
 |[watchdog](https://pypi.org/project/watchdog/)|pip install watchdog|sudo apt-get install python3-watchdog|python3 -m pip install watchdog|[gorakhargosh/watchdog](https://github.com/gorakhargosh/watchdog/tree/master)|
 |[python-dotenv](https://pypi.org/project/python-dotenv/)|pip install python-dotenv|sudo apt-get install python3-dotenv|python3 -m pip install python-dotenv|[theskumar/python-dotenv](https://github.com/theskumar/python-dotenv)|
 ## Four Supported Access Log Formats
-Apache uses same Standard Access LogFormats (***common***, ***combined***, ***vhost_combined***) on all 3 platforms.
+Apache uses same Standard Access LogFormats (***common***, ***combined***, ***vhost_combined***) on all 3 platforms. Each LogFormat adds 2 Format Strings to the prior. Format String descriptions are listed below each LogFormat.
 ```
 LogFormat "%h %l %u %t \"%r\" %>s %O" common
 ```
@@ -62,15 +62,17 @@ LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" v
 |%v|The canonical ServerName of the server serving the request.|
 |%p|The canonical port of the server serving the request.|
 
-Application is designed to use ***extended*** LogFormat below of 6 added to and 2 deleted (%l and %u) from vhost_combined.
+Application is designed to use this ***extended*** LogFormat. LogFormat has comma-separated values and adds 6 Format Strings. A complete list of Format Strings with descriptions indicating added Format Strings below.
 ```
-LogFormat "%v,%p,%h,%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\",\"%q\",\"%{Referer}i\",\"%{User-Agent}i\",\"%{farmwork.app}C\"" extended
+LogFormat "%v,%p,%h,%l,%u,%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\",\"%q\",\"%{Referer}i\",\"%{User-Agent}i\",\"%{farmwork.app}C\"" extended
 ```
 |Format String|Description|
 |-------------|-----------|
 |%v|The canonical ServerName of the server serving the request.|
 |%p|The canonical port of the server serving the request.|
 |%h|Remote hostname. Will log the IP address if HostnameLookups is set to Off, which is the default.|
+|%l|Remote logname. Returns dash unless "mod_ident" is present and IdentityCheck is set On. This can cause serious latency problems accessing server since every request requires a lookup be performed.| 
+|%u|Remote user if the request was authenticated. May be bogus if return status (%s) is 401 (unauthorized).|
 |%t|Time the request was received, in the format [18/Sep/2011:19:18:28 -0400]. The last number indicates the timezone offset from GMT|
 |%I|ADDED - Bytes received, including request and headers. Enable "mod_logio" to use this.|
 |%O|Bytes sent, including headers. The %O format provided by mod_logio will log the actual number of bytes sent over the network. Enable "mod_logio" to use this.|
