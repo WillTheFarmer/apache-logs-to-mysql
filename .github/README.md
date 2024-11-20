@@ -3,9 +3,9 @@ ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema designed to a
 
 Runs on Windows, Linux and MacOS & tested with MySQL versions 8.0.39, 8.4.3, 9.0.0 & 9.1.0.
 
-Imports Access Logs in Apache Logformats - ***common***, ***combined*** and ***vhost_combined***. Plus the ***extended*** LogFormat below.
+Imports Access Logs in Apache LogFormats - ***common***, ***combined*** and ***vhost_combined***. Plus a ***csv2mysql*** LogFormat defined below.
 
-Imports Error Logs in default Logformat and separates Apache & System errors. See Error Log views below.
+Imports Error Logs in default Logformat and preforms data harmonization on Apache Codes & Messages, System Codes & Messages, and Log Messages to create unified, standardized dataset. See Error Log views below.
 
 Python executes all MySQL from command prompt or PM2. Easy MySQL database installation with 3 simple steps.
 ## MySQL Access Log View by Browser - 1 of 50 schema views
@@ -62,9 +62,9 @@ LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" v
 |%v|The canonical ServerName of the server serving the request.|
 |%p|The canonical port of the server serving the request.|
 
-Application is designed to use this ***extended*** LogFormat. LogFormat has comma-separated values and adds 6 Format Strings. A complete list of Format Strings with descriptions indicating added Format Strings below.
+Application is designed to use this ***extended*** LogFormat. LogFormat has comma-separated values and adds 7 Format Strings. A complete list of Format Strings with descriptions indicating added Format Strings below.
 ```
-LogFormat "%v,%p,%h,%l,%u,%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\",\"%q\",\"%{Referer}i\",\"%{User-Agent}i\",\"%{farmwork.app}C\"" extended
+LogFormat "%v,%p,%h,%l,%u,%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\",\"%q\",\"%{Referer}i\",\"%{User-Agent}i\",\"%{farmwork.app}C\"" csv2mysql
 ```
 |Format String|Description|
 |-------------|-----------|
@@ -88,7 +88,7 @@ LogFormat "%v,%p,%h,%l,%u,%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\"
 |%q|The query string (prepended with a ? if a query string exists, otherwise an empty string).  Included in %r - First line of request.|
 |%{Referer}i|The "Referer" (sic) HTTP request header. This gives the site that the client reports having been referred from. (This should be the page that links to or includes /apache_pb.gif).|
 |%{User-Agent}i|The User-Agent HTTP request header. This is the identifying information that the client browser reports about itself.|
-|%{VARNAME}C|ADDED - The contents of cookie VARNAME in request sent to server. Only version 0 cookies are fully supported. ie - session ID to relate with login tables on server.|
+|%{VARNAME}C|ADDED - The contents of cookie VARNAME in request sent to server. Only version 0 cookies are fully supported.|
 ## Supported Error Log Format
 The application processes Error Logs with default format for threaded MPMs (Multi-Processing Modules). If you're running Apache 2.4 on any platform and ErrorLogFormat is not defined in config files this is the Error Log format.
 ```
