@@ -1,7 +1,7 @@
 - version 1.0.0 - 10/31/2024
 - version 1.1.0 - 11/18/2024 - major changes
 - version 1.1.1 - 11/20/2024 - keyword replacement
-- version 2.0.0 - 11/28/2024 - backward incompatible
+- version 2.0.0 - 11/30/2024 - backward incompatible
 - [1.0.1] apache_logs.error_systemCodeID corrected line - INTO logsystemCode to INTO logsystemCodeID
 - [1.0.1] remove debugging - SELECT statement from apache_logs.process_access_import, process_error_import & normalize_useragent.
 - [1.0.1] remove whitespace and commented out old code on all stored programs
@@ -17,6 +17,7 @@
 - [2.0.0] revamp parse & import processes and now provide 2 processing methods - by process_status and new importloadid.
 - [2.0.0] relate and control each client load, parsing and importing separately. Enable multiple upload clients simultaneously.  
 - [2.0.0] add or rename of COLUMNS in import_load, import_process, import_file. populate import_load and import_process with meaningful information.
+- [2.0.0] add compound indexes LOAD TABLES importfileid and process_status to improve Stored Procedures execution times when over 700,000 records.
 - [2.0.0] add SET importfileid COLUMN to LOAD DATA statement and remove UPDATE importfileid statement in Python. 
 - [2.0.0] create ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i , %v" to add %v-canonical ServerName.
 - [2.0.0] add ServerName & ServerPort on import Combined & Error logs stage tables. Option allow adding domains to logs.
