@@ -1,5 +1,5 @@
 # coding: utf-8
-# version 1.0.0 - 11/04/2024 - http://farmfreshsoftware.com
+# version 2.0.0 - 11/30/2024 - Comprehensive Update
 #
 # Copyright 2024 Will Raymond <farmfreshsoftware@gmail.com>
 #
@@ -14,6 +14,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# CHANGELOG.md in GitHub repository - https://github.com/WillTheFarmer/ApacheLogs2MySQL
 """
 :module: watch4logs
 :class:: importLogs
@@ -31,25 +33,28 @@ load_dotenv()  # Loads variables from .env into the environment
 watch_path = os.getenv('WATCH_PATH')
 watch_recursive = bool(int(os.getenv('WATCH_RECURSIVE')))
 watch_interval = int(os.getenv('WATCH_INTERVAL'))
+watch_log = int(os.getenv('WATCH_LOG'))
 class importLogs(FileSystemEventHandler):
-    processFiles = 0
-    def on_any_event(self, event):
-        if event.event_type == 'created' and event.is_directory == False:
-            setattr(importLogs, 'processFiles', 1)
-            print("@@@@@!!!!!-----File for processing -----!!!!!@@@@@")
+  processFiles = 0
+  def on_any_event(self, event):
+    if event.event_type == 'created' and event.is_directory == False:
+      setattr(importLogs, 'processFiles', 1)
+      if watch_log >= 1:
+        print("@@@@@!!!!!-----File for processing -----!!!!!@@@@@")
 
 if __name__ == "__main__":
-    event_handler = importLogs()
-    observer = Observer()
-    observer.schedule(event_handler, watch_path, recursive=watch_recursive)
-    observer.start()
-    try:
-        while True:
-            print("checking for new files")
-            if importLogs.processFiles == 1:
-                setattr(importLogs, 'processFiles', 0)
-                processLogs()
-            time.sleep(watch_interval)
-    except KeyboardInterrupt:
-        observer.stop()
-    observer.join()
+  event_handler = importLogs()
+  observer = Observer()
+  observer.schedule(event_handler, watch_path, recursive=watch_recursive)
+  observer.start()
+  try:
+    while True:
+      if watch_log >= 2:
+        print("checking for new files")
+      if importLogs.processFiles == 1:
+        setattr(importLogs, 'processFiles', 0)
+        processLogs()
+      time.sleep(watch_interval)
+  except KeyboardInterrupt:
+    observer.stop()
+  observer.join()

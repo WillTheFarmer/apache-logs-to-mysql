@@ -1,8 +1,5 @@
 -- # coding: utf-8
--- # version 1.0.0 - 11/04/2024
--- # version 1.0.1 - 11/06/2024
--- # version 1.1.0 - 11/18/2024 - major changes
--- # version 1.1.1 - 11/20/2024 - keyword change
+-- # version 2.0.0 - 11/30/2024 - Comprehensive Update
 -- #
 -- # Copyright 2024 Will Raymond <farmfreshsoftware@gmail.com>
 -- #
@@ -18,16 +15,11 @@
 -- # See the License for the specific language governing permissions and
 -- # limitations under the License.
 -- #
--- # file: apacheLogs2MySQL.sql 
--- # synopsis: Data definition language (DDL) for creating MySQL scehma - apache_logs for apachelogs2MySQL application
--- # Changelog
--- # [1.0.1] apache_logs.error_systemCodeID corrected line - INTO logsystemCode to INTO logsystemCodeID
--- # [1.0.1] removed debugging - SELECT statement from apache_logs.import_access_log, import_error_log & normalize_useragent and whitespace on all stored programs
--- # [1.0.1] set all table AUTO_INCREMENT=1. All future version releases will be the same - AUTO_INCREMENT=1.
--- # [1.1.0] renamed LOAD DATA TABLES, normalized access_log_useragent TABLE into 11 TABLES, added 13 VIEWS.
--- # [1.1.0] resized LOAD DATA COLUMNS, added req_query COLUMN and seperated query strings from req_uri COLUMN.
--- # [1.1.0] added access_log_reqquery TABLE, renamed access_log_session TABLE to access_log_cookie.
--- # [1.1.1] changed word 'extended' to 'csv2mysql'
+-- # CHANGELOG.md in GitHub repository - https://github.com/WillTheFarmer/ApacheLogs2MySQL
+-- #
+-- file: apacheLogs2MySQL.sql 
+-- synopsis: Data definition language (DDL) for creating MySQL scehma - apache_logs for apachelogs2MySQL application
+-- author: farmfreshsoftware@gmail.com (Will Raymond)
 
 CREATE DATABASE  IF NOT EXISTS `apache_logs` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `apache_logs`;
@@ -47,6 +39,27 @@ USE `apache_logs`;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Temporary view structure for view `access_clientname_list`
+--
+
+DROP TABLE IF EXISTS `access_clientname_list`;
+/*!50001 DROP VIEW IF EXISTS `access_clientname_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `access_clientname_list` AS SELECT 
+ 1 AS `Access Log Client Name`,
+ 1 AS `Log Count`,
+ 1 AS `HTTP Bytes`,
+ 1 AS `Bytes Sent`,
+ 1 AS `Bytes Received`,
+ 1 AS `Bytes Transferred`,
+ 1 AS `Max Request Time`,
+ 1 AS `Min Request Time`,
+ 1 AS `Max Delay Time`,
+ 1 AS `Min Delay Time`*/;
+SET character_set_client = @saved_cs_client;
 
 --
 -- Temporary view structure for view `access_cookie_list`
@@ -113,13 +126,14 @@ CREATE TABLE `access_log` (
   `reqmethodid` int DEFAULT NULL,
   `requriid` int DEFAULT NULL,
   `reqqueryid` int DEFAULT NULL,
-  `remotehostid` int DEFAULT NULL,
-  `remotelognameid` int DEFAULT NULL,
   `remoteuserid` int DEFAULT NULL,
-  `refererid` int DEFAULT NULL,
+  `remotelognameid` int DEFAULT NULL,
+  `refererid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_referer',
+  `clientnameid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_clientname',
+  `clientportid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_clientport',
+  `servernameid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_servername',
+  `serverportid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_serverport',
   `cookieid` int DEFAULT NULL,
-  `servernameid` int DEFAULT NULL,
-  `serverportid` int DEFAULT NULL,
   `useragentid` int DEFAULT NULL,
   `uaid` int DEFAULT NULL,
   `uabrowserid` int DEFAULT NULL,
@@ -134,34 +148,34 @@ CREATE TABLE `access_log` (
   `uaosversionid` int DEFAULT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `FK_access_reqstatus` (`reqstatusid`),
-  KEY `FK_access_reqprotocol` (`reqprotocolid`),
-  KEY `FK_access_reqmethod` (`reqmethodid`),
-  KEY `FK_access_requri` (`requriid`),
-  KEY `FK_access_reqquery` (`reqqueryid`),
-  KEY `FK_access_remotehost` (`remotehostid`),
-  KEY `FK_access_remotelogname` (`remotelognameid`),
-  KEY `FK_access_remoteuser` (`remoteuserid`),
-  KEY `FK_access_referer` (`refererid`),
-  KEY `FK_access_useragent` (`useragentid`),
-  KEY `FK_access_cookie` (`cookieid`),
-  KEY `FK_access_servername` (`servernameid`),
-  KEY `FK_access_serverport` (`serverportid`),
-  KEY `FK_access_importfile` (`importfileid`),
-  CONSTRAINT `FK_access_cookie` FOREIGN KEY (`cookieid`) REFERENCES `access_log_cookie` (`id`),
-  CONSTRAINT `FK_access_importfile` FOREIGN KEY (`importfileid`) REFERENCES `import_file` (`id`),
-  CONSTRAINT `FK_access_referer` FOREIGN KEY (`refererid`) REFERENCES `access_log_referer` (`id`),
-  CONSTRAINT `FK_access_remotehost` FOREIGN KEY (`remotehostid`) REFERENCES `access_log_remotehost` (`id`),
-  CONSTRAINT `FK_access_remotelogname` FOREIGN KEY (`remotelognameid`) REFERENCES `access_log_remotelogname` (`id`),
-  CONSTRAINT `FK_access_remoteuser` FOREIGN KEY (`remoteuserid`) REFERENCES `access_log_remoteuser` (`id`),
-  CONSTRAINT `FK_access_reqmethod` FOREIGN KEY (`reqmethodid`) REFERENCES `access_log_reqmethod` (`id`),
-  CONSTRAINT `FK_access_reqprotocol` FOREIGN KEY (`reqprotocolid`) REFERENCES `access_log_reqprotocol` (`id`),
-  CONSTRAINT `FK_access_reqquery` FOREIGN KEY (`reqqueryid`) REFERENCES `access_log_reqquery` (`id`),
-  CONSTRAINT `FK_access_reqstatus` FOREIGN KEY (`reqstatusid`) REFERENCES `access_log_reqstatus` (`id`),
-  CONSTRAINT `FK_access_requri` FOREIGN KEY (`requriid`) REFERENCES `access_log_requri` (`id`),
-  CONSTRAINT `FK_access_servername` FOREIGN KEY (`servernameid`) REFERENCES `access_log_servername` (`id`),
-  CONSTRAINT `FK_access_serverport` FOREIGN KEY (`serverportid`) REFERENCES `access_log_serverport` (`id`),
-  CONSTRAINT `FK_access_useragent` FOREIGN KEY (`useragentid`) REFERENCES `access_log_useragent` (`id`)
+  KEY `I_access_log_servernameid_serverportid` (`servernameid`,`serverportid`),
+  KEY `F_access_reqstatus` (`reqstatusid`),
+  KEY `F_access_reqprotocol` (`reqprotocolid`),
+  KEY `F_access_reqmethod` (`reqmethodid`),
+  KEY `F_access_requri` (`requriid`),
+  KEY `F_access_reqquery` (`reqqueryid`),
+  KEY `F_access_remotelogname` (`remotelognameid`),
+  KEY `F_access_remoteuser` (`remoteuserid`),
+  KEY `F_access_useragent` (`useragentid`),
+  KEY `F_access_cookie` (`cookieid`),
+  KEY `F_access_importfile` (`importfileid`),
+  KEY `F_access_clientname` (`clientnameid`),
+  KEY `F_access_referer` (`refererid`),
+  KEY `F_access_serverport` (`serverportid`),
+  CONSTRAINT `F_access_clientname` FOREIGN KEY (`clientnameid`) REFERENCES `log_clientname` (`id`),
+  CONSTRAINT `F_access_cookie` FOREIGN KEY (`cookieid`) REFERENCES `access_log_cookie` (`id`),
+  CONSTRAINT `F_access_importfile` FOREIGN KEY (`importfileid`) REFERENCES `import_file` (`id`),
+  CONSTRAINT `F_access_referer` FOREIGN KEY (`refererid`) REFERENCES `log_referer` (`id`),
+  CONSTRAINT `F_access_remotelogname` FOREIGN KEY (`remotelognameid`) REFERENCES `access_log_remotelogname` (`id`),
+  CONSTRAINT `F_access_remoteuser` FOREIGN KEY (`remoteuserid`) REFERENCES `access_log_remoteuser` (`id`),
+  CONSTRAINT `F_access_reqmethod` FOREIGN KEY (`reqmethodid`) REFERENCES `access_log_reqmethod` (`id`),
+  CONSTRAINT `F_access_reqprotocol` FOREIGN KEY (`reqprotocolid`) REFERENCES `access_log_reqprotocol` (`id`),
+  CONSTRAINT `F_access_reqquery` FOREIGN KEY (`reqqueryid`) REFERENCES `access_log_reqquery` (`id`),
+  CONSTRAINT `F_access_reqstatus` FOREIGN KEY (`reqstatusid`) REFERENCES `access_log_reqstatus` (`id`),
+  CONSTRAINT `F_access_requri` FOREIGN KEY (`requriid`) REFERENCES `access_log_requri` (`id`),
+  CONSTRAINT `F_access_servername` FOREIGN KEY (`servernameid`) REFERENCES `log_servername` (`id`),
+  CONSTRAINT `F_access_serverport` FOREIGN KEY (`serverportid`) REFERENCES `log_serverport` (`id`),
+  CONSTRAINT `F_access_useragent` FOREIGN KEY (`useragentid`) REFERENCES `access_log_useragent` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table is core table for access logs and contains foreign keys to relate to log attribute tables.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -177,38 +191,7 @@ CREATE TABLE `access_log_cookie` (
   `name` varchar(400) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_access_cookie_name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `access_log_referer`
---
-
-DROP TABLE IF EXISTS `access_log_referer`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `access_log_referer` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(1000) NOT NULL,
-  `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `access_log_remotehost`
---
-
-DROP TABLE IF EXISTS `access_log_remotehost`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `access_log_remotehost` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(45) NOT NULL,
-  `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_access_remotehost_name` (`name`)
+  UNIQUE KEY `U_access_cookie_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -224,7 +207,7 @@ CREATE TABLE `access_log_remotelogname` (
   `name` varchar(150) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_access_remotelogname_name` (`name`)
+  UNIQUE KEY `U_access_remotelogname_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -240,7 +223,7 @@ CREATE TABLE `access_log_remoteuser` (
   `name` varchar(150) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_access_remoteuser_name` (`name`)
+  UNIQUE KEY `U_access_remoteuser_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -256,7 +239,7 @@ CREATE TABLE `access_log_reqmethod` (
   `name` varchar(50) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_access_reqmethod_name` (`name`)
+  UNIQUE KEY `U_access_reqmethod_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -272,7 +255,7 @@ CREATE TABLE `access_log_reqprotocol` (
   `name` varchar(30) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_access_reqprotocol_name` (`name`)
+  UNIQUE KEY `U_access_reqprotocol_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -303,7 +286,7 @@ CREATE TABLE `access_log_reqstatus` (
   `name` int NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_access_reqstatus_name` (`name`)
+  UNIQUE KEY `U_access_reqstatus_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -323,38 +306,6 @@ CREATE TABLE `access_log_requri` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `access_log_servername`
---
-
-DROP TABLE IF EXISTS `access_log_servername`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `access_log_servername` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(253) NOT NULL,
-  `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_access_servername_name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `access_log_serverport`
---
-
-DROP TABLE IF EXISTS `access_log_serverport`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `access_log_serverport` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` int NOT NULL,
-  `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_access_serverport_name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
 -- Table structure for table `access_log_ua`
 --
 
@@ -366,7 +317,7 @@ CREATE TABLE `access_log_ua` (
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_access_ua_name` (`name`)
+  UNIQUE KEY `U_access_ua_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -382,7 +333,7 @@ CREATE TABLE `access_log_ua_browser` (
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_access_ua_browser_name` (`name`)
+  UNIQUE KEY `U_access_ua_browser_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -398,7 +349,7 @@ CREATE TABLE `access_log_ua_browser_family` (
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_access_ua_browser_family_name` (`name`)
+  UNIQUE KEY `U_access_ua_browser_family_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -414,7 +365,7 @@ CREATE TABLE `access_log_ua_browser_version` (
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_access_ua_browser_version_name` (`name`)
+  UNIQUE KEY `U_access_ua_browser_version_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -430,7 +381,7 @@ CREATE TABLE `access_log_ua_device` (
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_access_ua_device_name` (`name`)
+  UNIQUE KEY `U_access_ua_device_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -446,7 +397,7 @@ CREATE TABLE `access_log_ua_device_brand` (
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_access_ua_device_brand_name` (`name`)
+  UNIQUE KEY `U_access_ua_device_brand_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -462,7 +413,7 @@ CREATE TABLE `access_log_ua_device_family` (
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_access_ua_device_family_name` (`name`)
+  UNIQUE KEY `U_access_ua_device_family_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -478,7 +429,7 @@ CREATE TABLE `access_log_ua_device_model` (
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_access_ua_device_model_name` (`name`)
+  UNIQUE KEY `U_access_ua_device_model_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -494,7 +445,7 @@ CREATE TABLE `access_log_ua_os` (
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_access_ua_os_name` (`name`)
+  UNIQUE KEY `U_access_ua_os_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -510,7 +461,7 @@ CREATE TABLE `access_log_ua_os_family` (
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_access_ua_os_family_name` (`name`)
+  UNIQUE KEY `U_access_ua_os_family_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -526,7 +477,7 @@ CREATE TABLE `access_log_ua_os_version` (
   `name` varchar(300) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_access_ua_os_version_name` (`name`)
+  UNIQUE KEY `U_access_ua_os_version_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -577,27 +528,6 @@ SET @saved_cs_client     = @@character_set_client;
 /*!50503 SET character_set_client = utf8mb4 */;
 /*!50001 CREATE VIEW `access_referer_list` AS SELECT 
  1 AS `Access Log Referer`,
- 1 AS `Log Count`,
- 1 AS `HTTP Bytes`,
- 1 AS `Bytes Sent`,
- 1 AS `Bytes Received`,
- 1 AS `Bytes Transferred`,
- 1 AS `Max Request Time`,
- 1 AS `Min Request Time`,
- 1 AS `Max Delay Time`,
- 1 AS `Min Delay Time`*/;
-SET character_set_client = @saved_cs_client;
-
---
--- Temporary view structure for view `access_remotehost_list`
---
-
-DROP TABLE IF EXISTS `access_remotehost_list`;
-/*!50001 DROP VIEW IF EXISTS `access_remotehost_list`*/;
-SET @saved_cs_client     = @@character_set_client;
-/*!50503 SET character_set_client = utf8mb4 */;
-/*!50001 CREATE VIEW `access_remotehost_list` AS SELECT 
- 1 AS `Access Log Remote Host`,
  1 AS `Log Count`,
  1 AS `HTTP Bytes`,
  1 AS `Bytes Sent`,
@@ -766,6 +696,28 @@ SET @saved_cs_client     = @@character_set_client;
 /*!50503 SET character_set_client = utf8mb4 */;
 /*!50001 CREATE VIEW `access_servername_list` AS SELECT 
  1 AS `Access Log Server Name`,
+ 1 AS `Log Count`,
+ 1 AS `HTTP Bytes`,
+ 1 AS `Bytes Sent`,
+ 1 AS `Bytes Received`,
+ 1 AS `Bytes Transferred`,
+ 1 AS `Max Request Time`,
+ 1 AS `Min Request Time`,
+ 1 AS `Max Delay Time`,
+ 1 AS `Min Delay Time`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `access_servername_serverport_list`
+--
+
+DROP TABLE IF EXISTS `access_servername_serverport_list`;
+/*!50001 DROP VIEW IF EXISTS `access_servername_serverport_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `access_servername_serverport_list` AS SELECT 
+ 1 AS `Access Log Server Name`,
+ 1 AS `Server Port`,
  1 AS `Log Count`,
  1 AS `HTTP Bytes`,
  1 AS `Bytes Sent`,
@@ -1331,6 +1283,46 @@ SET @saved_cs_client     = @@character_set_client;
 SET character_set_client = @saved_cs_client;
 
 --
+-- Temporary view structure for view `error_client_list`
+--
+
+DROP TABLE IF EXISTS `error_client_list`;
+/*!50001 DROP VIEW IF EXISTS `error_client_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `error_client_list` AS SELECT 
+ 1 AS `Error Log Client Name`,
+ 1 AS `Log Count`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `error_client_port_list`
+--
+
+DROP TABLE IF EXISTS `error_client_port_list`;
+/*!50001 DROP VIEW IF EXISTS `error_client_port_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `error_client_port_list` AS SELECT 
+ 1 AS `Error Log Client Port`,
+ 1 AS `Log Count`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `error_clientname_clientport_list`
+--
+
+DROP TABLE IF EXISTS `error_clientname_clientport_list`;
+/*!50001 DROP VIEW IF EXISTS `error_clientname_clientport_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `error_clientname_clientport_list` AS SELECT 
+ 1 AS `Error Log Server Name`,
+ 1 AS `Server Port`,
+ 1 AS `Log Count`*/;
+SET character_set_client = @saved_cs_client;
+
+--
 -- Temporary view structure for view `error_importfile_list`
 --
 
@@ -1376,34 +1368,43 @@ CREATE TABLE `error_log` (
   `systemcodeid` int DEFAULT NULL,
   `systemmessageid` int DEFAULT NULL,
   `logmessageid` int DEFAULT NULL,
-  `reqclientid` int DEFAULT NULL,
-  `refererid` int DEFAULT NULL,
+  `refererid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_referer',
+  `clientnameid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_clientname',
+  `clientportid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_clientport',
+  `servernameid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_servername',
+  `serverportid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_serverport',
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `FK_error_level` (`loglevelid`),
-  KEY `FK_error_module` (`moduleid`),
-  KEY `FK_error_processid` (`processid`),
-  KEY `FK_error_threadid` (`threadid`),
-  KEY `FK_error_apachecode` (`apachecodeid`),
-  KEY `FK_error_apachemessage` (`apachemessageid`),
-  KEY `FK_error_systemcode` (`systemcodeid`),
-  KEY `FK_error_systemmessage` (`systemmessageid`),
-  KEY `FK_error_message` (`logmessageid`),
-  KEY `FK_error_reqclient` (`reqclientid`),
-  KEY `FK_error_referer` (`refererid`),
-  KEY `FK_error_importfile` (`importfileid`),
-  CONSTRAINT `FK_error_apachecode` FOREIGN KEY (`apachecodeid`) REFERENCES `error_log_apachecode` (`id`),
-  CONSTRAINT `FK_error_apachemessage` FOREIGN KEY (`apachemessageid`) REFERENCES `error_log_apachemessage` (`id`),
-  CONSTRAINT `FK_error_importfile` FOREIGN KEY (`importfileid`) REFERENCES `import_file` (`id`),
-  CONSTRAINT `FK_error_level` FOREIGN KEY (`loglevelid`) REFERENCES `error_log_level` (`id`),
-  CONSTRAINT `FK_error_message` FOREIGN KEY (`logmessageid`) REFERENCES `error_log_message` (`id`),
-  CONSTRAINT `FK_error_module` FOREIGN KEY (`moduleid`) REFERENCES `error_log_module` (`id`),
-  CONSTRAINT `FK_error_processid` FOREIGN KEY (`processid`) REFERENCES `error_log_processid` (`id`),
-  CONSTRAINT `FK_error_referer` FOREIGN KEY (`refererid`) REFERENCES `error_log_referer` (`id`),
-  CONSTRAINT `FK_error_reqclient` FOREIGN KEY (`reqclientid`) REFERENCES `error_log_reqclient` (`id`),
-  CONSTRAINT `FK_error_systemcode` FOREIGN KEY (`systemcodeid`) REFERENCES `error_log_systemcode` (`id`),
-  CONSTRAINT `FK_error_systemmessage` FOREIGN KEY (`systemmessageid`) REFERENCES `error_log_systemmessage` (`id`),
-  CONSTRAINT `FK_error_threadid` FOREIGN KEY (`threadid`) REFERENCES `error_log_threadid` (`id`)
+  KEY `I_error_log_clientnameid_clientportid` (`clientnameid`,`clientportid`),
+  KEY `I_error_log_processid_threadid` (`processid`,`threadid`),
+  KEY `I_error_log_servernameid_serverportid` (`servernameid`,`serverportid`),
+  KEY `F_error_level` (`loglevelid`),
+  KEY `F_error_module` (`moduleid`),
+  KEY `F_error_threadid` (`threadid`),
+  KEY `F_error_apachecode` (`apachecodeid`),
+  KEY `F_error_apachemessage` (`apachemessageid`),
+  KEY `F_error_systemcode` (`systemcodeid`),
+  KEY `F_error_systemmessage` (`systemmessageid`),
+  KEY `F_error_message` (`logmessageid`),
+  KEY `F_error_importfile` (`importfileid`),
+  KEY `F_error_clientport` (`clientportid`),
+  KEY `F_error_referer` (`refererid`),
+  KEY `F_error_serverport` (`serverportid`),
+  CONSTRAINT `F_error_apachecode` FOREIGN KEY (`apachecodeid`) REFERENCES `error_log_apachecode` (`id`),
+  CONSTRAINT `F_error_apachemessage` FOREIGN KEY (`apachemessageid`) REFERENCES `error_log_apachemessage` (`id`),
+  CONSTRAINT `F_error_clientname` FOREIGN KEY (`clientnameid`) REFERENCES `log_clientname` (`id`),
+  CONSTRAINT `F_error_clientport` FOREIGN KEY (`clientportid`) REFERENCES `log_clientport` (`id`),
+  CONSTRAINT `F_error_importfile` FOREIGN KEY (`importfileid`) REFERENCES `import_file` (`id`),
+  CONSTRAINT `F_error_level` FOREIGN KEY (`loglevelid`) REFERENCES `error_log_level` (`id`),
+  CONSTRAINT `F_error_message` FOREIGN KEY (`logmessageid`) REFERENCES `error_log_message` (`id`),
+  CONSTRAINT `F_error_module` FOREIGN KEY (`moduleid`) REFERENCES `error_log_module` (`id`),
+  CONSTRAINT `F_error_processid` FOREIGN KEY (`processid`) REFERENCES `error_log_processid` (`id`),
+  CONSTRAINT `F_error_referer` FOREIGN KEY (`refererid`) REFERENCES `log_referer` (`id`),
+  CONSTRAINT `F_error_servername` FOREIGN KEY (`servernameid`) REFERENCES `log_servername` (`id`),
+  CONSTRAINT `F_error_serverport` FOREIGN KEY (`serverportid`) REFERENCES `log_serverport` (`id`),
+  CONSTRAINT `F_error_systemcode` FOREIGN KEY (`systemcodeid`) REFERENCES `error_log_systemcode` (`id`),
+  CONSTRAINT `F_error_systemmessage` FOREIGN KEY (`systemmessageid`) REFERENCES `error_log_systemmessage` (`id`),
+  CONSTRAINT `F_error_threadid` FOREIGN KEY (`threadid`) REFERENCES `error_log_threadid` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1419,7 +1420,7 @@ CREATE TABLE `error_log_apachecode` (
   `name` varchar(200) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_error_apachecode_name` (`name`)
+  UNIQUE KEY `U_error_apachecode_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1435,7 +1436,7 @@ CREATE TABLE `error_log_apachemessage` (
   `name` varchar(500) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_error_apachemessage_name` (`name`)
+  UNIQUE KEY `U_error_apachemessage_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1451,7 +1452,7 @@ CREATE TABLE `error_log_level` (
   `name` varchar(100) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_error_level_name` (`name`)
+  UNIQUE KEY `U_error_level_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1467,7 +1468,7 @@ CREATE TABLE `error_log_message` (
   `name` varchar(500) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_error_message_name` (`name`)
+  UNIQUE KEY `U_error_message_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1483,7 +1484,7 @@ CREATE TABLE `error_log_module` (
   `name` varchar(200) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_error_module_name` (`name`)
+  UNIQUE KEY `U_error_module_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1499,39 +1500,7 @@ CREATE TABLE `error_log_processid` (
   `name` varchar(100) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_error_processid_name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `error_log_referer`
---
-
-DROP TABLE IF EXISTS `error_log_referer`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `error_log_referer` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(750) NOT NULL,
-  `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_error_referer_name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `error_log_reqclient`
---
-
-DROP TABLE IF EXISTS `error_log_reqclient`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `error_log_reqclient` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(500) NOT NULL,
-  `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_error_reqclient_name` (`name`)
+  UNIQUE KEY `U_error_processid_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1547,7 +1516,7 @@ CREATE TABLE `error_log_systemcode` (
   `name` varchar(200) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_error_systemcode_name` (`name`)
+  UNIQUE KEY `U_error_systemcode_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1563,7 +1532,7 @@ CREATE TABLE `error_log_systemmessage` (
   `name` varchar(500) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_error_systemmessage_name` (`name`)
+  UNIQUE KEY `U_error_systemmessage_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1579,7 +1548,7 @@ CREATE TABLE `error_log_threadid` (
   `name` varchar(100) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_error_threadid_name` (`name`)
+  UNIQUE KEY `U_error_threadid_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1650,15 +1619,42 @@ SET @saved_cs_client     = @@character_set_client;
 SET character_set_client = @saved_cs_client;
 
 --
--- Temporary view structure for view `error_reqclient_list`
+-- Temporary view structure for view `error_servername_list`
 --
 
-DROP TABLE IF EXISTS `error_reqclient_list`;
-/*!50001 DROP VIEW IF EXISTS `error_reqclient_list`*/;
+DROP TABLE IF EXISTS `error_servername_list`;
+/*!50001 DROP VIEW IF EXISTS `error_servername_list`*/;
 SET @saved_cs_client     = @@character_set_client;
 /*!50503 SET character_set_client = utf8mb4 */;
-/*!50001 CREATE VIEW `error_reqclient_list` AS SELECT 
- 1 AS `Error Log Client`,
+/*!50001 CREATE VIEW `error_servername_list` AS SELECT 
+ 1 AS `Error Log Server Name`,
+ 1 AS `Log Count`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `error_servername_serverport_list`
+--
+
+DROP TABLE IF EXISTS `error_servername_serverport_list`;
+/*!50001 DROP VIEW IF EXISTS `error_servername_serverport_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `error_servername_serverport_list` AS SELECT 
+ 1 AS `Error Log Server Name`,
+ 1 AS `Server Port`,
+ 1 AS `Log Count`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `error_serverport_list`
+--
+
+DROP TABLE IF EXISTS `error_serverport_list`;
+/*!50001 DROP VIEW IF EXISTS `error_serverport_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `error_serverport_list` AS SELECT 
+ 1 AS `Error Log Server Port`,
  1 AS `Log Count`*/;
 SET character_set_client = @saved_cs_client;
 
@@ -1736,9 +1732,9 @@ CREATE TABLE `import_error` (
   `id` int NOT NULL AUTO_INCREMENT,
   `importloadid` int DEFAULT NULL,
   `importprocessid` int DEFAULT NULL,
-  `module` varchar(100) DEFAULT NULL,
+  `module` varchar(300) DEFAULT NULL,
   `mysql_errno` smallint unsigned DEFAULT NULL,
-  `message_text` varchar(128) DEFAULT NULL,
+  `message_text` varchar(1000) DEFAULT NULL,
   `returned_sqlstate` varchar(250) DEFAULT NULL,
   `schema_name` varchar(64) DEFAULT NULL,
   `catalog_name` varchar(64) DEFAULT NULL,
@@ -1758,21 +1754,23 @@ DROP TABLE IF EXISTS `import_file`;
 CREATE TABLE `import_file` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(300) NOT NULL,
-  `importclientid` int DEFAULT NULL,
   `importloadid` int DEFAULT NULL,
+  `parseprocessid` int DEFAULT NULL,
   `importprocessid` int DEFAULT NULL,
   `filesize` bigint NOT NULL,
   `filecreated` datetime NOT NULL,
   `filemodified` datetime NOT NULL,
+  `server_name` varchar(253) DEFAULT NULL COMMENT 'Common & Combined logs. Added to populate ServerName for multiple domains import. Must be poulated before import process.',
+  `server_port` int DEFAULT NULL COMMENT 'Common & Combined logs. Added to populate ServerPort for multiple domains import. Must be poulated before import process.',
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UC_import_file_name` (`name`),
-  KEY `FK_importfile_importclient` (`importclientid`),
-  KEY `FK_importfile_importload` (`importloadid`),
-  KEY `FK_importfile_importprocess` (`importprocessid`),
-  CONSTRAINT `FK_importfile_importclient` FOREIGN KEY (`importclientid`) REFERENCES `import_client` (`id`),
-  CONSTRAINT `FK_importfile_importload` FOREIGN KEY (`importloadid`) REFERENCES `import_load` (`id`),
-  CONSTRAINT `FK_importfile_importprocess` FOREIGN KEY (`importprocessid`) REFERENCES `import_process` (`id`)
+  UNIQUE KEY `U_import_file_name` (`name`),
+  KEY `F_importfile_importload` (`importloadid`),
+  KEY `F_importfile_parsesprocess` (`parseprocessid`),
+  KEY `F_importfile_importprocess` (`importprocessid`),
+  CONSTRAINT `F_importfile_importload` FOREIGN KEY (`importloadid`) REFERENCES `import_load` (`id`),
+  CONSTRAINT `F_importfile_importprocess` FOREIGN KEY (`importprocessid`) REFERENCES `import_process` (`id`),
+  CONSTRAINT `F_importfile_parsesprocess` FOREIGN KEY (`parseprocessid`) REFERENCES `import_process` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table contains all access and error log files loaded and processed. Created, modified and size of each file at time of loading is captured for auditability. Each file processed by Server Application must exist in this table.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1785,27 +1783,32 @@ DROP TABLE IF EXISTS `import_load`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `import_load` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `importClientid` int DEFAULT NULL,
-  `comments` varchar(100) DEFAULT NULL,
-  `errorLogCount` int DEFAULT '0',
-  `errorLogLoaded` int DEFAULT '0',
-  `errorLogProcessed` int DEFAULT '0',
-  `combinedLogCount` int DEFAULT '0',
-  `combinedLogLoaded` int DEFAULT '0',
-  `combinedLogProcessed` int DEFAULT '0',
-  `vhostLogCount` int DEFAULT '0',
-  `vhostLogLoaded` int DEFAULT '0',
-  `vhostLogProcessed` int DEFAULT '0',
-  `csv2mysqlLogCount` int DEFAULT '0',
-  `csv2mysqlLogLoaded` int DEFAULT '0',
-  `csv2mysqlLogProcessed` int DEFAULT '0',
-  `userAgentProcessed` int DEFAULT '0',
-  `processSeconds` int DEFAULT '0',
+  `importclientid` int DEFAULT NULL,
+  `errorLogCount` int DEFAULT NULL,
+  `errorLogLoaded` int DEFAULT NULL,
+  `errorLogParsed` int DEFAULT NULL,
+  `errorLogProcessed` int DEFAULT NULL,
+  `combinedLogCount` int DEFAULT NULL,
+  `combinedLogLoaded` int DEFAULT NULL,
+  `combinedLogParsed` int DEFAULT NULL,
+  `combinedLogProcessed` int DEFAULT NULL,
+  `vhostLogCount` int DEFAULT NULL,
+  `vhostLogLoaded` int DEFAULT NULL,
+  `vhostLogParsed` int DEFAULT NULL,
+  `vhostLogProcessed` int DEFAULT NULL,
+  `csv2mysqlLogCount` int DEFAULT NULL,
+  `csv2mysqlLogLoaded` int DEFAULT NULL,
+  `csv2mysqlLogParsed` int DEFAULT NULL,
+  `csv2mysqlLogProcessed` int DEFAULT NULL,
+  `userAgentProcessed` int DEFAULT NULL,
+  `errorOccurred` tinyint DEFAULT NULL,
+  `processSeconds` int DEFAULT NULL,
   `started` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `completed` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `completed` datetime DEFAULT NULL,
+  `comments` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `FK_importload_importclient` (`importClientid`),
-  CONSTRAINT `FK_importload_importclient` FOREIGN KEY (`importClientid`) REFERENCES `import_client` (`id`)
+  KEY `F_importload_importclient` (`importclientid`),
+  CONSTRAINT `F_importload_importclient` FOREIGN KEY (`importclientid`) REFERENCES `import_client` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table has record for everytime the Python processLogs is executed. The has totals for each tyep and file formats were imported.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1818,15 +1821,21 @@ DROP TABLE IF EXISTS `import_process`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `import_process` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `importserverid` int DEFAULT NULL,
+  `importserverid` int NOT NULL,
+  `importloadid` int DEFAULT NULL,
+  `type` varchar(100) NOT NULL,
   `name` varchar(100) NOT NULL,
-  `records` int DEFAULT '0',
-  `files` int DEFAULT '0',
+  `records` int DEFAULT NULL,
+  `files` int DEFAULT NULL,
+  `loads` int DEFAULT NULL,
+  `errorOccurred` tinyint DEFAULT NULL,
+  `processSeconds` int DEFAULT NULL,
   `started` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `completed` datetime DEFAULT NULL,
+  `comments` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `FK_importprocess_importserver` (`importserverid`),
-  CONSTRAINT `FK_importprocess_importserver` FOREIGN KEY (`importserverid`) REFERENCES `import_server` (`id`)
+  KEY `F_importprocess_importserver` (`importserverid`),
+  CONSTRAINT `F_importprocess_importserver` FOREIGN KEY (`importserverid`) REFERENCES `import_server` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table has record for every MySQL Stored Procedure import execution. If completed column is NULL the process failed. Look in import_error table for error details.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1858,7 +1867,7 @@ DROP TABLE IF EXISTS `load_access_combined`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `load_access_combined` (
-  `remote_host` varchar(45) DEFAULT NULL COMMENT 'IPv4-mapped IPv6 (45 characters):ABCD:ABCD:ABCD:ABCD:ABCD:ABCD:192.168.158.190',
+  `remote_host` varchar(300) DEFAULT NULL COMMENT '253 characters is the maximum length of full domain name. Renamed as clientname and clientport in normalization to share with Error Logs',
   `remote_logname` varchar(150) DEFAULT NULL COMMENT 'This will return a dash unless mod_ident is present and IdentityCheck is set On.',
   `remote_user` varchar(150) DEFAULT NULL COMMENT 'Remote user if the request was authenticated. May be bogus if return status (%s) is 401 (unauthorized).',
   `log_time_a` varchar(21) DEFAULT NULL COMMENT 'due to MySQL LOAD DATA LOCAL INFILE limitations can not have 2 OPTIONALLY ENCLOSED BY "" and []. It is easier with 2 columns for this data',
@@ -1866,17 +1875,23 @@ CREATE TABLE `load_access_combined` (
   `first_line_request` varchar(4000) DEFAULT NULL COMMENT 'contains req_method, req_uri, req_query, req_protocol',
   `req_status` int DEFAULT NULL,
   `req_bytes` int DEFAULT NULL,
-  `log_referer` varchar(1000) DEFAULT NULL COMMENT '1000 characters should be more than enough for domain.',
+  `log_referer` varchar(750) DEFAULT NULL COMMENT '1000 characters should be more than enough for domain.',
   `log_useragent` varchar(2000) DEFAULT NULL COMMENT 'No strict size limit of User-Agent string is defined by official standards or specifications. 2 years of production logs found useragents longer than 1000 are hack attempts.',
+  `load_error` varchar(10) DEFAULT NULL COMMENT 'This column should always be NULL. Added to catch lines larger than designed for.',
   `log_time` varchar(28) DEFAULT NULL,
   `req_protocol` varchar(30) DEFAULT NULL COMMENT 'parsed from first_line_request in import',
   `req_method` varchar(50) DEFAULT NULL COMMENT 'parsed from first_line_request in import',
   `req_uri` varchar(2000) DEFAULT NULL COMMENT 'parsed from first_line_request in import. URLs under 2000 characters work in any combination of client and server software and search engines.',
   `req_query` varchar(2000) DEFAULT NULL COMMENT 'parsed from first_line_request in import. URLs under 2000 characters work in any combination of client and server software and search engines.',
+  `server_name` varchar(253) DEFAULT NULL COMMENT 'Common & Combined logs. Added to populate ServerName for multiple domains import. Must be poulated before import process.',
+  `server_port` int DEFAULT NULL COMMENT 'Common & Combined logs. Added to populate ServerPort for multiple domains import. Must be poulated before import process.',
   `importfileid` int DEFAULT NULL COMMENT 'used in import process to indicate file record extractedd from',
-  `import_status` int NOT NULL DEFAULT '0' COMMENT 'used in import process to indicate record processed',
+  `process_status` int NOT NULL DEFAULT '0' COMMENT 'used in parse and import processes to indicate record processed - 1=parsed, 2=imported',
   `id` int NOT NULL AUTO_INCREMENT,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `I_load_access_combined_process` (`process_status`),
+  KEY `I_load_access_combined_import_process` (`importfileid`,`process_status`),
+  CONSTRAINT `F_load_access_combined_importfile` FOREIGN KEY (`importfileid`) REFERENCES `import_file` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Used for LOAD DATA command for LogFormat combined and common to bring text files into MySQL and start the process.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1890,7 +1905,7 @@ DROP TABLE IF EXISTS `load_access_csv2mysql`;
 CREATE TABLE `load_access_csv2mysql` (
   `server_name` varchar(253) DEFAULT NULL COMMENT '253 characters is the maximum length of full domain name, including dots: e.g. www.example.com = 15 characters.',
   `server_port` int DEFAULT NULL,
-  `remote_host` varchar(45) DEFAULT NULL COMMENT 'IPv4-mapped IPv6 (45 characters):ABCD:ABCD:ABCD:ABCD:ABCD:ABCD:192.168.158.190',
+  `remote_host` varchar(300) DEFAULT NULL COMMENT '253 characters is the maximum length of full domain name. Renamed as clientname and clientport in normalization to share with Error Logs',
   `remote_logname` varchar(150) DEFAULT NULL COMMENT 'This will return a dash unless mod_ident is present and IdentityCheck is set On.',
   `remote_user` varchar(150) DEFAULT NULL COMMENT 'Remote user if the request was authenticated. May be bogus if return status (%s) is 401 (unauthorized).',
   `log_time` varchar(28) DEFAULT NULL,
@@ -1906,13 +1921,17 @@ CREATE TABLE `load_access_csv2mysql` (
   `req_method` varchar(50) DEFAULT NULL,
   `req_uri` varchar(2000) DEFAULT NULL COMMENT 'URLs under 2000 characters work in any combination of client and server software and search engines.',
   `req_query` varchar(2000) DEFAULT NULL COMMENT 'URLs under 2000 characters work in any combination of client and server software and search engines.',
-  `log_referer` varchar(1000) DEFAULT NULL COMMENT '1000 characters should be more than enough for domain.',
+  `log_referer` varchar(750) DEFAULT NULL COMMENT '1000 characters should be more than enough for domain.',
   `log_useragent` varchar(2000) DEFAULT NULL COMMENT 'No strict size limit of User-Agent string is defined by official standards or specifications. 2 years of production logs found useragents longer than 1000 are hack attempts.',
   `log_cookie` varchar(400) DEFAULT NULL COMMENT 'Use to store any Cookie VARNAME. ie - session ID in application cookie to relate with login tables on server.',
+  `load_error` varchar(10) DEFAULT NULL COMMENT 'This column should always be NULL. Added to catch lines larger than designed for.',
   `importfileid` int DEFAULT NULL COMMENT 'used in import process to indicate file record extractedd from',
-  `import_status` int NOT NULL DEFAULT '0' COMMENT 'used in import process to indicate record processed',
+  `process_status` int NOT NULL DEFAULT '0' COMMENT 'used in parse and import processes to indicate record processed - 1=parsed, 2=imported',
   `id` int NOT NULL AUTO_INCREMENT,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `I_load_access_csv2mysql_process` (`process_status`),
+  KEY `I_load_access_csv2mysql_import_process` (`importfileid`,`process_status`),
+  CONSTRAINT `F_load_access_csv2mysql_importfile` FOREIGN KEY (`importfileid`) REFERENCES `import_file` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Used for LOAD DATA command for LogFormat csv2mysql to bring text files into MySQL and start the process.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1925,7 +1944,7 @@ DROP TABLE IF EXISTS `load_access_vhost`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `load_access_vhost` (
   `log_server` varchar(300) DEFAULT NULL COMMENT '253 characters is the maximum length of full domain name, including dots: e.g. www.example.com = 15 characters. plus : plus 6 for port',
-  `remote_host` varchar(45) DEFAULT NULL COMMENT 'IPv4-mapped IPv6 (45 characters):ABCD:ABCD:ABCD:ABCD:ABCD:ABCD:192.168.158.190',
+  `remote_host` varchar(300) DEFAULT NULL COMMENT '253 characters is the maximum length of full domain name. Renamed as clientname and clientport in normalization to share with Error Logs',
   `remote_logname` varchar(150) DEFAULT NULL COMMENT 'This will return a dash unless mod_ident is present and IdentityCheck is set On.',
   `remote_user` varchar(150) DEFAULT NULL COMMENT 'Remote user if the request was authenticated. May be bogus if return status (%s) is 401 (unauthorized).',
   `log_time_a` varchar(21) DEFAULT NULL COMMENT 'due to MySQL LOAD DATA LOCAL INFILE limitations can not have 2 OPTIONALLY ENCLOSED BY "" and []. It is easier with 2 columns for this data',
@@ -1933,8 +1952,9 @@ CREATE TABLE `load_access_vhost` (
   `first_line_request` varchar(4000) DEFAULT NULL COMMENT 'contains req_method, req_uri, req_query, req_protocol',
   `req_status` int DEFAULT NULL,
   `req_bytes` int DEFAULT NULL,
-  `log_referer` varchar(1000) DEFAULT NULL COMMENT '1000 characters should be more than enough for domain.',
+  `log_referer` varchar(750) DEFAULT NULL COMMENT '1000 characters should be more than enough for domain.',
   `log_useragent` varchar(2000) DEFAULT NULL COMMENT 'No strict size limit of User-Agent string is defined by official standards or specifications. 2 years of production logs found useragents longer than 1000 are hack attempts.',
+  `load_error` varchar(10) DEFAULT NULL COMMENT 'This column should always be NULL. Added to catch lines larger than designed for.',
   `log_time` varchar(28) DEFAULT NULL,
   `server_name` varchar(253) DEFAULT NULL COMMENT '253 characters is the maximum length of full domain name, including dots: e.g. www.example.com = 15 characters.',
   `server_port` int DEFAULT NULL,
@@ -1943,9 +1963,12 @@ CREATE TABLE `load_access_vhost` (
   `req_uri` varchar(2000) DEFAULT NULL COMMENT 'parsed from first_line_request in import. URLs under 2000 characters work in any combination of client and server software and search engines.',
   `req_query` varchar(2000) DEFAULT NULL COMMENT 'parsed from first_line_request in import. URLs under 2000 characters work in any combination of client and server software and search engines.',
   `importfileid` int DEFAULT NULL COMMENT 'used in import process to indicate file record extractedd from',
-  `import_status` int NOT NULL DEFAULT '0' COMMENT 'used in import process to indicate record processed',
+  `process_status` int NOT NULL DEFAULT '0' COMMENT 'used in parse and import processes to indicate record processed - 1=parsed, 2=imported',
   `id` int NOT NULL AUTO_INCREMENT,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `I_load_access_vhost_process` (`process_status`),
+  KEY `I_load_access_vhost_import_process` (`importfileid`,`process_status`),
+  CONSTRAINT `F_load_access_combined_vhost_importfile` FOREIGN KEY (`importfileid`) REFERENCES `import_file` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Used for LOAD DATA command for LogFormat vhost to bring text files into MySQL and start the process.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1962,7 +1985,8 @@ CREATE TABLE `load_error_default` (
   `log_processid_threadid` varchar(200) DEFAULT NULL,
   `log_parse1` varchar(2000) DEFAULT NULL,
   `log_parse2` varchar(2000) DEFAULT NULL,
-  `log_message_nocode` varchar(500) DEFAULT NULL,
+  `log_message_nocode` varchar(1000) DEFAULT NULL,
+  `load_error` varchar(10) DEFAULT NULL COMMENT 'This column should always be NULL. Added to catch lines larger than designed for.',
   `logtime` datetime DEFAULT NULL,
   `loglevel` varchar(100) DEFAULT NULL,
   `module` varchar(200) DEFAULT NULL,
@@ -1973,13 +1997,99 @@ CREATE TABLE `load_error_default` (
   `systemcode` varchar(200) DEFAULT NULL,
   `systemmessage` varchar(500) DEFAULT NULL,
   `logmessage` varchar(500) DEFAULT NULL,
-  `reqclient` varchar(500) DEFAULT NULL,
   `referer` varchar(750) DEFAULT NULL,
-  `importfileid` int DEFAULT NULL COMMENT 'used in import process to indicate file record extractedd from',
-  `import_status` int NOT NULL DEFAULT '0' COMMENT 'used in import process to indicate record processed',
+  `client_name` varchar(253) DEFAULT NULL COMMENT 'Column to normalize Access & Error attributes with different names. From Error Log Format %a - Client IP (address) and port of the request.',
+  `client_port` int DEFAULT NULL COMMENT 'Column to normalize Access & Error attributes with different names. From Error Log Format %a - Client IP address and (port) of the request.',
+  `server_name` varchar(253) DEFAULT NULL COMMENT 'Error logs. Added to populate ServerName for multiple domains import. Must be poulated before import process.',
+  `server_port` int DEFAULT NULL COMMENT 'Error logs. Added to populate ServerPort for multiple domains import. Must be poulated before import process.',
+  `importfileid` int DEFAULT NULL COMMENT 'FOREIGN KEY used in import process to indicate file record extracted from',
+  `process_status` int NOT NULL DEFAULT '0' COMMENT 'used in parse and import processes to indicate record processed - 1=parsed, 2=imported',
   `id` int NOT NULL AUTO_INCREMENT,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `I_load_error_default_process` (`process_status`),
+  KEY `I_load_error_default_import_process` (`importfileid`,`process_status`),
+  CONSTRAINT `F_load_error_default_importfile` FOREIGN KEY (`importfileid`) REFERENCES `import_file` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table used for LOAD DATA command to bring text files into MySQL and start the process.';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `log_clientname`
+--
+
+DROP TABLE IF EXISTS `log_clientname`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `log_clientname` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(253) NOT NULL,
+  `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `U_log_clientname_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table is used by Access and Error logs.';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `log_clientport`
+--
+
+DROP TABLE IF EXISTS `log_clientport`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `log_clientport` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` int NOT NULL,
+  `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `U_log_clientport_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table is used by Access and Error logs.';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `log_referer`
+--
+
+DROP TABLE IF EXISTS `log_referer`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `log_referer` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(750) NOT NULL,
+  `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `U_log_referer_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table is used by Access and Error logs.';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `log_servername`
+--
+
+DROP TABLE IF EXISTS `log_servername`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `log_servername` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(253) NOT NULL,
+  `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `U_log_servername_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table is used by Access and Error logs.';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `log_serverport`
+--
+
+DROP TABLE IF EXISTS `log_serverport`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `log_serverport` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` int NOT NULL,
+  `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `U_log_serverport_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table is used by Access and Error logs.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1989,13 +2099,13 @@ CREATE TABLE `load_error_default` (
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_cookieID`(tcCookie varchar(400)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `access_cookieID`(tcCookie varchar(400)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE cookie_ID INTEGER DEFAULT null;
@@ -2015,77 +2125,17 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP FUNCTION IF EXISTS `access_refererID` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_refererID`(tcReferer varchar(1000)) RETURNS int
-    READS SQL DATA
-BEGIN
-    DECLARE referer_ID INTEGER DEFAULT null;
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_refererID'; 
-    SELECT id 
-    INTO referer_ID
-    FROM apache_logs.access_log_referer
-    WHERE name = tcReferer;
-    IF referer_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_referer (name) VALUES (tcReferer);
-        SET referer_ID = LAST_INSERT_ID();
-    END IF;
-    RETURN referer_ID;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP FUNCTION IF EXISTS `access_remoteHostID` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_remoteHostID`(tcRemoteHost varchar(45)) RETURNS int
-    READS SQL DATA
-BEGIN
-    DECLARE remoteHost_ID INTEGER DEFAULT null;
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_remoteHostID'; 
-    SELECT id 
-    INTO remoteHost_ID
-    FROM apache_logs.access_log_remotehost
-    WHERE name = tcRemoteHost;
-    IF remoteHost_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_remotehost (name) VALUES (tcRemoteHost);
-        SET remoteHost_ID = LAST_INSERT_ID();
-    END IF;
-    RETURN remoteHost_ID;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!50003 DROP FUNCTION IF EXISTS `access_remoteLogNameID` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_remoteLogNameID`(tcRemoteLogName varchar(150)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `access_remoteLogNameID`(tcRemoteLogName varchar(150)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE remoteLogName_ID INTEGER DEFAULT null;
@@ -2109,13 +2159,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_remoteUserID`(tcRemoteUser varchar(150)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `access_remoteUserID`(tcRemoteUser varchar(150)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE remoteUser_ID INTEGER DEFAULT null;
@@ -2139,13 +2189,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_reqMethodID`(tcReqMethod varchar(40)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `access_reqMethodID`(tcReqMethod varchar(40)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE reqMethod_ID INTEGER DEFAULT null;
@@ -2169,13 +2219,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_reqProtocolID`(tcReqProtocol varchar(20)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `access_reqProtocolID`(tcReqProtocol varchar(20)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE reqProtocol_ID INTEGER DEFAULT null;
@@ -2200,13 +2250,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_reqQueryID`(tcReqQuery varchar(2000)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `access_reqQueryID`(tcReqQuery varchar(2000)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE reqQuery_ID INTEGER DEFAULT null;
@@ -2230,13 +2280,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_reqStatusID`(tnReqStatus INTEGER) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `access_reqStatusID`(tnReqStatus INTEGER) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE reqStatus_ID INTEGER DEFAULT null;
@@ -2260,13 +2310,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_reqUriID`(tcReqUri varchar(2000)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `access_reqUriID`(tcReqUri varchar(2000)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE reqUri_ID INTEGER DEFAULT null;
@@ -2286,77 +2336,17 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP FUNCTION IF EXISTS `access_serverNameID` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_serverNameID`(tcServerName varchar(253)) RETURNS int
-    READS SQL DATA
-BEGIN
-    DECLARE serverName_ID INTEGER DEFAULT null;
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_serverNameID'; 
-    SELECT id 
-    INTO serverName_ID
-    FROM apache_logs.access_log_servername
-    WHERE name = tcServerName;
-    IF serverName_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_servername (name) VALUES (tcServerName);
-        SET serverName_ID = LAST_INSERT_ID();
-    END IF;
-    RETURN serverName_ID;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP FUNCTION IF EXISTS `access_serverPortID` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_serverPortID`(tnServerPort INTEGER) RETURNS int
-    READS SQL DATA
-BEGIN
-    DECLARE serverPort_ID INTEGER DEFAULT null;
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_serverPortID'; 
-    SELECT id 
-    INTO serverPort_ID
-    FROM apache_logs.access_log_serverport
-    WHERE name = tnServerPort;
-    IF serverPort_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_serverport (name) VALUES (tnServerPort);
-        SET serverPort_ID = LAST_INSERT_ID();
-    END IF;
-    RETURN serverPort_ID;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!50003 DROP FUNCTION IF EXISTS `access_uaBrowserFamilyID` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_uaBrowserFamilyID`(tcUa_browser_family varchar(300)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `access_uaBrowserFamilyID`(tcUa_browser_family varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_browser_family_ID INTEGER DEFAULT null;
@@ -2380,13 +2370,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_uaBrowserID`(tcUa_browser varchar(300)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `access_uaBrowserID`(tcUa_browser varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_browser_ID INTEGER DEFAULT null;
@@ -2410,13 +2400,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_uaBrowserVersionID`(tcUa_browser_version varchar(300)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `access_uaBrowserVersionID`(tcUa_browser_version varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_browser_version_ID INTEGER DEFAULT null;
@@ -2440,13 +2430,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_uaDeviceBrandID`(tcUa_device_brand varchar(300)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `access_uaDeviceBrandID`(tcUa_device_brand varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_device_brand_ID INTEGER DEFAULT null;
@@ -2470,13 +2460,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_uaDeviceFamilyID`(tcUa_device_family varchar(300)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `access_uaDeviceFamilyID`(tcUa_device_family varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_device_family_ID INTEGER DEFAULT null;
@@ -2500,13 +2490,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_uaDeviceID`(tcUa_device varchar(300)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `access_uaDeviceID`(tcUa_device varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_device_ID INTEGER DEFAULT null;
@@ -2530,13 +2520,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_uaDeviceModelID`(tcUa_device_model varchar(300)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `access_uaDeviceModelID`(tcUa_device_model varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_device_model_ID INTEGER DEFAULT null;
@@ -2560,13 +2550,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_uaID`(tcUa varchar(300)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `access_uaID`(tcUa varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_ID INTEGER DEFAULT null;
@@ -2590,13 +2580,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_uaOsFamilyID`(tcUa_os_family varchar(300)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `access_uaOsFamilyID`(tcUa_os_family varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_os_family_ID INTEGER DEFAULT null;
@@ -2620,13 +2610,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_uaOsID`(tcUa_os varchar(300)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `access_uaOsID`(tcUa_os varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_os_ID INTEGER DEFAULT null;
@@ -2650,13 +2640,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_uaOsVersionID`(tcUa_os_version varchar(300)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `access_uaOsVersionID`(tcUa_os_version varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_os_version_ID INTEGER DEFAULT null;
@@ -2680,13 +2670,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `access_userAgentID`(tcUserAgent varchar(2000)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `access_userAgentID`(tcUserAgent varchar(2000)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE userAgent_ID INTEGER DEFAULT null;
@@ -2710,13 +2700,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `error_apacheCodeID`(logapacheCode varchar(400)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `error_apacheCodeID`(logapacheCode varchar(400)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE logapacheCodeID INTEGER DEFAULT null;
@@ -2740,13 +2730,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `error_apacheMessageID`(logapacheMessage varchar(400)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `error_apacheMessageID`(logapacheMessage varchar(400)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE logapacheMessageID INTEGER DEFAULT null;
@@ -2770,13 +2760,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `error_logLevelID`(loglevel varchar(100)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `error_logLevelID`(loglevel varchar(100)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE logLevelID INTEGER DEFAULT null;
@@ -2800,13 +2790,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `error_logMessageID`(logmessage varchar(500)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `error_logMessageID`(logmessage varchar(500)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE logmessageID INTEGER DEFAULT null;
@@ -2830,13 +2820,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `error_moduleID`(logmodule varchar(100)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `error_moduleID`(logmodule varchar(100)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE logmoduleID INTEGER DEFAULT null;
@@ -2860,86 +2850,26 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `error_processID`(logprocessid varchar(100)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `error_processID`(logprocessid varchar(100)) RETURNS int
     READS SQL DATA
 BEGIN
-  DECLARE logprocessidID INTEGER DEFAULT null;
+  DECLARE logprocess_ID INTEGER DEFAULT null;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'error_processID'; 
   SELECT id
-    INTO logprocessidID
+    INTO logprocess_ID
     FROM apache_logs.error_log_processid
     WHERE name = logprocessid;
-  IF logprocessidID IS NULL THEN
+  IF logprocess_ID IS NULL THEN
       INSERT INTO apache_logs.error_log_processid (name) VALUES (logprocessid);
-      SET logprocessidID = LAST_INSERT_ID();
+      SET logprocess_ID = LAST_INSERT_ID();
   END IF;
-  RETURN logprocessidID;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP FUNCTION IF EXISTS `error_refererID` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `error_refererID`(logreferer varchar(100)) RETURNS int
-    READS SQL DATA
-BEGIN
-  DECLARE logrefererID INTEGER DEFAULT null;
-  DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'error_refererID'; 
-  SELECT id
-    INTO logrefererID
-    FROM apache_logs.error_log_referer
-    WHERE name = logreferer;
-  IF logrefererID IS NULL THEN
-      INSERT INTO apache_logs.error_log_referer (name) VALUES (logreferer);
-      SET logrefererID = LAST_INSERT_ID();
-  END IF;
-  RETURN logrefererID;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP FUNCTION IF EXISTS `error_reqClientID` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `error_reqClientID`(logreqClient varchar(100)) RETURNS int
-    READS SQL DATA
-BEGIN
-  DECLARE logreqClientID INTEGER DEFAULT null;
-  DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'error_reqClientID'; 
-  SELECT id
-    INTO logreqClientID
-    FROM apache_logs.error_log_reqclient
-    WHERE name = logreqClient;
-  IF logreqClientID IS NULL THEN
-      INSERT INTO apache_logs.error_log_reqclient (name) VALUES (logreqClient);
-      SET logreqClientID = LAST_INSERT_ID();
-  END IF;
-  RETURN logreqClientID;
+  RETURN logprocess_ID;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -2950,13 +2880,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `error_systemCodeID`(logsystemCode varchar(400)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `error_systemCodeID`(logsystemCode varchar(400)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE logsystemCodeID INTEGER DEFAULT null;
@@ -2980,13 +2910,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `error_systemMessageID`(logsystemMessage varchar(400)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `error_systemMessageID`(logsystemMessage varchar(400)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE logsystemMessageID INTEGER DEFAULT null;
@@ -3010,26 +2940,26 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `error_threadID`(logthreadid varchar(100)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `error_threadID`(logthreadid varchar(100)) RETURNS int
     READS SQL DATA
 BEGIN
-  DECLARE logthreadidID INTEGER DEFAULT null;
+  DECLARE logthread_ID INTEGER DEFAULT null;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'error_threadID'; 
   SELECT id
-    INTO logthreadidID
+    INTO logthread_ID
     FROM apache_logs.error_log_threadid
     WHERE name = logthreadid;
-  IF logthreadidID IS NULL THEN
+  IF logthread_ID IS NULL THEN
       INSERT INTO apache_logs.error_log_threadid (name) VALUES (logthreadid);
-      SET logthreadidID = LAST_INSERT_ID();
+      SET logthread_ID = LAST_INSERT_ID();
   END IF;
-  RETURN logthreadidID;
+  RETURN logthread_ID;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -3040,13 +2970,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `importClientID`(
+CREATE DEFINER=`root`@`localhost` FUNCTION `importClientID`(
   in_ipaddress VARCHAR(50),
   in_deviceid VARCHAR(200),
   in_login VARCHAR(200),
@@ -3061,28 +2991,26 @@ CREATE DEFINER=`root`@`%` FUNCTION `importClientID`(
 BEGIN
   DECLARE e1 INT UNSIGNED;
   DECLARE e2, e3 VARCHAR(128);
-  DECLARE e4, e5 VARCHAR(64);
-  DECLARE importClientID INTEGER DEFAULT null;
+  DECLARE importClient_ID INTEGER DEFAULT null;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION 
 	BEGIN
-   	    GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
-		CALL apache_logs.importerror('importClientID', e1, e2, e3, 'apache_logs', 'apachelogs2mysql.py');
+    GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
+		CALL apache_logs.errorProcess('importclientID', e1, e2, e3, 'apache_logs', 'apachelogs2mysql.py', null, null);
 	END;
-  SELECT 
-      id
-  INTO importClientID FROM
-      apache_logs.import_client
-  WHERE ipaddress = in_ipaddress
-    AND deviceid = in_deviceid
-    AND login = in_login
-    AND expandUser = in_expandUser
-    AND platformSystem = in_platformSystem
-    AND platformNode = in_platformNode
-    AND platformRelease = in_platformRelease
-    AND platformVersion = in_platformVersion
-    AND platformMachine = in_platformMachine
-    AND platformProcessor = in_platformProcessor;
-  IF importClientID IS NULL THEN
+  SELECT id
+    INTO importClient_ID
+    FROM apache_logs.import_client
+   WHERE ipaddress = in_ipaddress
+     AND deviceid = in_deviceid
+     AND login = in_login
+     AND expandUser = in_expandUser
+     AND platformSystem = in_platformSystem
+     AND platformNode = in_platformNode
+     AND platformRelease = in_platformRelease
+     AND platformVersion = in_platformVersion
+     AND platformMachine = in_platformMachine
+     AND platformProcessor = in_platformProcessor;
+  IF importClient_ID IS NULL THEN
   	INSERT INTO apache_logs.import_client 
       (ipaddress,
       deviceid,
@@ -3105,9 +3033,84 @@ BEGIN
       in_platformVersion,
       in_platformMachine,
       in_platformProcessor);
-	  SET importClientID = LAST_INSERT_ID();
+	  SET importClient_ID = LAST_INSERT_ID();
   END IF;
-  RETURN importClientID;
+  RETURN importClient_ID;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP FUNCTION IF EXISTS `importFileCheck` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` FUNCTION `importFileCheck`(importfileid INTEGER,
+  processid INTEGER,
+  processType VARCHAR(10)) RETURNS int
+    READS SQL DATA
+BEGIN
+  DECLARE importFileName VARCHAR(300) DEFAULT null;
+  DECLARE parseProcess_ID INTEGER DEFAULT null;
+  DECLARE importProcess_ID INTEGER DEFAULT null;
+  DECLARE processFile INTEGER DEFAULT 1;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'importFileCheck'; 
+  SELECT name,
+         parseprocessid,
+         importprocessid 
+    INTO importFileName,
+         parseProcess_ID,
+         importProcess_ID
+    FROM apache_logs.import_file
+    WHERE id = importfileid;
+  -- IF none of these things happen all is well. processing records from same file.
+  IF importFileName IS NULL THEN
+  -- This is an error. Import File must be in table when import processing.
+    SET processFile = 0;
+    SIGNAL SQLSTATE
+      '45000'
+    SET
+      MESSAGE_TEXT = `ERROR - Import File is not found in import_file table.`,
+      MYSQL_ERRNO = ER_SIGNAL_EXCEPTION;
+  ELSEIF processid IS NULL THEN
+  -- This is an error. This function is only called when import processing. ProcessID must be valid.
+    SET processFile = 0;
+    SIGNAL SQLSTATE
+      '45000'
+    SET
+      MESSAGE_TEXT = `ERROR - ProcessID required when import processing.`,
+      MYSQL_ERRNO = ER_SIGNAL_EXCEPTION;
+  ELSEIF processType = 'parse' AND parseProcess_ID IS NULL THEN
+  -- First time and first record in file being processed. This will happen one time for each file.
+    UPDATE apache_logs.import_file SET parseprocessid = processid WHERE id = importFileID;
+  ELSEIF  processType = 'parse' AND processid != parseProcess_ID THEN
+  -- This is an error. This function is only called when import processing. only ONE ProcessID must be used for each file.
+    SET processFile = 0;
+    SIGNAL SQLSTATE
+      '45000'
+    SET
+      MESSAGE_TEXT = `ERROR - Previous PARSE process found. File has already been PARSED.`,
+      MYSQL_ERRNO = ER_SIGNAL_EXCEPTION;
+  ELSEIF processType = 'import' AND importProcess_ID IS NULL THEN
+  -- First time and first record in file being processed. This will happen one time for each file.
+    UPDATE apache_logs.import_file SET importprocessid = processid WHERE id = importFileID;
+  ELSEIF  processType = 'import' AND processid != importProcess_ID THEN
+  -- This is an error. This function is only called when import processing. only ONE ProcessID must be used for each file.
+    SET processFile = 0;
+    SIGNAL SQLSTATE
+      '45000'
+    SET
+      MESSAGE_TEXT = `ERROR - Previous IMPORT process found. File has already been IMPORTED.`,
+      MYSQL_ERRNO = ER_SIGNAL_EXCEPTION;
+  END IF;
+  RETURN processFile;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -3118,23 +3121,22 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `importFileExists`(importFile varchar(300)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `importFileExists`(importFile varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE e1 INT UNSIGNED;
   DECLARE e2, e3 VARCHAR(128);
-  DECLARE e4, e5 VARCHAR(64);
   DECLARE importFileID INTEGER DEFAULT null;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION 
 	BEGIN
-   	    GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
-		CALL apache_logs.importerror('importFileID', e1, e2, e3, 'apache_logs', 'apachelogs2mysql.py');
+    GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
+    CALL apache_logs.errorProcess('importFileExists', e1, e2, e3, 'apache_logs', 'apachelogs2mysql.py', null, null );
 	END;
   SELECT id
     INTO importFileID
@@ -3151,118 +3153,51 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `importFileID`(importFile varchar(300),
-    file_Size varchar(30),
-    file_Created varchar(30),
-    file_Modified varchar(30),
-    import_client_id varchar(30), 
-    import_load_id varchar(30)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `importFileID`(importFile varchar(300),
+  file_Size varchar(30),
+  file_Created varchar(30),
+  file_Modified varchar(30),
+  import_load_id varchar(30)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE e1 INT UNSIGNED;
   DECLARE e2, e3 VARCHAR(128);
-  DECLARE e4, e5 VARCHAR(64);
-  DECLARE importFileID INTEGER DEFAULT null;
-  DECLARE importclient_id INTEGER DEFAULT null;
+  DECLARE importFile_ID INTEGER DEFAULT null;
   DECLARE importload_id INTEGER DEFAULT null;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION 
 	BEGIN
-   	    GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
-		CALL apache_logs.importerror('importFileID', e1, e2, e3, 'apache_logs', 'apachelogs2mysql.py');
+    GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
+    CALL apache_logs.errorProcess('importFileID', e1, e2, e3, 'apache_logs', 'apachelogs2mysql.py', importload_id, null );
 	END;
   SELECT id
-    INTO importFileID
+    INTO importFile_ID
     FROM apache_logs.import_file
     WHERE name = importFile;
-  IF importFileID IS NULL THEN
-    IF NOT CONVERT(import_client_id, UNSIGNED) = 0 THEN
-	  SET importclient_id = CONVERT(import_client_id, UNSIGNED);
-    END IF;
+  IF importFile_ID IS NULL THEN
     IF NOT CONVERT(import_load_id, UNSIGNED) = 0 THEN
-	  SET importload_id = CONVERT(import_load_id, UNSIGNED);
+  	  SET importload_id = CONVERT(import_load_id, UNSIGNED);
     END IF;
 	INSERT INTO apache_logs.import_file 
 			(name,
 			filesize,
 			filecreated,
 			filemodified,
-			importclientid,
-            importloadid)
+      importloadid)
     VALUES 
 		(importFile, 
          CONVERT(file_Size, UNSIGNED),
          STR_TO_DATE(file_Created,'%a %b %e %H:%i:%s %Y'),
          STR_TO_DATE(file_Modified,'%a %b %e %H:%i:%s %Y'),
-         importclient_id,
          importload_id);
-	SET importFileID = LAST_INSERT_ID();
+	SET importFile_ID = LAST_INSERT_ID();
   END IF;
-  RETURN importFileID;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP FUNCTION IF EXISTS `importFileProcess` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `importFileProcess`(importfileid INTEGER, processid INTEGER) RETURNS int
-    READS SQL DATA
-BEGIN
-  DECLARE importFileName VARCHAR(300) DEFAULT null;
-  DECLARE checkProcessID INTEGER DEFAULT null;
-  DECLARE processFile INTEGER DEFAULT 1;
-  DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'importFileProcess'; 
-  SELECT name,
-         importprocessid 
-    INTO importFileName,
-         checkProcessID
-    FROM apache_logs.import_file
-    WHERE id = importfileid;
-  -- IF none of these things happen all is well. processing records from same file.
-  IF importFileName IS NULL THEN
-  -- This is an error. Import File must be in table when import processing.
-    SET processFile = 0;
-    SIGNAL SQLSTATE
-      '45000'
-    SET
-      MESSAGE_TEXT = `Import File is not found in import_file table. An error has happened.`,
-      MYSQL_ERRNO = ER_SIGNAL_EXCEPTION;
-  ELSEIF processid IS NULL THEN
-  -- This is an error. This function is only called when import processing. ProcessID must be valid.
-    SET processFile = 0;
-    SIGNAL SQLSTATE
-      '45000'
-    SET
-      MESSAGE_TEXT = `ProcessID required when import processing. An error has happpened.`,
-      MYSQL_ERRNO = ER_SIGNAL_EXCEPTION;
-  ELSEIF checkProcessID IS NULL THEN
-  -- First time and first record in file being processed. This will happen one time for each file.
-    UPDATE apache_logs.import_file SET importprocessid = processid WHERE id = importFileID;
-  ELSEIF processid != checkProcessID THEN
-  -- This is an error. This function is only called when import processing. only ONE ProcessID must be used for each file.
-    SET processFile = 0;
-    SIGNAL SQLSTATE
-      '45000'
-    SET
-      MESSAGE_TEXT = `File has already been processed in previous import process.  An error has happpened.`,
-      MYSQL_ERRNO = ER_SIGNAL_EXCEPTION;
-  END IF;
-  RETURN processFile;
+  RETURN importFile_ID;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -3273,25 +3208,30 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `importLoadID`(import_client_id varchar(30)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `importLoadID`(import_client_id varchar(30)) RETURNS int
     READS SQL DATA
 BEGIN
-  DECLARE importLoadID INTEGER DEFAULT null;
-  DECLARE importclient_id INTEGER DEFAULT null;
+  DECLARE e1 INT UNSIGNED;
+  DECLARE e2, e3 VARCHAR(128);
+  DECLARE importLoad_ID INTEGER DEFAULT null;
+  DECLARE importclient_ID INTEGER DEFAULT null;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-		CALL importerror('importLoadID', 'SQLEXCEPTION');
+	BEGIN
+    GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
+    CALL apache_logs.errorProcess('importLoadID', e1, e2, e3, 'apache_logs', 'apachelogs2mysql.py', importLoad_ID, null );
+	END;
   IF NOT CONVERT(import_client_id, UNSIGNED) = 0 THEN
-	  SET importclient_id = CONVERT(import_client_id, UNSIGNED);
+	  SET importclient_ID = CONVERT(import_client_id, UNSIGNED);
   END IF;
-  INSERT INTO apache_logs.import_load (importclientid) VALUES (importclient_id);
-  SET importLoadID = LAST_INSERT_ID();
-  RETURN importLoadID;
+  INSERT INTO apache_logs.import_load (importclientid) VALUES (importclient_ID);
+  SET importLoad_ID = LAST_INSERT_ID();
+  RETURN importLoad_ID;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -3302,17 +3242,18 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `importProcessID`(importProcess varchar(300)) RETURNS int
+CREATE DEFINER=`root`@`localhost` FUNCTION `importProcessID`(processType varchar(100),
+  processName varchar(100)) RETURNS int
     READS SQL DATA
 BEGIN
-  DECLARE importProcessID INTEGER DEFAULT null;
-  DECLARE importServer_ID INTEGER DEFAULT null;
+  DECLARE importProcess_ID INTEGER DEFAULT NULL;
+  DECLARE importServer_ID INTEGER DEFAULT NULL;
   DECLARE db_user VARCHAR(255) DEFAULT NULL;
   DECLARE db_host VARCHAR(255) DEFAULT NULL;
   DECLARE db_version VARCHAR(255) DEFAULT NULL;
@@ -3320,34 +3261,34 @@ BEGIN
   DECLARE db_machine VARCHAR(255) DEFAULT NULL;
   DECLARE db_server VARCHAR(255) DEFAULT NULL;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION
-	BEGIN
-		IF @error_count=1 THEN RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'importServerID called from importProcessID'; ELSE RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'importProcessID'; END IF;
-	END;
+  	BEGIN
+	  	IF @error_count=1 THEN RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'importServerID called from importProcessID'; ELSE RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'importProcessID'; END IF;
+	  END;
   SET @error_count = 0;
-  IF importProcess IS NOT NULL THEN
 	SELECT user(),
-		@@hostname,
-		@@version,
-        @@version_compile_os,
-        @@version_compile_machine,
-   		@@server_uuid
-	INTO 
-		db_user,
-		db_host,
-        db_version,
-        db_system,
-        db_machine,
-		db_server;
+    @@hostname,
+    @@version,
+    @@version_compile_os,
+    @@version_compile_machine,
+    @@server_uuid
+  INTO 
+    db_user,
+    db_host,
+    db_version,
+    db_system,
+    db_machine,
+    db_server;
 	SET importServer_ID = importServerID(db_user, db_host, db_version, db_system, db_machine, db_server);
 	INSERT INTO apache_logs.import_process
-      (name,
+      (type,
+      name,
       importserverid)
     VALUES
-      (importProcess,
+      (processType,
+      processName,
       importServer_ID);
-    SET importProcessID = LAST_INSERT_ID();
-  END IF;
-  RETURN importProcessID;
+    SET importProcess_ID = LAST_INSERT_ID();
+  RETURN importProcess_ID;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -3358,36 +3299,36 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `importServerID`(in_user VARCHAR(250),
+CREATE DEFINER=`root`@`localhost` FUNCTION `importServerID`(in_user VARCHAR(250),
 	in_host VARCHAR(250),
-    in_version VARCHAR(50),
-    in_system VARCHAR(50),
-    in_machine VARCHAR(50),
+  in_version VARCHAR(50),
+  in_system VARCHAR(50),
+  in_machine VARCHAR(50),
 	in_server VARCHAR(250)) RETURNS int
     READS SQL DATA
 BEGIN
-  DECLARE importServerID INTEGER DEFAULT null;
+  DECLARE importServer_ID INTEGER DEFAULT null;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION
   BEGIN
-	SET @error_count = 1;
-	RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'importServerID'; 
+  	SET @error_count = 1;
+	  RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'importServerID'; 
   END;
   SELECT id
-	INTO importServerID
-	FROM apache_logs.import_server
+	  INTO importServer_ID
+	  FROM apache_logs.import_server
    WHERE dbuser = in_user
      AND dbhost = in_host
      AND dbversion = in_version
      AND dbsystem = in_system
      AND dbmachine = in_machine
      AND serveruuid = in_server;
-  IF importServerID IS NULL THEN
+  IF importServer_ID IS NULL THEN
     INSERT INTO apache_logs.import_server 
       (dbuser,
       dbhost,
@@ -3402,33 +3343,224 @@ BEGIN
       in_system,
       in_machine,
       in_server);
-    SET importServerID = LAST_INSERT_ID();
+    SET importServer_ID = LAST_INSERT_ID();
   END IF;
-  RETURN importServerID;
+  RETURN importServer_ID;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `importError` */;
+/*!50003 DROP FUNCTION IF EXISTS `log_clientNameID` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` PROCEDURE `importError`(IN in_module VARCHAR(100),
+CREATE DEFINER=`root`@`localhost` FUNCTION `log_clientNameID`(tcClientName varchar(253)) RETURNS int
+    READS SQL DATA
+BEGIN
+  DECLARE clientName_ID INTEGER DEFAULT null;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'log_clientNameID'; 
+  SELECT id 
+  INTO clientName_ID
+  FROM apache_logs.log_clientname
+  WHERE name = tcClientName;
+  IF clientName_ID IS NULL THEN
+    INSERT INTO apache_logs.log_clientname (name) VALUES (tcClientName);
+    SET clientName_ID = LAST_INSERT_ID();
+  END IF;
+  RETURN clientName_ID;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP FUNCTION IF EXISTS `log_clientPortID` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` FUNCTION `log_clientPortID`(tcClientPort varchar(253)) RETURNS int
+    READS SQL DATA
+BEGIN
+  DECLARE clientPort_ID INTEGER DEFAULT null;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'log_clientPortID'; 
+  SELECT id 
+  INTO clientPort_ID
+  FROM apache_logs.log_clientport
+  WHERE name = tcClientPort;
+  IF clientPort_ID IS NULL THEN
+    INSERT INTO apache_logs.log_clientport (name) VALUES (tcClientPort);
+    SET clientPort_ID = LAST_INSERT_ID();
+  END IF;
+  RETURN clientPort_ID;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP FUNCTION IF EXISTS `log_refererID` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` FUNCTION `log_refererID`(tcReferer varchar(1000)) RETURNS int
+    READS SQL DATA
+BEGIN
+  DECLARE referer_ID INTEGER DEFAULT null;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'log_refererID'; 
+  SELECT id 
+  INTO referer_ID
+  FROM apache_logs.log_referer
+  WHERE name = tcReferer;
+  IF referer_ID IS NULL THEN
+    INSERT INTO apache_logs.log_referer (name) VALUES (tcReferer);
+    SET referer_ID = LAST_INSERT_ID();
+  END IF;
+  RETURN referer_ID;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP FUNCTION IF EXISTS `log_serverNameID` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` FUNCTION `log_serverNameID`(tcServerName varchar(253)) RETURNS int
+    READS SQL DATA
+BEGIN
+  DECLARE serverName_ID INTEGER DEFAULT null;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'log_serverNameID'; 
+  SELECT id 
+  INTO serverName_ID
+  FROM apache_logs.log_servername
+  WHERE name = tcServerName;
+  IF serverName_ID IS NULL THEN
+    INSERT INTO apache_logs.log_servername (name) VALUES (tcServerName);
+    SET serverName_ID = LAST_INSERT_ID();
+  END IF;
+  RETURN serverName_ID;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP FUNCTION IF EXISTS `log_serverPortID` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` FUNCTION `log_serverPortID`(tnServerPort INTEGER) RETURNS int
+    READS SQL DATA
+BEGIN
+  DECLARE serverPort_ID INTEGER DEFAULT null;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'log_serverPortID'; 
+  SELECT id 
+  INTO serverPort_ID
+  FROM apache_logs.log_serverport
+  WHERE name = tnServerPort;
+  IF serverPort_ID IS NULL THEN
+    INSERT INTO apache_logs.log_serverport (name) VALUES (tnServerPort);
+    SET serverPort_ID = LAST_INSERT_ID();
+  END IF;
+  RETURN serverPort_ID;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `errorLoad` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `errorLoad`(IN in_module VARCHAR(300),
+     IN in_mysqlerrno VARCHAR(10),
+     IN in_messagetext VARCHAR(1000), 
+     IN in_loadID VARCHAR(10))
+BEGIN
+	DECLARE mysqlerrno INTEGER DEFAULT 0;
+	DECLARE loadID INTEGER DEFAULT 0;
+    IF NOT CONVERT(in_mysqlerrno, UNSIGNED) = 0 THEN
+	    SET mysqlerrno = CONVERT(in_mysqlerrno, UNSIGNED);
+    END IF;
+    IF NOT CONVERT(in_loadID, UNSIGNED) = 0 THEN
+	    SET loadID = CONVERT(in_loadID, UNSIGNED);
+    END IF;
+	INSERT INTO import_error 
+			(module,
+			mysql_errno,
+			message_text,
+      importloadid,
+      schema_name)
+		VALUES
+			(in_module,
+			mysqlerrno,
+			in_messagetext,
+      loadID,
+      'apachelogs2mysql.py');
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `errorProcess` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `errorProcess`(IN in_module VARCHAR(300),
 	 IN in_mysqlerrno INTEGER, 
-     IN in_messagetext VARCHAR(128), 
-     IN in_returnedsqlstate VARCHAR(250), 
-     IN in_schemaname VARCHAR(64),
-     IN in_catalogname VARCHAR(64),
-     IN in_loadID INTEGER,
-     IN in_processID INTEGER)
+   IN in_messagetext VARCHAR(1000), 
+   IN in_returnedsqlstate VARCHAR(250), 
+   IN in_schemaname VARCHAR(64),
+   IN in_catalogname VARCHAR(64),
+   IN in_loadID INTEGER,
+   IN in_processID INTEGER)
 BEGIN
 	INSERT INTO import_error 
 			(module,
@@ -3436,624 +3568,18 @@ BEGIN
 			message_text,
 			returned_sqlstate,
 			schema_name,
-            catalog_name,
-            importloadid,
-            importprocessid)
+      catalog_name,
+      importloadid,
+      importprocessid)
 		VALUES
 			(in_module,
-			 in_mysqlerrno,
-			 in_messagetext,
-			 in_returnedsqlstate,
-			 in_schemaname,
-			 in_catalogname,
-             in_loadID,
-             in_processID);
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `import_access_log` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` PROCEDURE `import_access_log`(
-    IN importTable VARCHAR(100)
-)
-BEGIN
-	DECLARE e1 INT UNSIGNED;
-	DECLARE e2, e3 VARCHAR(128);
-	DECLARE e4, e5 VARCHAR(64);
-	DECLARE done BOOL DEFAULT false;
-	DECLARE processID INTEGER DEFAULT 0;
-	DECLARE recordsAdded INTEGER DEFAULT 0;
-	DECLARE filesAdded INTEGER DEFAULT 0;
-	DECLARE processFile INTEGER DEFAULT NULL;
-	DECLARE logTime VARCHAR(50) DEFAULT NULL;
-	DECLARE logTimeConverted DATETIME DEFAULT now();
-	DECLARE remoteHost VARCHAR(45) DEFAULT NULL;
-	DECLARE remoteLogName VARCHAR(150) DEFAULT NULL;
-	DECLARE remoteUser VARCHAR(150) DEFAULT NULL;
-	DECLARE bytesReceived INTEGER DEFAULT 0;
-	DECLARE bytesSent INTEGER DEFAULT 0;
-	DECLARE bytesTransferred INTEGER DEFAULT 0;
-	DECLARE reqTimeMilli INTEGER DEFAULT 0;
-	DECLARE reqTimeMicro INTEGER DEFAULT 0;
-	DECLARE reqDelayMilli INTEGER DEFAULT 0;
-	DECLARE reqBytes INTEGER DEFAULT 0;
-	DECLARE reqStatus INTEGER DEFAULT 0;
-	DECLARE reqProtocol VARCHAR(30) DEFAULT NULL;
-	DECLARE reqMethod VARCHAR(50) DEFAULT NULL;
-	DECLARE reqUri VARCHAR(2000) DEFAULT NULL;
-	DECLARE reqQuery VARCHAR(2000) DEFAULT NULL;
-	DECLARE reqQueryConverted VARCHAR(2000) DEFAULT NULL;
-	DECLARE referer VARCHAR(1000) DEFAULT NULL;
-	DECLARE refererConverted VARCHAR(2000) DEFAULT NULL;
-	DECLARE userAgent VARCHAR(2000) DEFAULT NULL;
-	DECLARE logCookie VARCHAR(400) DEFAULT NULL;
-	DECLARE logCookieConverted VARCHAR(400) DEFAULT NULL;
-	DECLARE serverName VARCHAR(253) DEFAULT NULL;
-	DECLARE serverPort INTEGER DEFAULT NULL;
-	DECLARE importFile VARCHAR(300) DEFAULT NULL;
-	DECLARE importid INTEGER DEFAULT NULL;
-	DECLARE remoteHost_Id, 
-		remoteLogName_Id, 
-		remoteUser_Id, 
-		reqStatus_Id, 
-		reqProtocol_Id, 
-		reqMethod_Id, 
-		reqUri_Id, 
-		reqQuery_Id, 
-		referer_Id, 
-		userAgent_Id, 
-		logCookie_Id, 
-		serverName_Id, 
-		serverPort_Id, 
-		importFile_Id 
-		INTEGER DEFAULT NULL;
-	-- declare cursor for csv2mysql format
-	DECLARE importCsv2mysql CURSOR FOR SELECT 
-		remote_host, 
-		remote_logname, 
-		remote_user, 
-		log_time, 
-		bytes_received, 
-		bytes_sent, 
-		bytes_transferred, 
-		reqtime_milli, 
-		reqtime_micro, 
-		reqdelay_milli, 
-		req_bytes, 
-		req_status, 
-		req_protocol, 
-		req_method, 
-		req_uri, 
-		req_query, 
-		log_referer, 
-		log_useragent,
-		log_cookie,
-		server_name, 
-		server_port, 
-		importfileid,
-		id 
-	FROM apache_logs.load_access_csv2mysql
-   WHERE import_status=0;
-	-- declare cursor for combined format
-	DECLARE importVhost CURSOR FOR SELECT 
-		remote_host, 
-		remote_logname, 
-		remote_user, 
-		log_time, 
-		req_bytes, 
-		req_status, 
-		req_protocol, 
-		req_method, 
-		req_uri, 
-		req_query, 
-		log_referer, 
-		log_useragent,
-		server_name, 
-		server_port, 
-		importfileid,
-		id 
-	FROM apache_logs.load_access_vhost
-   WHERE import_status=0;
-	-- declare cursor for combined format
-	DECLARE importCombined CURSOR FOR SELECT 
-		remote_host, 
-		remote_logname, 
-		remote_user, 
-		log_time, 
-		req_bytes, 
-		req_status, 
-		req_protocol, 
-		req_method, 
-		req_uri, 
-		req_query, 
-		log_referer, 
-		log_useragent,
-		importfileid,
-		id 
-	FROM apache_logs.load_access_combined
-   WHERE import_status=0;
-	-- declare NOT FOUND handler
-	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-		BEGIN
-			GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME; 
- 			CALL apache_logs.importerror('import_access_log', e1, e2, e3, e4, e5, null, processid);
- 			ROLLBACK;
-		END;
-    SET processID = apache_logs.importProcessID(CONCAT('access log', ' - ', importTable));
-	START TRANSACTION;
-    -- open the cursor
-	IF importTable = 'csv2mysql' THEN
-		OPEN importCsv2mysql;
-	ELSEIF importTable = 'vhost' THEN
-		OPEN importVhost;
-	ELSE
-		OPEN importCombined;
-	END IF;	
-    process_import: LOOP
-		IF importTable = 'csv2mysql' THEN
-			FETCH importCsv2mysql INTO 
-			remoteHost, 
-			remoteUser, 
-			remoteLogName, 
-			logTime, 
-			bytesReceived, 
-			bytesSent, 
-			bytesTransferred, 
-			reqTimeMilli, 
-			reqTimeMicro, 
-			reqDelayMilli, 
-			reqBytes, 
-			reqStatus, 
-			reqProtocol, 
-			reqMethod, 
-			reqUri, 
-			reqQuery, 
-			referer, 
-			userAgent,
-			logCookie,
-			serverName, 
-			serverPort, 
-			importFile_Id,
-            importid; 
-		ELSEIF importTable = 'vhost' THEN
-			FETCH importVhost INTO 
-			remoteHost, 
-			remoteUser, 
-			remoteLogName, 
-			logTime, 
-			reqBytes, 
-			reqStatus, 
-			reqProtocol, 
-			reqMethod, 
-			reqUri, 
-			reqQuery, 
-			referer, 
-			userAgent,
-			serverName, 
-			serverPort, 
-			importFile_Id,
-            importid; 
-		ELSE
-			FETCH importCombined INTO 
-			remoteHost, 
-			remoteUser, 
-			remoteLogName, 
-			logTime, 
-			reqBytes, 
-			reqStatus, 
-			reqProtocol, 
-			reqMethod, 
-			reqUri, 
-			reqQuery, 
-			referer, 
-			userAgent,
-			importFile_Id,
-            importid; 
-		END IF;
-		IF done = true THEN 
-			LEAVE process_import;
-		END IF;
-		SET processFile = apache_logs.importFileProcess(importFile_Id, processID);
-		IF processFile = 0 THEN
-			ROLLBACK;
-			LEAVE process_import;
-        END IF;
-		SET recordsAdded = recordsAdded + 1;
-		-- any customizing for business needs should be done here before normalization functions called.
-        -- convert import staging columns - reqQuery, referer, log_time and log_cookie in import for audit purposes
-		IF POSITION("?" IN reqQuery)>0 THEN
-			SET reqQueryConverted = SUBSTR(reqQuery,(POSITION("?" IN reqQuery)+1));
-		ELSE
-			SET reqQueryConverted = reqQuery;
-		END IF;
-		IF POSITION("?" IN referer)>0 THEN
-			SET refererConverted = SUBSTR(referer,1,(POSITION("?" IN referer)-1));
-		ELSE
-			SET refererConverted = referer;
-		END IF;
-		IF POSITION("[" IN logTime)>0 THEN
-			SET logTimeConverted = STR_TO_DATE(SUBSTR(logTime,2,20),'%d/%b/%Y:%H:%i:%s');
-		ELSE
-			SET logTimeConverted = STR_TO_DATE(SUBSTR(logTime,1,20),'%d/%b/%Y:%H:%i:%s');
-		END IF;
-		IF logCookie IS NULL THEN
-			SET logCookieConverted = NULL;
-		ELSEIF logCookie != '-' THEN
-			SET logCookieConverted = SUBSTR(logCookie,3,POSITION('.' IN logCookie)-3);
-		ELSE
-			SET logCookieConverted = 'Empty Cookie';
-		END IF;
-        -- normalize import staging table 
-		IF reqProtocol IS NOT NULL THEN
-			SET reqProtocol_Id = apache_logs.access_reqProtocolID(reqProtocol);
-        END IF;
-		IF reqMethod IS NOT NULL THEN
-			SET reqMethod_Id = apache_logs.access_reqMethodID(reqMethod);
-        END IF;
-		IF reqStatus IS NOT NULL THEN
-			SET reqStatus_Id = apache_logs.access_reqStatusID(reqStatus);
-        END IF;
-		IF reqUri IS NOT NULL THEN
-			SET reqUri_Id = apache_logs.access_reqUriID(reqUri);
-        END IF;
-		IF reqQueryConverted IS NOT NULL THEN
-			SET reqQuery_Id = apache_logs.access_reqQueryID(reqQueryConverted);
-        END IF;
-		IF remoteHost IS NOT NULL THEN
-			SET remoteHost_Id = apache_logs.access_remoteHostID(remoteHost);
-        END IF;
-		IF remoteLogName IS NOT NULL THEN
-			SET remoteLogName_Id = apache_logs.access_remoteLogNameID(remoteLogName);
-        END IF;
-		IF remoteUser IS NOT NULL THEN
-			SET remoteUser_Id = apache_logs.access_remoteUserID(remoteUser);
-        END IF;
-		IF refererConverted IS NOT NULL THEN
-			SET referer_Id = apache_logs.access_refererID(refererConverted);
-        END IF;
-		IF userAgent IS NOT NULL THEN
-			SET userAgent_Id = apache_logs.access_userAgentID(userAgent);
-        END IF;
-		IF serverName IS NOT NULL THEN
-			SET serverName_Id = apache_logs.access_serverNameID(serverName);
-        END IF;
-		IF serverPort IS NOT NULL THEN
-			SET serverPort_Id = apache_logs.access_serverPortID(serverPort);
-        END IF;
-		IF logCookieConverted IS NOT NULL THEN
-			SET logCookie_Id = apache_logs.access_cookieID(logCookieConverted);
-        END IF;
-		INSERT INTO apache_logs.access_log (timeStamp, 
-		    bytes_received,
-		    bytes_sent,
-		    bytes_transferred,
-		    reqtime_milli,
-		    reqtime_micro,
-		    reqdelay_milli,
-		    reqbytes,
-			reqstatusid, 
-			reqprotocolid, 
-			reqmethodid, 
-			requriid, 
-			reqqueryid, 
-			remotehostid,
-			remotelognameid,
-			remoteuserid, 
-			refererid, 
-			useragentid,
-			cookieid,
-			servernameid, 
-			serverportid, 
-			importfileid) 
-		VALUES
-			(logTimeConverted,
-			bytesReceived,
-			bytesSent,
-			bytesTransferred,
-			reqTimeMilli,
-			reqTimeMicro,
-			reqDelayMilli,
-			reqBytes,
-			reqStatus_Id,
-			reqProtocol_Id,
-			reqMethod_Id,
-			reqUri_Id,
-			reqQuery_Id,
-			remoteHost_Id,
-			remoteLogName_Id,
-			remoteUser_Id,
-			referer_Id,
-			userAgent_Id,
-			logCookie_Id,
-			serverName_Id, 
-			serverPort_Id, 
-			importfile_Id);
-		IF importTable = 'csv2mysql' THEN
-			UPDATE apache_logs.load_access_csv2mysql SET import_status=1 WHERE id=importid;
-		ELSEIF importTable = 'vhost' THEN
-			UPDATE apache_logs.load_access_vhost SET import_status=1 WHERE id=importid;
-		ELSE
-			UPDATE apache_logs.load_access_combined SET import_status=1 WHERE id=importid;
-		END IF;	
-	END LOOP;
-    -- update import process table
-	SELECT COUNT(DISTINCT(importfileid))
-	INTO filesAdded
-	FROM access_log
-	INNER JOIN import_file
-	ON access_log.importfileid = import_file.id
-	WHERE import_file.importprocessid=processid;
-	UPDATE apache_logs.import_process 
-       SET records = recordsAdded, 
-           files = filesAdded, 
-           completed = now() 
-     WHERE id = processID;
-	COMMIT;
-    -- close the cursor
-	IF importTable = 'csv2mysql' THEN
-		CLOSE importCsv2mysql;
-	ELSEIF importTable = 'vhost' THEN
-		CLOSE importVhost;
-	ELSE
-		CLOSE importCombined;
-	END IF;	
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `import_error_log` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` PROCEDURE `import_error_log`(
-    IN importTable VARCHAR(100)
-)
-BEGIN
-	DECLARE e1 INT UNSIGNED;
-	DECLARE e2, e3 VARCHAR(128);
-	DECLARE e4, e5 VARCHAR(64);
-	DECLARE done BOOL DEFAULT false;
-	DECLARE processID INTEGER DEFAULT 0;
-	DECLARE recordsAdded INTEGER DEFAULT 0;
-	DECLARE filesAdded INTEGER DEFAULT 0;
-	DECLARE processFile INTEGER DEFAULT NULL;
-	DECLARE log_time DATETIME DEFAULT now();
-	DECLARE log_level VARCHAR(100) DEFAULT NULL;
-	DECLARE log_module VARCHAR(100) DEFAULT NULL;
-	DECLARE log_processid VARCHAR(100) DEFAULT NULL;
-	DECLARE log_threadid VARCHAR(100) DEFAULT NULL;
-	DECLARE log_apacheCode VARCHAR(400) DEFAULT NULL;
-	DECLARE log_apacheMessage VARCHAR(400) DEFAULT NULL;
-	DECLARE log_systemCode VARCHAR(400) DEFAULT NULL;
-	DECLARE log_systemMessage VARCHAR(400) DEFAULT NULL;
-	DECLARE log_message VARCHAR(500) DEFAULT NULL;
-	DECLARE log_reqClient VARCHAR(200) DEFAULT NULL;
-	DECLARE log_referer VARCHAR(1000) DEFAULT NULL;
-	DECLARE refererConverted VARCHAR(1000) DEFAULT NULL;
-	DECLARE importFile VARCHAR(300) DEFAULT NULL;
-	DECLARE importid INTEGER DEFAULT NULL;
-	DECLARE logLevel_Id,
-		module_Id,
-		process_Id, 
-		thread_Id, 
-		apacheCode_Id, 
-		apacheMessage_Id, 
-		systemCode_Id, 
-		systemMessage_Id, 
-		logMessage_Id, 
-		reqClient_Id, 
-		referer_Id, 
-		importFile_Id 
-		INTEGER DEFAULT NULL;
-	DECLARE importDefault CURSOR FOR SELECT 
-		logtime, 
-		loglevel, 
-		module, 
-		processid, 
-		threadid, 
-		apachecode, 
-		apachemessage, 
-		systemcode, 
-		systemmessage, 
-		logmessage, 
-		reqclient, 
-		referer,
-        importfileid,
-        id
-	FROM apache_logs.load_error_default
-    WHERE import_status = 0;
-	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-		BEGIN
-			GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME; 
- 			CALL apache_logs.importerror('import_error_log', e1, e2, e3, e4, e5, null, processid);
- 			ROLLBACK;
-		END;
-    SET processID = apache_logs.importProcessID(CONCAT('error log', ' - ', importTable));
-	OPEN importDefault;
-	START TRANSACTION;
-    process_import: LOOP
-		FETCH importDefault INTO 
-			log_time, 
-			log_level,
-			log_module,
-			log_processid, 
-			log_threadid, 
-			log_apacheCode, 
-			log_apacheMessage, 
-			log_systemCode, 
-			log_systemMessage, 
-			log_message, 
-			log_reqClient, 
-			log_referer, 
-			importFile_Id,
-            importid; 
-		IF done = true THEN 
-			LEAVE process_import;
-		END IF;
-		SET processFile = apache_logs.importFileProcess(importFile_Id, processID);
-		IF processFile = 0 THEN
-			ROLLBACK;
-			LEAVE process_import;
-        END IF;
-		SET recordsAdded = recordsAdded + 1;
-		SET logLevel_Id = null,
-		module_Id = null,
-		process_Id = null, 
-		thread_Id = null, 
-		apacheCode_Id = null, 
-		apacheMessage_Id = null, 
-		systemCode_Id = null, 
-		systemMessage_Id = null, 
-		logMessage_Id = null, 
-		reqClient_Id = null, 
-		referer_Id = null;
-		-- any customizing for business needs should be done here before normalization functions called.
-        -- convert staging columns - log_referer in import for audit purposes
-		IF POSITION("?" IN log_referer)>0 THEN
-			SET refererConverted = SUBSTR(log_referer,1,(POSITION("?" IN log_referer)-1));
-		ELSE
-			SET refererConverted = log_referer;
-		END IF;
-        -- normalize import staging table 
-		IF log_level IS NOT NULL THEN
-			SET logLevel_Id = apache_logs.error_logLevelID(log_level);
-		END IF;
-		IF log_module IS NOT NULL THEN
-			SET module_Id = apache_logs.error_moduleID(log_module);
-		END IF;
-		IF log_processid IS NOT NULL THEN
-			SET process_Id = apache_logs.error_processID(log_processid);
-		END IF;
-		IF log_threadid IS NOT NULL THEN
-			SET thread_Id = apache_logs.error_threadID(log_threadid);
-		END IF;
-		IF log_apacheCode IS NOT NULL THEN
-			SET apacheCode_Id = apache_logs.error_apacheCodeID(log_apacheCode);
-		END IF;
-		IF log_apacheMessage IS NOT NULL THEN
-			SET apacheMessage_Id = apache_logs.error_apacheMessageID(log_apacheMessage);
-		END IF;
-		IF log_systemCode IS NOT NULL THEN
-			SET systemCode_Id = apache_logs.error_systemCodeID(log_systemCode);
-		END IF;
-		IF log_systemMessage IS NOT NULL THEN
-			SET systemMessage_Id = apache_logs.error_systemMessageID(log_systemMessage);
-		END IF;
-		IF log_message IS NOT NULL THEN
-			SET logMessage_id = apache_logs.error_logMessageID(log_message);
-		END IF;
-		IF log_reqClient IS NOT NULL THEN
-			SET reqClient_id = apache_logs.error_reqClientID(log_reqClient);
-		END IF;
-		IF refererConverted IS NOT NULL THEN
-			SET referer_Id = apache_logs.error_refererID(refererConverted);
-		END IF;
-		INSERT INTO apache_logs.error_log (timeStamp, 
-			loglevelid,
-			moduleid,
-			processid, 
-			threadid, 
-			apachecodeid, 
-			apachemessageid, 
-			systemcodeid, 
-			systemmessageid, 
-			logmessageid, 
-			reqclientid, 
-			refererid,
-            importfileid) 
-		VALUES
-			(log_time,
-			logLevel_Id,
-			module_Id,
-			process_Id, 
-			thread_Id, 
-			apacheCode_Id, 
-			apacheMessage_Id, 
-			systemCode_Id, 
-			systemMessage_Id, 
-			logMessage_Id, 
-			reqClient_Id, 
-			referer_Id,
-            importFile_Id);
-		UPDATE apache_logs.load_error_default SET import_status=1 WHERE id=importid;
-    END LOOP;
-    -- update import process table
-	SELECT COUNT(DISTINCT(importfileid))
-	INTO filesAdded
-	FROM error_log
-	INNER JOIN import_file
-	ON error_log.importfileid = import_file.id
-	WHERE import_file.importprocessid=processid;
-	UPDATE apache_logs.import_process 
-       SET records = recordsAdded, 
-           files = filesAdded, 
-           completed = now() 
-     WHERE id = processID;
-	COMMIT;
-    -- close the cursor
-	CLOSE importDefault;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `loadError` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` PROCEDURE `loadError`(IN in_module VARCHAR(100),
-     IN in_mysqlerrno VARCHAR(10),
-     IN in_messagetext VARCHAR(128), 
-     IN in_processID VARCHAR(10))
-BEGIN
-	DECLARE mysqlerrno INTEGER DEFAULT 0;
-	DECLARE processID INTEGER DEFAULT 0;
-    IF NOT CONVERT(in_mysqlerrno, UNSIGNED) = 0 THEN
-	  SET mysqlerrno = CONVERT(in_mysqlerrno, UNSIGNED);
-    END IF;
-    IF NOT CONVERT(in_processID, UNSIGNED) = 0 THEN
-	  SET processID = CONVERT(in_processID, UNSIGNED);
-    END IF;
-	INSERT INTO import_error 
-			(module,
-			mysql_errno,
-			message_text,
-            importprocessid,
-            schema_name)
-		VALUES
-			(in_module,
-			 mysqlerrno,
-			 in_messagetext,
-             processID,
-             'apachelogs2mysql.py');
+			in_mysqlerrno,
+			in_messagetext,
+			in_returnedsqlstate,
+			in_schemaname,
+			in_catalogname,
+      in_loadID,
+      in_processID);
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -4064,23 +3590,28 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`%` PROCEDURE `normalize_useragent`(
-    IN importProcess VARCHAR(100)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `normalize_useragent`(
+  IN in_processName VARCHAR(100),
+  IN in_importLoadID VARCHAR(20)
 )
 BEGIN
+	-- standard variables for processes
 	DECLARE e1 INT UNSIGNED;
 	DECLARE e2, e3 VARCHAR(128);
 	DECLARE e4, e5 VARCHAR(64);
 	DECLARE done BOOL DEFAULT false;
-	DECLARE processID INTEGER DEFAULT 0;
+	DECLARE importProcessID INTEGER DEFAULT NULL;
+	DECLARE importLoad_ID INTEGER DEFAULT NULL;
 	DECLARE recordsProcessed INTEGER DEFAULT 0;
-	DECLARE filesProcessed INTEGER DEFAULT 0;
+	DECLARE filesProcessed INTEGER DEFAULT 1;
+  DECLARE processError INTEGER DEFAULT 0;
+  -- LOAD DATA staging table column variables
 	DECLARE vua VARCHAR(200) DEFAULT NULL;
 	DECLARE vua_browser VARCHAR(200) DEFAULT NULL;
 	DECLARE vua_browser_family VARCHAR(200) DEFAULT NULL;
@@ -4093,6 +3624,7 @@ BEGIN
 	DECLARE vua_device_brand VARCHAR(200) DEFAULT NULL;
 	DECLARE vua_device_model VARCHAR(200) DEFAULT NULL;
 	DECLARE userAgent_id INTEGER DEFAULT NULL;
+	-- Primary IDs for the normalized Attribute tables
 	DECLARE ua_id,
     uabrowser_id,
     uabrowserfamily_id,
@@ -4104,39 +3636,46 @@ BEGIN
     uadevicefamily_id,
     uadevicebrand_id,
     uadevicemodel_id
-	INTEGER DEFAULT NULL;
-	DECLARE userAgent CURSOR FOR SELECT 
-    	 ua,
-    	 ua_browser,
-	     ua_browser_family,
-    	 ua_browser_version,
-	     ua_os,
-    	 ua_os_family,
-	     ua_os_version,
-    	 ua_device,
-	     ua_device_family,
-    	 ua_device_brand,
-	     ua_device_model,
-		 id
-	FROM apache_logs.access_log_useragent
-   WHERE uaid IS NULL;
+  	INTEGER DEFAULT NULL;
+	-- declare cursor for userAgent format
+	DECLARE userAgent CURSOR FOR 
+    SELECT ua,
+         	ua_browser,
+          ua_browser_family,
+         	ua_browser_version,
+          ua_os,
+       	  ua_os_family,
+          ua_os_version,
+         	ua_device,
+          ua_device_family,
+         	ua_device_brand,
+          ua_device_model,
+          id
+  	    FROM apache_logs.access_log_useragent
+       WHERE uaid IS NULL;
+	-- declare NOT FOUND handler
 	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION 
 		BEGIN
 			GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME; 
- 			CALL apache_logs.importerror('normalize_useragent', e1, e2, e3, e4, e5, null, processid);
+ 			CALL apache_logs.errorProcess('normalize_useragent', e1, e2, e3, e4, e5, importLoad_ID, importProcessID);
+      SET processError = processError + 1;
  			ROLLBACK;
 		END;
-	SELECT COUNT(DISTINCT(l.id))
-	INTO filesProcessed
-	FROM apache_logs.access_log_useragent lu
-    INNER JOIN apache_logs.access_log l
-    ON lu.id = l.useragentid
-	WHERE lu.uaid IS NULL;
-    SET processID = apache_logs.importProcessID(CONCAT('normalize_useragent', ' - ', importProcess));
+	-- check parameters for valid values
+  IF CONVERT(in_importLoadID, UNSIGNED) = 0 AND in_importLoadID != 'ALL' THEN
+    SIGNAL SQLSTATE '22003' SET MESSAGE_TEXT = 'Invalid parameter value for in_importLoadID. Must be convert to number or be ALL';
+  END IF;
+  IF FIND_IN_SET(in_processName, "default,MySQL WorkBench,Python Processed") = 0 THEN
+    SIGNAL SQLSTATE '22003' SET MESSAGE_TEXT = 'Invalid parameter value for in_processName. Must be default,MySQL WorkBench OR Python Processed';
+  END IF;
+	IF NOT CONVERT(in_importLoadID, UNSIGNED) = 0 THEN
+		SET importLoad_ID = CONVERT(in_importLoadID, UNSIGNED);
+	END IF;
+  SET importProcessID = apache_logs.importProcessID('normalize_useragent', in_processName);
 	OPEN userAgent;
-    START TRANSACTION;	
-    process_normalize: LOOP
+  START TRANSACTION;	
+  process_normalize: LOOP
 		FETCH userAgent INTO 
 			vua,
 			vua_browser,
@@ -4221,13 +3760,20 @@ BEGIN
     			uadevicefamilyid = uadevicefamily_id,
     			uadevicebrandid = uadevicebrand_id,
     			uadevicemodelid = uadevicemodel_id WHERE useragentid = userAgent_id;
-    END LOOP;
-    -- update import process table
+  END LOOP;
+  -- to remove SQL calculating filesProcessed when recordsProcessed = 0. Set=1 by default.
+  IF recordsProcessed = 0 THEN
+    SET filesProcessed = 0;
+  END IF;
+  -- update import process table
 	UPDATE apache_logs.import_process 
-       SET records = recordsProcessed, 
-           files = filesProcessed, 
-           completed = now()
-     WHERE id = processID;
+      SET records = recordsProcessed, 
+          files = filesProcessed,
+          importloadid = importLoad_ID,
+          completed = now(), 
+          errorOccurred = processError,
+          processSeconds = TIME_TO_SEC(TIMEDIFF(now(),started)) 
+    WHERE id = importProcessID;
 	COMMIT;
     -- close the cursor
 	CLOSE userAgent;
@@ -4237,6 +3783,1591 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `process_access_import` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `process_access_import`(
+  IN in_processName VARCHAR(100),
+  IN in_importLoadID VARCHAR(20)
+)
+BEGIN
+-- standard variables for processes
+	DECLARE e1 INT UNSIGNED;
+	DECLARE e2, e3 VARCHAR(128);
+	DECLARE e4, e5 VARCHAR(64);
+  DECLARE done BOOL DEFAULT false;
+  DECLARE importProcessID INTEGER DEFAULT NULL;
+  DECLARE importLoad_ID INTEGER DEFAULT NULL;
+  DECLARE importRecordID INTEGER DEFAULT NULL;
+  DECLARE importFile_ID INTEGER DEFAULT NULL;
+  DECLARE recordsProcessed INTEGER DEFAULT 0;
+  DECLARE filesProcessed INTEGER DEFAULT 0;
+  DECLARE loadsProcessed INTEGER DEFAULT 1;
+  DECLARE processError INTEGER DEFAULT 0;
+  -- LOAD DATA staging table column variables
+	DECLARE logTime VARCHAR(50) DEFAULT NULL;
+	DECLARE logTimeConverted DATETIME DEFAULT now();
+	DECLARE remoteLogName VARCHAR(150) DEFAULT NULL;
+	DECLARE remoteUser VARCHAR(150) DEFAULT NULL;
+	DECLARE bytesReceived INTEGER DEFAULT 0;
+	DECLARE bytesSent INTEGER DEFAULT 0;
+	DECLARE bytesTransferred INTEGER DEFAULT 0;
+	DECLARE reqTimeMilli INTEGER DEFAULT 0;
+	DECLARE reqTimeMicro INTEGER DEFAULT 0;
+	DECLARE reqDelayMilli INTEGER DEFAULT 0;
+	DECLARE reqBytes INTEGER DEFAULT 0;
+	DECLARE reqStatus INTEGER DEFAULT 0;
+	DECLARE reqProtocol VARCHAR(30) DEFAULT NULL;
+	DECLARE reqMethod VARCHAR(50) DEFAULT NULL;
+	DECLARE reqUri VARCHAR(2000) DEFAULT NULL;
+	DECLARE reqQuery VARCHAR(2000) DEFAULT NULL;
+	DECLARE reqQueryConverted VARCHAR(2000) DEFAULT NULL;
+	DECLARE referer VARCHAR(1000) DEFAULT NULL;
+	DECLARE refererConverted VARCHAR(2000) DEFAULT NULL;
+	DECLARE userAgent VARCHAR(2000) DEFAULT NULL;
+	DECLARE logCookie VARCHAR(400) DEFAULT NULL;
+	DECLARE logCookieConverted VARCHAR(400) DEFAULT NULL;
+	DECLARE clientName VARCHAR(253) DEFAULT NULL;
+	DECLARE serverName VARCHAR(253) DEFAULT NULL;
+	DECLARE serverPort INTEGER DEFAULT NULL;
+	DECLARE serverNameFile VARCHAR(253) DEFAULT NULL;
+	DECLARE serverPortFile INTEGER DEFAULT NULL;
+	DECLARE importFile VARCHAR(300) DEFAULT NULL;
+  -- Primary IDs for the normalized Attribute tables
+	DECLARE remoteLogName_Id, 
+		remoteUser_Id, 
+		reqStatus_Id, 
+		reqProtocol_Id, 
+		reqMethod_Id, 
+		reqUri_Id, 
+		reqQuery_Id, 
+		referer_Id, 
+		userAgent_Id, 
+		logCookie_Id, 
+		clientName_Id, 
+		serverName_Id, 
+		serverPort_Id 
+		INTEGER DEFAULT NULL;
+  -- declare cursor for csv2mysql format - All importloadIDs not processed
+	DECLARE csv2mysqlStatus CURSOR FOR 
+      SELECT l.remote_host, 
+ 		        l.remote_logname, 
+    	  	  l.remote_user, 
+		        l.log_time, 
+		        l.bytes_received, 
+      		  l.bytes_sent, 
+	      	  l.bytes_transferred, 
+		        l.reqtime_milli, 
+    		    l.reqtime_micro, 
+  	    	  l.reqdelay_milli, 
+	  	      l.req_bytes, 
+    		    l.req_status, 
+		        l.req_protocol, 
+  		      l.req_method, 
+    	  	  l.req_uri, 
+		        l.req_query, 
+		        l.log_referer, 
+      		  l.log_useragent,
+	      	  l.log_cookie,
+		        l.server_name, 
+    		    l.server_port, 
+		        l.importfileid,
+ 	  	      f.server_name server_name_file, 
+     		    f.server_port server_port_file, 
+		        l.id 
+        FROM apache_logs.load_access_csv2mysql l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE l.process_status=1;
+  -- declare cursor for csv2mysql format - single importLoadID
+	DECLARE csv2mysqlLoadID CURSOR FOR 
+      SELECT l.remote_host, 
+      		  l.remote_logname, 
+	      	  l.remote_user, 
+  		      l.log_time, 
+	  	      l.bytes_received, 
+    	  	  l.bytes_sent, 
+	    	    l.bytes_transferred, 
+		        l.reqtime_milli, 
+    		    l.reqtime_micro, 
+  		      l.reqdelay_milli, 
+    	  	  l.req_bytes, 
+    		    l.req_status, 
+    		    l.req_protocol, 
+      		  l.req_method, 
+	      	  l.req_uri, 
+		        l.req_query, 
+    		    l.log_referer, 
+      		  l.log_useragent,
+	      	  l.log_cookie,
+    		    l.server_name, 
+    		    l.server_port, 
+		        l.importfileid,
+ 	  	      f.server_name server_name_file, 
+     		    f.server_port server_port_file, 
+    		    l.id 
+  	    FROM apache_logs.load_access_csv2mysql l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
+         AND l.process_status=1;
+  -- declare cursor for combined format - All importloadIDs not processed
+	DECLARE vhostStatus CURSOR FOR 
+      SELECT l.remote_host, 
+    		    l.remote_logname, 
+		        l.remote_user, 
+      		  l.log_time, 
+	      	  l.req_bytes, 
+		        l.req_status, 
+    		    l.req_protocol, 
+  	    	  l.req_method, 
+	  	      l.req_uri, 
+    		    l.req_query, 
+		        l.log_referer, 
+  		      l.log_useragent,
+	  	      l.server_name, 
+    		    l.server_port, 
+  	    	  l.importfileid,
+ 	  	      f.server_name server_name_file, 
+     		    f.server_port server_port_file, 
+	  	      l.id 
+  	    FROM apache_logs.load_access_vhost l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE l.process_status=1;
+  -- declare cursor for combined format - single importLoadID
+	DECLARE vhostLoadID CURSOR FOR 
+      SELECT l.remote_host, 
+    		    l.remote_logname, 
+		        l.remote_user, 
+      		  l.log_time, 
+	      	  l.req_bytes, 
+    		    l.req_status, 
+		        l.req_protocol, 
+  		      l.req_method, 
+    	  	  l.req_uri, 
+		        l.req_query, 
+		        l.log_referer, 
+      		  l.log_useragent,
+	      	  l.server_name, 
+		        l.server_port, 
+      		  l.importfileid,
+ 	  	      f.server_name server_name_file, 
+     		    f.server_port server_port_file, 
+	      	  l.id 
+	      FROM apache_logs.load_access_vhost l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
+         AND l.process_status=1;
+  -- declare cursor for combined format - All importloadIDs not processed
+	DECLARE combinedStatus CURSOR FOR 
+      SELECT l.remote_host, 
+    		    l.remote_logname, 
+  	    	  l.remote_user, 
+    	  	  l.log_time, 
+    		    l.req_bytes, 
+    		    l.req_status, 
+  	    	  l.req_protocol, 
+    	  	  l.req_method, 
+		        l.req_uri, 
+		        l.req_query, 
+      		  l.log_referer, 
+    	  	  l.log_useragent,
+	  	      l.server_name, 
+    		    l.server_port, 
+    		    l.importfileid,
+ 	  	      f.server_name server_name_file, 
+     		    f.server_port server_port_file, 
+		        l.id 
+        FROM apache_logs.load_access_combined l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE l.process_status=1;
+  -- declare cursor for combined format - single importLoadID
+	DECLARE combinedLoadID CURSOR FOR 
+      SELECT l.remote_host, 
+    		    l.remote_logname, 
+  	    	  l.remote_user, 
+    	  	  l.log_time, 
+    		    l.req_bytes, 
+    		    l.req_status, 
+  	    	  l.req_protocol, 
+    	  	  l.req_method, 
+		        l.req_uri, 
+		        l.req_query, 
+      		  l.log_referer, 
+    	  	  l.log_useragent,
+	  	      l.server_name, 
+    		    l.server_port, 
+    		    l.importfileid,
+ 	  	      f.server_name server_name_file, 
+     		    f.server_port server_port_file, 
+		        l.id 
+        FROM apache_logs.load_access_combined l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
+         AND l.process_status=1;
+  -- declare NOT FOUND handler
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+		BEGIN
+			GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME; 
+ 			CALL apache_logs.errorProcess('process_access_import', e1, e2, e3, e4, e5, importLoad_ID, importProcessID);
+      SET processError = processError + 1;
+ 			ROLLBACK;
+		END;
+  -- check parameters for valid values
+  IF CONVERT(in_importLoadID, UNSIGNED) = 0 AND in_importLoadID != 'ALL' THEN
+    SIGNAL SQLSTATE '22003' SET MESSAGE_TEXT = 'Invalid parameter value for in_importLoadID. Must be convert to number or be ALL';
+  END IF;
+  IF FIND_IN_SET(in_processName, "csv2mysql,vhost,combined") = 0 THEN
+    SIGNAL SQLSTATE '22003' SET MESSAGE_TEXT = 'Invalid parameter value for in_processName. Must be csv2mysql, vhost OR combined';
+  END IF;
+	IF NOT CONVERT(in_importLoadID, UNSIGNED) = 0 THEN
+		SET importLoad_ID = CONVERT(in_importLoadID, UNSIGNED);
+	END IF;
+	IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
+    SELECT COUNT(DISTINCT(l.importfileid))
+      INTO filesProcessed
+      FROM apache_logs.load_access_csv2mysql l
+     WHERE l.process_status = 1;
+    SELECT COUNT(DISTINCT(f.importloadid))
+      INTO loadsProcessed
+      FROM apache_logs.load_access_csv2mysql l
+INNER JOIN apache_logs.import_file f 
+        ON l.importfileid = f.id
+     WHERE l.process_status = 1;
+	ELSEIF in_processName = 'csv2mysql' THEN
+    SELECT COUNT(DISTINCT(l.importfileid))
+      INTO filesProcessed
+      FROM apache_logs.load_access_csv2mysql l
+INNER JOIN apache_logs.import_file f 
+        ON l.importfileid = f.id
+     WHERE l.process_status = 1
+       AND f.importloadid = importLoad_ID;
+	ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
+    SELECT COUNT(DISTINCT(l.importfileid))
+      INTO filesProcessed
+      FROM apache_logs.load_access_vhost l
+     WHERE l.process_status = 1;
+    SELECT COUNT(DISTINCT(f.importloadid))
+      INTO loadsProcessed
+      FROM apache_logs.load_access_vhost l
+INNER JOIN apache_logs.import_file f 
+        ON l.importfileid = f.id
+     WHERE l.process_status = 1;
+	ELSEIF in_processName = 'vhost' THEN
+    SELECT COUNT(DISTINCT(l.importfileid))
+      INTO filesProcessed
+      FROM apache_logs.load_access_vhost l
+INNER JOIN apache_logs.import_file f 
+        ON l.importfileid = f.id
+     WHERE l.process_status = 1
+       AND f.importloadid = importLoad_ID;
+	ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
+    SELECT COUNT(DISTINCT(l.importfileid))
+      INTO filesProcessed
+      FROM apache_logs.load_access_combined l
+     WHERE l.process_status = 1;
+    SELECT COUNT(DISTINCT(f.importloadid))
+      INTO loadsProcessed
+      FROM apache_logs.load_access_combined l
+INNER JOIN apache_logs.import_file f 
+        ON l.importfileid = f.id
+     WHERE l.process_status = 1;
+	ELSE
+    SELECT COUNT(DISTINCT(l.importfileid))
+      INTO filesProcessed
+      FROM apache_logs.load_access_combined l
+INNER JOIN apache_logs.import_file f 
+        ON l.importfileid = f.id
+     WHERE l.process_status = 1
+       AND f.importloadid = importLoad_ID;
+	END IF;	
+  SET importProcessID = apache_logs.importProcessID('access_import', in_processName);
+	START TRANSACTION;
+  -- open the cursor
+	IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
+		OPEN csv2mysqlStatus;
+	ELSEIF in_processName = 'csv2mysql' THEN
+		OPEN csv2mysqlLoadID;
+	ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
+		OPEN vhostStatus;
+	ELSEIF in_processName = 'vhost' THEN
+		OPEN vhostLoadID;
+	ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
+		OPEN combinedStatus;
+	ELSE
+		OPEN combinedLoadID;
+	END IF;	
+  process_import: LOOP
+  	IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
+	  	FETCH csv2mysqlStatus INTO 
+		  	clientName, 
+			  remoteUser, 
+  			remoteLogName, 
+	  		logTime, 
+		  	bytesReceived, 
+			  bytesSent, 
+  			bytesTransferred, 
+	  		reqTimeMilli, 
+		  	reqTimeMicro, 
+	  		reqDelayMilli, 
+  			reqBytes, 
+		  	reqStatus, 
+			  reqProtocol, 
+  			reqMethod, 
+	  		reqUri, 
+		  	reqQuery, 
+			  referer, 
+  			userAgent,
+	  		logCookie,
+		  	serverName, 
+			  serverPort, 
+  			importFile_ID,
+		  	serverNameFile, 
+			  serverPortFile, 
+        importRecordID; 
+	  ELSEIF in_processName = 'csv2mysql' THEN
+		  FETCH csv2mysqlLoadID INTO 
+  			clientName, 
+	  		remoteUser, 
+		  	remoteLogName, 
+			  logTime, 
+  			bytesReceived, 
+	  		bytesSent, 
+		  	bytesTransferred, 
+			  reqTimeMilli, 
+  			reqTimeMicro, 
+	  		reqDelayMilli, 
+		  	reqBytes, 
+			  reqStatus, 
+  			reqProtocol, 
+	  		reqMethod, 
+		  	reqUri, 
+			  reqQuery, 
+  			referer, 
+	  		userAgent,
+		  	logCookie,
+			  serverName, 
+  			serverPort, 
+	  		importFile_ID,
+		  	serverNameFile, 
+			  serverPortFile, 
+        importRecordID; 
+  	ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
+	  	FETCH vhostStatus INTO 
+		  	clientName, 
+  			remoteUser, 
+	  		remoteLogName, 
+		  	logTime, 
+			  reqBytes, 
+  			reqStatus, 
+	  		reqProtocol, 
+		  	reqMethod, 
+			  reqUri, 
+  			reqQuery, 
+	  		referer, 
+		  	userAgent,
+			  serverName, 
+  			serverPort, 
+	  		importFile_ID,
+		  	serverNameFile, 
+			  serverPortFile, 
+        importRecordID; 
+  	ELSEIF in_processName = 'vhost' THEN
+	  	FETCH vhostLoadID INTO 
+		  	clientName, 
+			  remoteUser, 
+  			remoteLogName, 
+	  		logTime, 
+		  	reqBytes, 
+			  reqStatus, 
+  			reqProtocol, 
+	  		reqMethod, 
+		  	reqUri, 
+  			reqQuery, 
+	  		referer, 
+		  	userAgent,
+			  serverName, 
+  			serverPort, 
+	  		importFile_ID,
+		  	serverNameFile, 
+			  serverPortFile, 
+        importRecordID; 
+	  ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
+		  FETCH combinedStatus INTO 
+  			clientName, 
+	  		remoteUser, 
+		  	remoteLogName, 
+			  logTime, 
+  			reqBytes, 
+	  		reqStatus, 
+		  	reqProtocol, 
+			  reqMethod, 
+  			reqUri, 
+	  		reqQuery, 
+		  	referer, 
+			  userAgent,
+			  serverName, 
+  			serverPort, 
+  			importFile_ID,
+		  	serverNameFile, 
+			  serverPortFile, 
+        importRecordID; 
+	  ELSE
+		  FETCH combinedLoadID INTO 
+  			clientName, 
+	  		remoteUser, 
+		  	remoteLogName, 
+			  logTime, 
+  			reqBytes, 
+	  		reqStatus, 
+		  	reqProtocol, 
+			  reqMethod, 
+  			reqUri, 
+	  		reqQuery, 
+		  	referer, 
+  			userAgent,
+			  serverName, 
+  			serverPort, 
+	  		importFile_ID,
+		  	serverNameFile, 
+			  serverPortFile, 
+        importRecordID; 
+  	END IF;	
+		IF done = true THEN 
+			LEAVE process_import;
+		END IF;
+		IF apache_logs.importFileCheck(importFile_ID, importProcessID, 'import') = 0 THEN
+			ROLLBACK;
+			LEAVE process_import;
+    END IF;
+		SET recordsProcessed = recordsProcessed + 1;
+	  SET remoteLogName_Id = null, 
+		remoteUser_Id = null, 
+		reqStatus_Id = null, 
+		reqProtocol_Id = null, 
+		reqMethod_Id = null, 
+		reqUri_Id = null, 
+		reqQuery_Id = null, 
+		referer_Id = null, 
+		userAgent_Id = null, 
+		logCookie_Id = null, 
+		clientName_Id = null, 
+		serverName_Id = null, 
+		serverPort_Id  = null;
+    -- any customizing for business needs should be done here before normalization functions called.
+    -- convert import staging columns - reqQuery, referer, log_time and log_cookie in import for audit purposes
+		IF POSITION("?" IN reqQuery)>0 THEN
+			SET reqQueryConverted = SUBSTR(reqQuery,(POSITION("?" IN reqQuery)+1));
+		ELSE
+			SET reqQueryConverted = reqQuery;
+		END IF;
+		IF POSITION("?" IN referer)>0 THEN
+			SET refererConverted = SUBSTR(referer,1,(POSITION("?" IN referer)-1));
+		ELSE
+			SET refererConverted = referer;
+		END IF;
+		IF POSITION("[" IN logTime)>0 THEN
+			SET logTimeConverted = STR_TO_DATE(SUBSTR(logTime,2,20),'%d/%b/%Y:%H:%i:%s');
+		ELSE
+			SET logTimeConverted = STR_TO_DATE(SUBSTR(logTime,1,20),'%d/%b/%Y:%H:%i:%s');
+		END IF;
+		IF logCookie IS NULL THEN
+			SET logCookieConverted = NULL;
+		ELSEIF logCookie != '-' THEN
+			SET logCookieConverted = SUBSTR(logCookie,3,POSITION('.' IN logCookie)-3);
+		ELSE
+			SET logCookieConverted = 'Empty Cookie';
+		END IF;
+-- normalize import staging table 
+		IF reqProtocol IS NOT NULL THEN
+			SET reqProtocol_Id = apache_logs.access_reqProtocolID(reqProtocol);
+    END IF;
+		IF reqMethod IS NOT NULL THEN
+			SET reqMethod_Id = apache_logs.access_reqMethodID(reqMethod);
+    END IF;
+		IF reqStatus IS NOT NULL THEN
+			SET reqStatus_Id = apache_logs.access_reqStatusID(reqStatus);
+    END IF;
+		IF reqUri IS NOT NULL THEN
+			SET reqUri_Id = apache_logs.access_reqUriID(reqUri);
+    END IF;
+		IF reqQueryConverted IS NOT NULL THEN
+			SET reqQuery_Id = apache_logs.access_reqQueryID(reqQueryConverted);
+    END IF;
+		IF remoteLogName IS NOT NULL THEN
+			SET remoteLogName_Id = apache_logs.access_remoteLogNameID(remoteLogName);
+    END IF;
+		IF remoteUser IS NOT NULL THEN
+			SET remoteUser_Id = apache_logs.access_remoteUserID(remoteUser);
+    END IF;
+		IF userAgent IS NOT NULL THEN
+			SET userAgent_Id = apache_logs.access_userAgentID(userAgent);
+    END IF;
+		IF logCookieConverted IS NOT NULL THEN
+			SET logCookie_Id = apache_logs.access_cookieID(logCookieConverted);
+    END IF;
+		IF refererConverted IS NOT NULL THEN
+			SET referer_Id = apache_logs.log_refererID(refererConverted);
+    END IF;
+		IF clientName IS NOT NULL THEN
+			SET clientName_Id = apache_logs.log_clientNameID(clientName);
+    END IF;
+		IF serverName IS NOT NULL THEN
+			SET serverName_Id = apache_logs.log_serverNameID(serverName);
+		ELSEIF serverNameFile IS NOT NULL THEN
+			SET serverName_Id = apache_logs.log_serverNameID(serverNameFile);
+    END IF;
+		IF serverPort IS NOT NULL THEN
+			SET serverPort_Id = apache_logs.log_serverPortID(serverPort);
+		ELSEIF serverPortFile IS NOT NULL THEN
+			SET serverPort_Id = apache_logs.log_serverPortID(serverPortFile);
+    END IF;
+		INSERT INTO apache_logs.access_log 
+      (timeStamp, 
+		  bytes_received,
+		  bytes_sent,
+		  bytes_transferred,
+		  reqtime_milli,
+		  reqtime_micro,
+		  reqdelay_milli,
+		  reqbytes,
+  		reqstatusid, 
+	  	reqprotocolid, 
+		  reqmethodid, 
+			requriid, 
+  		reqqueryid, 
+		  remotelognameid,
+			remoteuserid, 
+	  	useragentid,
+		  cookieid,
+  		refererid, 
+	  	clientnameid,
+			servernameid, 
+  		serverportid, 
+	  	importfileid) 
+		VALUES
+			(logTimeConverted,
+			bytesReceived,
+			bytesSent,
+			bytesTransferred,
+			reqTimeMilli,
+			reqTimeMicro,
+			reqDelayMilli,
+			reqBytes,
+			reqStatus_Id,
+			reqProtocol_Id,
+			reqMethod_Id,
+			reqUri_Id,
+			reqQuery_Id,
+			remoteLogName_Id,
+			remoteUser_Id,
+			userAgent_Id,
+			logCookie_Id,
+			referer_Id,
+			clientName_Id,
+			serverName_Id, 
+			serverPort_Id, 
+			importFile_ID);
+		IF in_processName = 'csv2mysql' THEN
+			UPDATE apache_logs.load_access_csv2mysql SET process_status=2 WHERE id=importRecordID;
+		ELSEIF in_processName = 'vhost' THEN
+			UPDATE apache_logs.load_access_vhost SET process_status=2 WHERE id=importRecordID;
+		ELSE
+			UPDATE apache_logs.load_access_combined SET process_status=2 WHERE id=importRecordID;
+		END IF;	
+	END LOOP;
+  -- to remove SQL calculating loadsProcessed when importLoad_ID is passed. Set=1 by default.
+  IF importLoad_ID IS NOT NULL AND recordsProcessed = 0 THEN
+    SET loadsProcessed = 0;
+  END IF;
+  -- update import process table
+  UPDATE apache_logs.import_process 
+      SET records = recordsProcessed, 
+          files = filesProcessed, 
+          loads = loadsProcessed, 
+          importloadid = importLoad_ID, 
+          completed = now(), 
+          errorOccurred = processError,
+          processSeconds = TIME_TO_SEC(TIMEDIFF(now(),started)) 
+    WHERE id = importProcessID;
+	COMMIT;
+  -- close the cursor
+  IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
+		CLOSE csv2mysqlStatus;
+	ELSEIF in_processName = 'csv2mysql' THEN
+		CLOSE csv2mysqlLoadID;
+	ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
+		CLOSE vhostStatus;
+	ELSEIF in_processName = 'vhost' THEN
+		CLOSE vhostLoadID;
+	ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
+		CLOSE combinedStatus;
+	ELSE
+		CLOSE combinedLoadID;
+	END IF;	
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `process_access_parse` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `process_access_parse`(
+    IN in_processName VARCHAR(100),
+	IN in_importLoadID VARCHAR(20)
+)
+BEGIN
+-- standard variables for processes
+	DECLARE e1 INT UNSIGNED;
+	DECLARE e2, e3 VARCHAR(128);
+	DECLARE e4, e5 VARCHAR(64);
+  DECLARE done BOOL DEFAULT false;
+  DECLARE importProcessID INTEGER DEFAULT NULL;
+  DECLARE importLoad_ID INTEGER DEFAULT NULL;
+  DECLARE importRecordID INTEGER DEFAULT NULL;
+  DECLARE importFile_ID INTEGER DEFAULT NULL;
+  DECLARE recordsProcessed INTEGER DEFAULT 0;
+  DECLARE filesProcessed INTEGER DEFAULT 0;
+  DECLARE loadsProcessed INTEGER DEFAULT 1;
+  DECLARE processError INTEGER DEFAULT 0;
+  -- declare cursor for csv2mysql format - All importloadIDs not processed
+	DECLARE csv2mysqlStatus CURSOR FOR 
+      SELECT l.id,
+             l.importfileid
+        FROM apache_logs.load_access_csv2mysql l
+       WHERE l.process_status=0;
+  -- declare cursor for csv2mysql format - single importLoadID
+	DECLARE csv2mysqlLoadID CURSOR FOR 
+      SELECT l.id,
+             l.importfileid
+  	    FROM apache_logs.load_access_csv2mysql l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
+         AND l.process_status=0;
+  -- declare cursor for combined format - All importloadIDs not processed
+	DECLARE vhostStatus CURSOR FOR 
+      SELECT l.id,
+             l.importfileid
+  	    FROM apache_logs.load_access_vhost l
+       WHERE l.process_status=0;
+  -- declare cursor for combined format - single importLoadID
+	DECLARE vhostLoadID CURSOR FOR 
+      SELECT l.id,
+             l.importfileid
+	      FROM apache_logs.load_access_vhost l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
+         AND l.process_status=0;
+  -- declare cursor for combined format - All importloadIDs not processed
+	DECLARE combinedStatus CURSOR FOR 
+      SELECT l.id,
+             l.importfileid
+        FROM apache_logs.load_access_combined l
+       WHERE l.process_status=0;
+  -- declare cursor for combined format - single importLoadID
+	DECLARE combinedLoadID CURSOR FOR 
+      SELECT l.id,
+             l.importfileid
+        FROM apache_logs.load_access_combined l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
+         AND l.process_status=0;
+  -- declare NOT FOUND handler
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN
+			GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME; 
+ 			CALL apache_logs.errorProcess('process_access_parse', e1, e2, e3, e4, e5, importLoad_ID, importProcessID);
+      SET processError = processError + 1;
+ 			ROLLBACK;
+		END;
+  -- check parameters for valid values
+  IF CONVERT(in_importLoadID, UNSIGNED) = 0 AND in_importLoadID != 'ALL' THEN
+    SIGNAL SQLSTATE '22003' SET MESSAGE_TEXT = 'Invalid parameter value for in_importLoadID. Must be convert to number or be ALL';
+  END IF;
+  IF FIND_IN_SET(in_processName, "csv2mysql,vhost,combined") = 0 THEN
+    SIGNAL SQLSTATE '22003' SET MESSAGE_TEXT = 'Invalid parameter value for in_processName. Must be csv2mysql, vhost OR combined';
+  END IF;
+	IF NOT CONVERT(in_importLoadID, UNSIGNED) = 0 THEN
+		SET importLoad_ID = CONVERT(in_importLoadID, UNSIGNED);
+	END IF;
+	IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
+    SELECT COUNT(DISTINCT(l.importfileid))
+      INTO filesProcessed
+      FROM apache_logs.load_access_csv2mysql l
+     WHERE l.process_status = 0;
+    SELECT COUNT(DISTINCT(f.importloadid))
+      INTO loadsProcessed
+      FROM apache_logs.load_access_csv2mysql l
+INNER JOIN apache_logs.import_file f 
+        ON l.importfileid = f.id
+     WHERE l.process_status = 0;
+	ELSEIF in_processName = 'csv2mysql' THEN
+    SELECT COUNT(DISTINCT(l.importfileid))
+      INTO filesProcessed
+      FROM apache_logs.load_access_csv2mysql l
+INNER JOIN apache_logs.import_file f 
+        ON l.importfileid = f.id
+     WHERE f.importloadid = importLoad_ID
+       AND l.process_status = 0;
+	ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
+    SELECT COUNT(DISTINCT(l.importfileid))
+      INTO filesProcessed
+      FROM apache_logs.load_access_vhost l
+     WHERE l.process_status = 0;
+    SELECT COUNT(DISTINCT(f.importloadid))
+      INTO loadsProcessed
+      FROM apache_logs.load_access_vhost l
+INNER JOIN apache_logs.import_file f 
+        ON l.importfileid = f.id
+     WHERE l.process_status = 0;
+	ELSEIF in_processName = 'vhost' THEN
+    SELECT COUNT(DISTINCT(l.importfileid))
+      INTO filesProcessed
+      FROM apache_logs.load_access_vhost l
+INNER JOIN apache_logs.import_file f 
+        ON l.importfileid = f.id
+     WHERE f.importloadid = importLoad_ID
+       AND l.process_status = 0;
+	ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
+    SELECT COUNT(DISTINCT(l.importfileid))
+      INTO filesProcessed
+      FROM apache_logs.load_access_combined l
+     WHERE l.process_status = 0;
+    SELECT COUNT(DISTINCT(f.importloadid))
+      INTO loadsProcessed
+      FROM apache_logs.load_access_combined l
+INNER JOIN apache_logs.import_file f 
+        ON l.importfileid = f.id
+     WHERE l.process_status = 0;
+	ELSE
+    SELECT COUNT(DISTINCT(l.importfileid))
+      INTO filesProcessed
+      FROM apache_logs.load_access_combined l
+INNER JOIN apache_logs.import_file f 
+        ON l.importfileid = f.id
+     WHERE f.importloadid = importLoad_ID
+       AND l.process_status = 0;
+	END IF;	
+  SET importProcessID = apache_logs.importProcessID('access_parse', in_processName);
+	START TRANSACTION;
+	IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
+		OPEN csv2mysqlStatus;
+	ELSEIF in_processName = 'csv2mysql' THEN
+		OPEN csv2mysqlLoadID;
+	ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
+		OPEN vhostStatus;
+	ELSEIF in_processName = 'vhost' THEN
+		OPEN vhostLoadID;
+	ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
+		OPEN combinedStatus;
+	ELSE
+		OPEN combinedLoadID;
+	END IF;	
+  process_parse: LOOP
+  	IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
+	  	FETCH csv2mysqlStatus INTO importRecordID, importFile_ID;
+	  ELSEIF in_processName = 'csv2mysql' THEN
+		  FETCH csv2mysqlLoadID INTO importRecordID, importFile_ID;
+	  ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
+		  FETCH vhostStatus INTO importRecordID, importFile_ID;
+  	ELSEIF in_processName = 'vhost' THEN
+	  	FETCH vhostLoadID INTO importRecordID, importFile_ID;
+	  ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
+  		FETCH combinedStatus INTO importRecordID, importFile_ID;
+	  ELSE
+		  FETCH combinedLoadID INTO importRecordID, importFile_ID;
+  END IF;	
+	IF done = true THEN 
+			LEAVE process_parse;
+		END IF;
+		IF apache_logs.importFileCheck(importFile_ID, importProcessID, 'parse') = 0 THEN
+			ROLLBACK;
+			LEAVE process_parse;
+    END IF;
+		SET recordsProcessed = recordsProcessed + 1;
+    -- 	IF in_processName = 'csv2mysql' THEN
+    IF in_processName = 'vhost' THEN
+      UPDATE apache_logs.load_access_vhost 
+      SET server_name = SUBSTR(log_server,1,(POSITION(':' IN log_server)-1)) 
+      WHERE id=importRecordID AND POSITION(':' IN log_server)>0;
+      
+      UPDATE apache_logs.load_access_vhost 
+      SET server_port = SUBSTR(log_server,(POSITION(':' IN log_server)+1)) 
+      WHERE id=importRecordID AND POSITION(':' IN log_server)>0;
+      
+      UPDATE apache_logs.load_access_vhost 
+      SET req_method = SUBSTR(first_line_request,1,(POSITION(' ' IN first_line_request)-1)) 
+      WHERE id=importRecordID AND LEFT(first_line_request,1) RLIKE '^[A-Z]';
+      
+      UPDATE apache_logs.load_access_vhost 
+      SET req_uri = SUBSTR(first_line_request,(POSITION(' ' IN first_line_request)+1),LOCATE(' ',first_line_request,(POSITION(' ' IN first_line_request)+1))-(POSITION(' ' IN first_line_request)+1)) 
+      WHERE id=importRecordID AND LEFT(first_line_request,1) RLIKE '^[A-Z]';
+      
+      UPDATE apache_logs.load_access_vhost 
+      SET req_protocol = SUBSTR(first_line_request,LOCATE(' ',first_line_request,(POSITION(' ' IN first_line_request)+1))) 
+      WHERE id=importRecordID AND LEFT(first_line_request,1) RLIKE '^[A-Z]';
+      
+      UPDATE apache_logs.load_access_vhost 
+      SET req_query = SUBSTR(req_uri,POSITION('?' IN req_uri)) 
+      WHERE id=importRecordID AND POSITION('?' IN req_uri)>0;
+      
+      UPDATE apache_logs.load_access_vhost 
+      SET req_uri = SUBSTR(req_uri,1,(POSITION('?' IN req_uri)-1)) 
+      WHERE id=importRecordID AND POSITION('?' IN req_uri)>0;
+      
+      UPDATE apache_logs.load_access_vhost 
+      SET req_protocol = 'Invalid Request', req_method = 'Invalid Request', req_uri = 'Invalid Request' 
+      WHERE id=importRecordID AND LEFT(first_line_request,1) NOT RLIKE '^[A-Z]|-';
+      
+      UPDATE apache_logs.load_access_vhost 
+      SET req_protocol = 'Empty Request', req_method = 'Empty Request', req_uri = 'Empty Request' 
+      WHERE id=importRecordID AND LEFT(first_line_request,1) RLIKE '^-';
+      
+      UPDATE apache_logs.load_access_vhost 
+      SET req_protocol = TRIM(req_protocol)
+      WHERE id=importRecordID;
+      
+      UPDATE apache_logs.load_access_vhost 
+      SET log_time = CONCAT(log_time_a,' ',log_time_b)
+      WHERE id=importRecordID;
+    ELSEIF in_processName = 'combined' THEN
+      UPDATE apache_logs.load_access_combined 
+      SET req_method = SUBSTR(first_line_request,1,(POSITION(' ' IN first_line_request)-1)) 
+      WHERE id=importRecordID AND LEFT(first_line_request,1) RLIKE '^[A-Z]';
+      
+      UPDATE apache_logs.load_access_combined 
+      SET req_uri = SUBSTR(first_line_request,(POSITION(' ' IN first_line_request)+1),LOCATE(' ',first_line_request,(POSITION(' ' IN first_line_request)+1))-(POSITION(' ' IN first_line_request)+1)) 
+      WHERE id=importRecordID AND LEFT(first_line_request,1) RLIKE '^[A-Z]';
+      
+      UPDATE apache_logs.load_access_combined 
+      SET req_protocol = SUBSTR(first_line_request,LOCATE(' ',first_line_request,(POSITION(' ' IN first_line_request)+1))) 
+      WHERE id=importRecordID AND LEFT(first_line_request,1) RLIKE '^[A-Z]';
+      
+      UPDATE apache_logs.load_access_combined 
+      SET req_query = SUBSTR(req_uri,POSITION('?' IN req_uri)) 
+      WHERE id=importRecordID AND POSITION('?' IN req_uri)>0;
+      
+      UPDATE apache_logs.load_access_combined 
+      SET req_uri = SUBSTR(req_uri,1,(POSITION('?' IN req_uri)-1)) 
+      WHERE id=importRecordID AND POSITION('?' IN req_uri)>0;
+      
+      UPDATE apache_logs.load_access_combined 
+      SET req_protocol = 'Invalid Request', req_method = 'Invalid Request', req_uri = 'Invalid Request' 
+      WHERE id=importRecordID AND LEFT(first_line_request,1) NOT RLIKE '^[A-Z]|-';
+      
+      UPDATE apache_logs.load_access_combined 
+      SET req_protocol = 'Empty Request', req_method = 'Empty Request', req_uri = 'Empty Request' 
+      WHERE id=importRecordID AND LEFT(first_line_request,1) RLIKE '^-';
+      
+      UPDATE apache_logs.load_access_combined 
+      SET req_protocol = TRIM(req_protocol) 
+      WHERE id=importRecordID;
+      
+      UPDATE apache_logs.load_access_combined 
+      SET log_time = CONCAT(log_time_a,' ',log_time_b) 
+      WHERE id=importRecordID;
+    END IF;
+		IF in_processName = 'csv2mysql' THEN
+			UPDATE apache_logs.load_access_csv2mysql SET process_status=1 WHERE id=importRecordID;
+		ELSEIF in_processName = 'vhost' THEN
+			UPDATE apache_logs.load_access_vhost SET process_status=1 WHERE id=importRecordID;
+		ELSE
+			UPDATE apache_logs.load_access_combined SET process_status=1 WHERE id=importRecordID;
+		END IF;	
+	END LOOP;
+  -- to remove SQL calculating loadsProcessed when importLoad_ID is passed. Set=1 by default.
+  IF importLoad_ID IS NOT NULL AND recordsProcessed = 0 THEN
+    SET loadsProcessed = 0;
+  END IF;
+  -- update import process table
+ 	UPDATE apache_logs.import_process 
+      SET records = recordsProcessed, 
+          files = filesProcessed, 
+          loads = loadsProcessed, 
+          importloadid = importLoad_ID,
+          completed = now(), 
+          errorOccurred = processError,
+          processSeconds = TIME_TO_SEC(TIMEDIFF(now(),started)) 
+    WHERE id = importProcessID;
+  COMMIT;
+  -- close the cursor
+  IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
+		CLOSE csv2mysqlStatus;
+	ELSEIF in_processName = 'csv2mysql' THEN
+		CLOSE csv2mysqlLoadID;
+	ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
+		CLOSE vhostStatus;
+	ELSEIF in_processName = 'vhost' THEN
+		CLOSE vhostLoadID;
+	ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
+		CLOSE combinedStatus;
+	ELSE
+		CLOSE combinedLoadID;
+	END IF;	
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `process_error_import` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `process_error_import`(
+  IN in_processName VARCHAR(100),
+  IN in_importLoadID VARCHAR(20)
+)
+BEGIN
+	-- standard variables for processes
+	DECLARE e1 INT UNSIGNED;
+	DECLARE e2, e3 VARCHAR(128);
+	DECLARE e4, e5 VARCHAR(64);
+  DECLARE done BOOL DEFAULT false;
+  DECLARE importProcessID INTEGER DEFAULT NULL;
+  DECLARE importLoad_ID INTEGER DEFAULT NULL;
+  DECLARE importRecordID INTEGER DEFAULT NULL;
+  DECLARE importFile_ID INTEGER DEFAULT NULL;
+  DECLARE recordsProcessed INTEGER DEFAULT 0;
+  DECLARE filesProcessed INTEGER DEFAULT 0;
+  DECLARE loadsProcessed INTEGER DEFAULT 1;
+  DECLARE processError INTEGER DEFAULT 0;
+  -- LOAD DATA staging table column variables
+	DECLARE log_time DATETIME DEFAULT now();
+	DECLARE log_level VARCHAR(100) DEFAULT NULL;
+	DECLARE log_module VARCHAR(100) DEFAULT NULL;
+	DECLARE log_processid VARCHAR(100) DEFAULT NULL;
+	DECLARE log_threadid VARCHAR(100) DEFAULT NULL;
+	DECLARE log_apacheCode VARCHAR(400) DEFAULT NULL;
+	DECLARE log_apacheMessage VARCHAR(400) DEFAULT NULL;
+	DECLARE log_systemCode VARCHAR(400) DEFAULT NULL;
+	DECLARE log_systemMessage VARCHAR(400) DEFAULT NULL;
+	DECLARE log_message VARCHAR(500) DEFAULT NULL;
+	DECLARE log_referer VARCHAR(1000) DEFAULT NULL;
+	DECLARE refererConverted VARCHAR(1000) DEFAULT NULL;
+	DECLARE clientName VARCHAR(253) DEFAULT NULL;
+	DECLARE clientPort VARCHAR(100) DEFAULT NULL;
+	DECLARE serverName VARCHAR(253) DEFAULT NULL;
+	DECLARE serverPort INTEGER DEFAULT NULL;
+	DECLARE serverNameFile VARCHAR(253) DEFAULT NULL;
+	DECLARE serverPortFile INTEGER DEFAULT NULL;
+	DECLARE importFile VARCHAR(300) DEFAULT NULL;
+	-- Primary IDs for the normalized Attribute tables
+	DECLARE logLevel_Id,
+		module_Id,
+		process_Id, 
+		thread_Id, 
+		apacheCode_Id, 
+		apacheMessage_Id, 
+		systemCode_Id, 
+		systemMessage_Id, 
+		logMessage_Id, 
+		referer_Id,
+		clientName_Id, 
+		clientPort_Id, 
+ 		serverName_Id, 
+		serverPort_Id 
+		INTEGER DEFAULT NULL;
+	-- declare cursor for default format - single importLoadID
+	DECLARE defaultByLoadID CURSOR FOR 
+	    	SELECT l.logtime, 
+		          l.loglevel, 
+    		      l.module, 
+		          l.processid, 
+		          l.threadid, 
+    		      l.apachecode, 
+		          l.apachemessage, 
+    		      l.systemcode, 
+		          l.systemmessage, 
+		          l.logmessage, 
+          		l.referer,
+  	  	      l.client_name, 
+      		    l.client_port, 
+  	  	      l.server_name, 
+      		    l.server_port, 
+              l.importfileid,
+  	  	      f.server_name server_name_file, 
+      		    f.server_port server_port_file, 
+              l.id
+           FROM apache_logs.load_error_default l 
+     INNER JOIN apache_logs.import_file f 
+             ON l.importfileid = f.id
+          WHERE l.process_status = 1
+            AND f.importloadid = CONVERT(in_importLoadID, UNSIGNED);
+	DECLARE defaultByStatus CURSOR FOR 
+		    SELECT l.logtime, 
+    		      l.loglevel, 
+          		l.module, 
+		          l.processid, 
+          		l.threadid, 
+    		      l.apachecode, 
+		          l.apachemessage, 
+		          l.systemcode, 
+    		      l.systemmessage, 
+    		      l.logmessage, 
+          		l.referer,
+  	  	      l.client_name, 
+      		    l.client_port, 
+  	  	      l.server_name, 
+      		    l.server_port, 
+              l.importfileid,
+  	  	      f.server_name server_name_file, 
+      		    f.server_port server_port_file, 
+              l.id
+          FROM apache_logs.load_error_default l 
+     INNER JOIN apache_logs.import_file f 
+             ON l.importfileid = f.id
+          WHERE l.process_status = 1;
+  -- declare NOT FOUND handler
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+		BEGIN
+			GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME; 
+ 			CALL apache_logs.errorProcess('process_error_import', e1, e2, e3, e4, e5, importLoad_ID, importProcessID);
+      SET processError = processError + 1;
+ 			ROLLBACK;
+		END;
+  -- check parameters for valid values
+  IF CONVERT(in_importLoadID, UNSIGNED) = 0 AND in_importLoadID != 'ALL' THEN
+    SIGNAL SQLSTATE '22003' SET MESSAGE_TEXT = 'Invalid parameter value for in_importLoadID. Must be convert to number or be ALL';
+  END IF;
+  IF FIND_IN_SET(in_processName, "default") = 0 THEN
+    SIGNAL SQLSTATE '22003' SET MESSAGE_TEXT = 'Invalid parameter value for in_processName. Must be default';
+  END IF;
+	IF NOT CONVERT(in_importLoadID, UNSIGNED) = 0 THEN
+		SET importLoad_ID = CONVERT(in_importLoadID, UNSIGNED);
+	END IF;
+  IF importLoad_ID IS NULL THEN
+    SELECT COUNT(DISTINCT(l.importfileid))
+      INTO filesProcessed
+      FROM apache_logs.load_error_default l 
+     WHERE l.process_status = 1;
+    SELECT COUNT(DISTINCT(f.importloadid))
+      INTO loadsProcessed
+      FROM apache_logs.load_error_default l 
+INNER JOIN apache_logs.import_file f 
+        ON l.importfileid = f.id
+     WHERE l.process_status = 1;
+  ELSE
+    SELECT COUNT(DISTINCT(l.importfileid))
+      INTO filesProcessed
+      FROM apache_logs.load_error_default l 
+INNER JOIN apache_logs.import_file f 
+        ON l.importfileid = f.id
+     WHERE l.process_status = 1
+       AND f.importloadid = importLoad_ID;
+  END IF;
+  SET importProcessID = apache_logs.importProcessID('error_import', in_processName);
+	START TRANSACTION;
+  IF importLoad_ID IS NULL THEN
+    OPEN defaultByStatus;
+  ELSE
+  	OPEN defaultByLoadID;
+  END IF;
+  process_import: LOOP
+    IF importLoad_ID IS NULL THEN
+		  FETCH defaultByStatus INTO 
+  			log_time, 
+	  		log_level,
+		  	log_module,
+			  log_processid, 
+  			log_threadid, 
+	  		log_apacheCode, 
+		  	log_apacheMessage, 
+			  log_systemCode, 
+  			log_systemMessage, 
+	  		log_message, 
+			  log_referer, 
+		  	clientName, 
+		  	clientPort, 
+		  	serverName, 
+			  serverPort, 
+			  importFile_ID,
+		  	serverNameFile, 
+			  serverPortFile, 
+        importRecordID; 
+    ELSE
+		  FETCH defaultByLoadID INTO 
+  			log_time, 
+	  		log_level,
+		  	log_module,
+			  log_processid, 
+			  log_threadid, 
+			  log_apacheCode, 
+			  log_apacheMessage, 
+  			log_systemCode, 
+	  		log_systemMessage, 
+		  	log_message, 
+			  log_referer, 
+		  	clientName, 
+		  	clientPort, 
+		  	serverName, 
+			  serverPort, 
+		  	importFile_ID,
+		  	serverNameFile, 
+			  serverPortFile, 
+        importRecordID; 
+    END IF;
+    IF done = true THEN 
+		  LEAVE process_import;
+    END IF;
+    IF apache_logs.importFileCheck(importFile_ID, importProcessID, 'import') = 0 THEN
+  		ROLLBACK;
+			LEAVE process_import;
+    END IF;
+    SET recordsProcessed = recordsProcessed + 1;
+		SET logLevel_Id = null,
+    		module_Id = null,
+    		process_Id = null, 
+    		thread_Id = null, 
+    		apacheCode_Id = null, 
+    		apacheMessage_Id = null, 
+    		systemCode_Id = null, 
+    		systemMessage_Id = null, 
+    		logMessage_Id = null, 
+    		referer_Id = null,
+        clientName_Id = null, 
+        clientPort_Id = null, 
+        serverName_Id = null, 
+        serverPort_Id = null;
+		-- any customizing for business needs should be done here before normalization functions called.
+    -- convert staging columns - log_referer in import for audit purposes
+		IF POSITION("?" IN log_referer)>0 THEN
+			SET refererConverted = SUBSTR(log_referer,1,(POSITION("?" IN log_referer)-1));
+		ELSE
+			SET refererConverted = log_referer;
+		END IF;
+    -- normalize import staging table 
+		IF log_level IS NOT NULL THEN
+			SET logLevel_Id = apache_logs.error_logLevelID(log_level);
+		END IF;
+		IF log_module IS NOT NULL THEN
+			SET module_Id = apache_logs.error_moduleID(log_module);
+		END IF;
+		IF log_processid IS NOT NULL THEN
+			SET process_Id = apache_logs.error_processID(log_processid);
+		END IF;
+		IF log_threadid IS NOT NULL THEN
+			SET thread_Id = apache_logs.error_threadID(log_threadid);
+		END IF;
+		IF log_apacheCode IS NOT NULL THEN
+			SET apacheCode_Id = apache_logs.error_apacheCodeID(log_apacheCode);
+		END IF;
+		IF log_apacheMessage IS NOT NULL THEN
+			SET apacheMessage_Id = apache_logs.error_apacheMessageID(log_apacheMessage);
+		END IF;
+		IF log_systemCode IS NOT NULL THEN
+			SET systemCode_Id = apache_logs.error_systemCodeID(log_systemCode);
+		END IF;
+		IF log_systemMessage IS NOT NULL THEN
+			SET systemMessage_Id = apache_logs.error_systemMessageID(log_systemMessage);
+		END IF;
+		IF log_message IS NOT NULL THEN
+			SET logMessage_id = apache_logs.error_logMessageID(log_message);
+		END IF;
+		IF refererConverted IS NOT NULL THEN
+			SET referer_Id = apache_logs.log_refererID(refererConverted);
+		END IF;
+		IF clientName IS NOT NULL THEN
+			SET clientName_id = apache_logs.log_clientNameID(clientName);
+		END IF;
+		IF clientPort IS NOT NULL THEN
+			SET clientPort_id = apache_logs.log_clientPortID(clientPort);
+		END IF;
+		IF serverName IS NOT NULL THEN
+			SET serverName_Id = apache_logs.log_serverNameID(serverName);
+		ELSEIF serverNameFile IS NOT NULL THEN
+			SET serverName_Id = apache_logs.log_serverNameID(serverNameFile);
+    END IF;
+		IF serverPort IS NOT NULL THEN
+			SET serverPort_Id = apache_logs.log_serverPortID(serverPort);
+		ELSEIF serverPortFile IS NOT NULL THEN
+			SET serverPort_Id = apache_logs.log_serverPortID(serverPortFile);
+    END IF;
+		INSERT INTO apache_logs.error_log 
+			(timeStamp, 
+			loglevelid,
+			moduleid,
+			processid, 
+			threadid, 
+			apachecodeid, 
+			apachemessageid, 
+			systemcodeid, 
+			systemmessageid, 
+			logmessageid, 
+			refererid,
+			clientnameid, 
+			clientportid, 
+			servernameid, 
+  		serverportid, 
+      importfileid) 
+		VALUES
+			(log_time,
+			logLevel_Id,
+			module_Id,
+			process_Id, 
+			thread_Id, 
+			apacheCode_Id, 
+			apacheMessage_Id, 
+			systemCode_Id, 
+			systemMessage_Id, 
+			logMessage_Id, 
+			referer_Id,
+			clientName_Id, 
+			clientPort_Id, 
+			serverName_Id, 
+			serverPort_Id, 
+      importFile_ID);
+    UPDATE apache_logs.load_error_default SET process_status=2 WHERE id=importRecordID;
+  END LOOP;
+  -- to remove SQL calculating loadsProcessed when importLoad_ID is passed. Set=1 by default.
+  IF importLoad_ID IS NOT NULL AND recordsProcessed = 0 THEN
+    SET loadsProcessed = 0;
+  END IF;
+  -- update import process table
+  UPDATE apache_logs.import_process 
+      SET records = recordsProcessed, 
+          files = filesProcessed, 
+          loads = loadsProcessed,
+          importloadid = importLoad_ID, 
+          completed = now(), 
+          errorOccurred = processError,
+          processSeconds = TIME_TO_SEC(TIMEDIFF(now(),started)) 
+    WHERE id = importProcessID;
+  COMMIT;
+  -- close the cursor
+  IF importLoad_ID IS NULL THEN
+    CLOSE defaultByStatus;
+  ELSE
+    CLOSE defaultByLoadID;
+  END IF;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `process_error_parse` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `process_error_parse`(
+  IN in_processName VARCHAR(100),
+  IN in_importLoadID VARCHAR(20)
+)
+BEGIN
+	-- standard variables for processes
+  DECLARE e1 INT UNSIGNED;
+  DECLARE e2, e3 VARCHAR(128);
+  DECLARE e4, e5 VARCHAR(64);
+  DECLARE done BOOL DEFAULT false;
+  DECLARE importProcessID INTEGER DEFAULT NULL;
+  DECLARE importLoad_ID INTEGER DEFAULT NULL;
+  DECLARE importRecordID INTEGER DEFAULT NULL;
+  DECLARE importFile_ID INTEGER DEFAULT NULL;
+  DECLARE recordsProcessed INTEGER DEFAULT 0;
+  DECLARE filesProcessed INTEGER DEFAULT 0;
+  DECLARE loadsProcessed INTEGER DEFAULT 1;
+  DECLARE processError INTEGER DEFAULT 0;
+	-- declare cursor for default format - single importLoadID
+  DECLARE defaultByLoadID CURSOR FOR 
+      SELECT l.id,
+             l.importfileid
+        FROM apache_logs.load_error_default l 
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
+         AND l.process_status = 0;
+  DECLARE defaultByStatus CURSOR FOR 
+      SELECT l.id,
+             l.importfileid
+        FROM apache_logs.load_error_default l 
+       WHERE l.process_status = 0;
+	-- declare NOT FOUND handler
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN
+      GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME; 
+      CALL apache_logs.errorProcess('process_error_parse', e1, e2, e3, e4, e5, importLoad_ID, importProcessID);
+      SET processError = processError + 1;
+      ROLLBACK;
+    END;
+	-- check parameters for valid values
+  IF CONVERT(in_importLoadID, UNSIGNED) = 0 AND in_importLoadID != 'ALL' THEN
+    SIGNAL SQLSTATE '22003' SET MESSAGE_TEXT = 'Invalid parameter value for in_importLoadID. Must be convert to number or be ALL';
+  END IF;
+  IF FIND_IN_SET(in_processName, "default") = 0 THEN
+    SIGNAL SQLSTATE '22003' SET MESSAGE_TEXT = 'Invalid parameter value for in_processName. Must be default';
+  END IF;
+  IF NOT CONVERT(in_importLoadID, UNSIGNED) = 0 THEN
+    SET importLoad_ID = CONVERT(in_importLoadID, UNSIGNED);
+  END IF;
+  IF importLoad_ID IS NULL THEN
+    SELECT COUNT(DISTINCT(l.importfileid))
+      INTO filesProcessed
+      FROM apache_logs.load_error_default l 
+     WHERE l.process_status = 0;
+    SELECT COUNT(DISTINCT(f.importloadid))
+      INTO loadsProcessed
+      FROM apache_logs.load_error_default l 
+INNER JOIN apache_logs.import_file f 
+        ON l.importfileid = f.id
+     WHERE l.process_status = 0;
+  ELSE
+    SELECT COUNT(DISTINCT(l.importfileid))
+      INTO filesProcessed
+      FROM apache_logs.load_error_default l 
+INNER JOIN apache_logs.import_file f 
+        ON l.importfileid = f.id
+     WHERE f.importloadid = importLoad_ID
+       AND l.process_status = 0;
+  END IF;
+  SET importProcessID = apache_logs.importProcessID('error_parse', in_processName);
+  START TRANSACTION;
+  IF importLoad_ID IS NULL THEN
+    OPEN defaultByStatus;
+  ELSE
+    OPEN defaultByLoadID;
+  END IF;
+  process_parse: LOOP
+    IF importLoad_ID IS NULL THEN
+      FETCH defaultByStatus INTO importRecordID, importFile_ID;
+    ELSE
+      FETCH defaultByLoadID INTO importRecordID, importFile_ID;
+    END IF;
+    IF done = true THEN 
+      LEAVE process_parse;
+    END IF;
+    IF apache_logs.importFileCheck(importFile_ID, importProcessID, 'parse') = 0 THEN
+      ROLLBACK;
+      LEAVE process_parse;
+    END IF;
+    SET recordsProcessed = recordsProcessed + 1;
+    UPDATE apache_logs.load_error_default 
+        SET module = SUBSTR(log_mod_level,3,(POSITION(':' IN log_mod_level)-3)),
+        loglevel = SUBSTR(log_mod_level,(POSITION(':' IN log_mod_level)+1)),
+        processid = SUBSTR(log_processid_threadid,(POSITION('pid' IN log_processid_threadid)+4),(POSITION(':' IN log_processid_threadid)-(POSITION('pid' IN log_processid_threadid)+4))),
+        threadid = SUBSTR(log_processid_threadid,(POSITION('tid' IN log_processid_threadid)+4)),
+        logtime = STR_TO_DATE(SUBSTR(log_time,2,31),'%a %b %d %H:%i:%s.%f %Y')
+      WHERE id = importRecordID;
+
+    UPDATE apache_logs.load_error_default 
+        SET apachecode = SUBSTR(log_parse1,2,(POSITION(':' IN log_parse1)-2)) 
+      WHERE id = importRecordID AND LEFT(log_parse1,2)=' A';
+
+    UPDATE apache_logs.load_error_default 
+        SET apachecode = SUBSTR(log_parse2,2,(POSITION(':' IN log_parse2)-2)) 
+      WHERE id = importRecordID AND LEFT(log_parse2,2)=' A';
+
+    UPDATE apache_logs.load_error_default 
+        SET apachecode = SUBSTR(log_parse1,(POSITION(': AH' IN log_parse1)+2),LOCATE(':',log_parse1,(POSITION(': AH' IN log_parse1)+2))-(POSITION(': AH' IN log_parse1)+2)) 
+      WHERE id = importRecordID AND POSITION(': AH' IN log_parse1)>0;
+
+    UPDATE apache_logs.load_error_default 
+        SET apachemessage = SUBSTR(log_parse1,(POSITION(':' IN log_parse1)+1)) 
+      WHERE id = importRecordID AND LEFT(log_parse1,2)=' A';
+
+    UPDATE apache_logs.load_error_default 
+        SET apachemessage = SUBSTR(log_parse2,(POSITION(':' IN log_parse2)+1)) 
+      WHERE id = importRecordID AND LEFT(log_parse2,2)=' A' AND POSITION('referer:' IN log_parse2)=0;
+
+    UPDATE apache_logs.load_error_default 
+        SET apachemessage = SUBSTR(log_parse2,(POSITION(':' IN log_parse2)+1),POSITION(', referer:' IN log_parse2)-(POSITION(':' IN log_parse2)+1)) 
+      WHERE id = importRecordID AND LEFT(log_parse2,2)=' A' AND POSITION(', referer:' IN log_parse2)>0;
+
+    UPDATE apache_logs.load_error_default 
+        SET apachemessage = SUBSTR(log_parse1,LOCATE(':',log_parse1,POSITION(': AH' IN log_parse1)+2)+2) 
+      WHERE id = importRecordID AND POSITION(': AH' IN log_parse1)>0;
+
+    UPDATE apache_logs.load_error_default 
+        SET client_name = SUBSTR(log_parse1,(POSITION('[client' IN log_parse1)+8)) 
+      WHERE id = importRecordID AND POSITION('[client' IN log_parse1)>0;
+
+    UPDATE apache_logs.load_error_default 
+        SET client_port = SUBSTR(client_name,(POSITION(':' IN client_name)+1)) 
+      WHERE id = importRecordID AND POSITION(':' IN client_name)>0;
+
+    UPDATE apache_logs.load_error_default 
+        SET client_name = SUBSTR(client_name,1,(POSITION(':' IN client_name)-1)) 
+      WHERE id = importRecordID AND POSITION(':' IN client_name)>0;
+
+    UPDATE apache_logs.load_error_default 
+        SET systemcode = SUBSTR(log_parse1,POSITION('(' IN log_parse1),LOCATE(':',log_parse1,POSITION('(' IN log_parse1))-POSITION('(' IN log_parse1)) 
+      WHERE id = importRecordID AND POSITION('(' IN log_parse1)>0 AND LOCATE(':',log_parse1,POSITION('(' IN log_parse1))-POSITION('(' IN log_parse1)>0;
+
+    UPDATE apache_logs.load_error_default 
+        SET systemmessage = SUBSTR(log_parse1,POSITION(':' IN log_parse1) + 1) 
+      WHERE id = importRecordID AND POSITION('(' IN log_parse1)>0 AND LOCATE(':',log_parse1,POSITION('(' IN log_parse1))-POSITION('(' IN log_parse1)>0 AND apachecode IS NULL;
+
+    UPDATE apache_logs.load_error_default 
+        SET log_message_nocode = log_parse1 
+      WHERE id = importRecordID AND systemcode IS NULL AND apachecode IS NULL;
+
+    UPDATE apache_logs.load_error_default 
+        SET module = SUBSTR(log_parse1,2,(POSITION(':' IN log_parse1)-2)) 
+      WHERE id = importRecordID AND systemcode IS NULL AND apachecode IS NULL AND LENGTH(module)=0 AND POSITION(':' IN log_parse1)>0 AND LOCATE(' ',log_parse1,2)>POSITION(':' IN log_parse1);
+
+    UPDATE apache_logs.load_error_default 
+        SET logmessage = SUBSTR(log_parse1,(POSITION(':' IN log_parse1)+1)) 
+      WHERE id = importRecordID AND systemcode IS NULL AND apachecode IS NULL AND POSITION(':' IN log_parse1)>0 AND LOCATE(' ',log_parse1,2)>POSITION(':' IN log_parse1);
+
+    UPDATE apache_logs.load_error_default 
+        SET logmessage = log_message_nocode 
+      WHERE id = importRecordID AND logmessage IS NULL AND log_message_nocode IS NOT NULL;
+
+    UPDATE apache_logs.load_error_default 
+        SET referer = SUBSTR(log_parse2,(POSITION('referer:' IN log_parse2)+8)) 
+      WHERE id = importRecordID AND POSITION('referer:' IN log_parse2)>0;
+
+    UPDATE apache_logs.load_error_default 
+        SET server_name = SUBSTR(referer,POSITION(' , ' IN referer)+3) 
+      WHERE id = importRecordID AND POSITION(' , ' IN referer)>0;
+
+    UPDATE apache_logs.load_error_default 
+        SET server_name = SUBSTR(logmessage,POSITION(' , ' IN logmessage)+3) 
+      WHERE id = importRecordID AND POSITION(' , ' IN logmessage)>0;
+
+    UPDATE apache_logs.load_error_default 
+        SET logmessage = SUBSTR(logmessage,1,POSITION(' , ' IN logmessage)) 
+      WHERE id = importRecordID AND POSITION(' , ' IN logmessage)>0;
+
+    UPDATE apache_logs.load_error_default 
+        SET server_name = SUBSTR(systemmessage,POSITION(' , ' IN systemmessage)+3) 
+      WHERE id = importRecordID AND POSITION(' , ' IN systemmessage)>0;
+
+    UPDATE apache_logs.load_error_default 
+        SET systemmessage = SUBSTR(systemmessage,1,POSITION(' , ' IN systemmessage)) 
+      WHERE id = importRecordID AND POSITION(' , ' IN systemmessage)>0;
+
+    UPDATE apache_logs.load_error_default 
+        SET server_name = SUBSTR(apachemessage,POSITION(' , ' IN apachemessage)+3) 
+      WHERE id = importRecordID AND POSITION(' , ' IN apachemessage)>0;
+
+    UPDATE apache_logs.load_error_default 
+        SET apachemessage = SUBSTR(apachemessage,1,POSITION(' , ' IN apachemessage)) 
+      WHERE id = importRecordID AND POSITION(' , ' IN apachemessage)>0;
+
+-- UPDATE apache_logs.load_error_default SET module = SUBSTR(log_mod_level,3,(POSITION(':' IN log_mod_level)-3))
+-- UPDATE apache_logs.load_error_default SET loglevel = SUBSTR(log_mod_level,(POSITION(':' IN log_mod_level)+1))
+-- UPDATE apache_logs.load_error_default SET processid = SUBSTR(log_processid_threadid,(POSITION('pid' IN log_processid_threadid)+4),(POSITION(':' IN log_processid_threadid)-(POSITION('pid' IN log_processid_threadid)+4)))
+-- UPDATE apache_logs.load_error_default SET threadid = SUBSTR(log_processid_threadid,(POSITION('tid' IN log_processid_threadid)+4))
+-- UPDATE apache_logs.load_error_default SET logtime = STR_TO_DATE(SUBSTR(log_time,2,31),'%a %b %d %H:%i:%s.%f %Y')
+-- UPDATE apache_logs.load_error_default SET apachecode = SUBSTR(log_parse1,2,(POSITION(':' IN log_parse1)-2)) WHERE LEFT(log_parse1,2)=' A'
+-- UPDATE apache_logs.load_error_default SET apachecode = SUBSTR(log_parse2,2,(POSITION(':' IN log_parse2)-2)) WHERE LEFT(log_parse2,2)=' A'
+-- UPDATE apache_logs.load_error_default SET apachecode = SUBSTR(log_parse1,(POSITION(': AH' IN log_parse1)+2),LOCATE(':',log_parse1,(POSITION(': AH' IN log_parse1)+2))-(POSITION(': AH' IN log_parse1)+2)) WHERE POSITION(': AH' IN log_parse1)>0
+
+-- UPDATE apache_logs.load_error_default SET apachemessage = SUBSTR(log_parse1,(POSITION(':' IN log_parse1)+1)) WHERE LEFT(log_parse1,2)=' A'
+-- UPDATE apache_logs.load_error_default SET apachemessage = SUBSTR(log_parse2,(POSITION(':' IN log_parse2)+1)) WHERE LEFT(log_parse2,2)=' A' and POSITION('referer:' IN log_parse2)=0
+-- UPDATE apache_logs.load_error_default SET apachemessage = SUBSTR(log_parse2,(POSITION(':' IN log_parse2)+1),POSITION(', referer:' IN log_parse2)-(POSITION(':' IN log_parse2)+1)) WHERE LEFT(log_parse2,2)=' A' and POSITION(', referer:' IN log_parse2)>0
+-- UPDATE apache_logs.load_error_default SET apachemessage = SUBSTR(log_parse1,LOCATE(':',log_parse1,POSITION(': AH' IN log_parse1)+2)+2) WHERE POSITION(': AH' IN log_parse1)>0
+
+-- UPDATE apache_logs.load_error_default SET reqclient = SUBSTR(log_parse1,(POSITION('[client' IN log_parse1)+8)) WHERE POSITION('[client' IN log_parse1)>0
+-- UPDATE apache_logs.load_error_default SET systemcode = SUBSTR(log_parse1,POSITION('(' IN log_parse1),LOCATE(':',log_parse1,POSITION('(' IN log_parse1))-POSITION('(' IN log_parse1)) WHERE POSITION('(' IN log_parse1)>0 AND LOCATE(':',log_parse1,POSITION('(' IN log_parse1))-POSITION('(' IN log_parse1)>0
+-- UPDATE apache_logs.load_error_default SET systemmessage = SUBSTR(log_parse1,POSITION(':' IN log_parse1) + 1) WHERE POSITION('(' IN log_parse1)>0 AND LOCATE(':',log_parse1,POSITION('(' IN log_parse1))-POSITION('(' IN log_parse1)>0 AND apachecode IS NULL
+-- UPDATE apache_logs.load_error_default SET log_message_nocode = log_parse1 WHERE systemcode IS NULL and apachecode IS NULL
+-- UPDATE apache_logs.load_error_default SET module = SUBSTR(log_parse1,2,(POSITION(':' IN log_parse1)-2)) WHERE systemcode IS NULL and apachecode IS NULL and LENGTH(module)=0 AND POSITION(':' IN log_parse1)>0 AND LOCATE(' ',log_parse1,2)>POSITION(':' IN log_parse1)
+-- UPDATE apache_logs.load_error_default SET logmessage = SUBSTR(log_parse1,(POSITION(':' IN log_parse1)+1)) WHERE systemcode IS NULL and apachecode IS NULL AND POSITION(':' IN log_parse1)>0 AND LOCATE(' ',log_parse1,2)>POSITION(':' IN log_parse1)
+-- UPDATE apache_logs.load_error_default SET logmessage = log_message_nocode WHERE logmessage IS NULL and log_message_nocode IS NOT NULL
+-- UPDATE apache_logs.load_error_default SET referer = SUBSTR(log_parse2,(POSITION('referer:' IN log_parse2)+8)) WHERE POSITION('referer:' IN log_parse2)>0
+-- UPDATE apache_logs.load_error_default SET module=TRIM(module), loglevel=TRIM(loglevel), processid=TRIM(processid), threadid=TRIM(threadid), apachecode=TRIM(apachecode), apachemessage=TRIM(apachemessage), systemcode=TRIM(systemcode), systemmessage = TRIM(systemmessage), logmessage=TRIM(logmessage), reqclient=TRIM(reqclient), referer=TRIM(referer)
+
+    UPDATE apache_logs.load_error_default 
+        SET module=TRIM(module),
+            loglevel=TRIM(loglevel),
+            processid=TRIM(processid),
+            threadid=TRIM(threadid),
+            apachecode=TRIM(apachecode),
+            apachemessage=TRIM(apachemessage),
+            systemcode=TRIM(systemcode),
+            systemmessage = TRIM(systemmessage),
+            logmessage=TRIM(logmessage),
+            client_name=TRIM(client_name),
+            referer=TRIM(referer) 
+      WHERE id=importRecordID;
+    UPDATE apache_logs.load_error_default SET process_status=1 WHERE id=importRecordID;
+  END LOOP;
+  -- to remove SQL calculating loadsProcessed when importLoad_ID is passed. Set=1 by default.
+  IF importLoad_ID IS NOT NULL AND recordsProcessed = 0 THEN
+    SET loadsProcessed = 0;
+  END IF;
+  -- update import process table
+  UPDATE apache_logs.import_process 
+      SET records = recordsProcessed, 
+          files = filesProcessed, 
+          loads = loadsProcessed, 
+          importloadid = importLoad_ID,
+          completed = now(), 
+          errorOccurred = processError,
+          processSeconds = TIME_TO_SEC(TIMEDIFF(now(),started)) 
+    WHERE id = importProcessID;
+  COMMIT;
+  -- close the cursor
+  IF importLoad_ID IS NULL THEN
+    CLOSE defaultByStatus;
+  ELSE
+    CLOSE defaultByLoadID;
+  END IF;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
+-- Final view structure for view `access_clientname_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `access_clientname_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `access_clientname_list` AS select `ln`.`name` AS `Access Log Client Name`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`log_clientname` `ln` join `access_log` `l` on((`l`.`clientnameid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
 
 --
 -- Final view structure for view `access_cookie_list`
@@ -4246,11 +5377,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_cookie_list` AS select `ln`.`name` AS `Access Log Cookie`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_cookie` `ln` join `access_log` `l` on((`l`.`cookieid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4264,11 +5395,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_importfile_list` AS select `ln`.`name` AS `Access Log Import File`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`import_file` `ln` join `access_log` `l` on((`l`.`importfileid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4282,30 +5413,12 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
-/*!50001 VIEW `access_referer_list` AS select `ln`.`name` AS `Access Log Referer`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_referer` `ln` join `access_log` `l` on((`l`.`refererid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
-/*!50001 SET character_set_client      = @saved_cs_client */;
-/*!50001 SET character_set_results     = @saved_cs_results */;
-/*!50001 SET collation_connection      = @saved_col_connection */;
-
---
--- Final view structure for view `access_remotehost_list`
---
-
-/*!50001 DROP VIEW IF EXISTS `access_remotehost_list`*/;
-/*!50001 SET @saved_cs_client          = @@character_set_client */;
-/*!50001 SET @saved_cs_results         = @@character_set_results */;
-/*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
-/*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
-/*!50001 VIEW `access_remotehost_list` AS select `ln`.`name` AS `Access Log Remote Host`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_remotehost` `ln` join `access_log` `l` on((`l`.`remotehostid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `access_referer_list` AS select `ln`.`name` AS `Access Log Referer`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`log_referer` `ln` join `access_log` `l` on((`l`.`refererid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -4318,11 +5431,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_remotelogname_list` AS select `ln`.`name` AS `Access Log Remote Log Name`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_remotelogname` `ln` join `access_log` `l` on((`l`.`remotelognameid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4336,11 +5449,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_remoteuser_list` AS select `ln`.`name` AS `Access Log Remote User`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_remoteuser` `ln` join `access_log` `l` on((`l`.`remoteuserid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4354,11 +5467,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_reqmethod_list` AS select `ln`.`name` AS `Access Log Method`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_reqmethod` `ln` join `access_log` `l` on((`l`.`reqmethodid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4372,11 +5485,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_reqprotocol_list` AS select `ln`.`name` AS `Access Log Protocol`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_reqprotocol` `ln` join `access_log` `l` on((`l`.`reqstatusid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4390,11 +5503,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_reqquery_list` AS select `ln`.`name` AS `Access Log Query String`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_reqquery` `ln` join `access_log` `l` on((`l`.`reqqueryid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4408,11 +5521,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_reqstatus_list` AS select `ln`.`name` AS `Access Log Status`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_reqstatus` `ln` join `access_log` `l` on((`l`.`reqstatusid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4426,11 +5539,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_requri_list` AS select `ln`.`name` AS `Access Log URI`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_requri` `ln` join `access_log` `l` on((`l`.`requriid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4444,12 +5557,30 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
-/*!50001 VIEW `access_servername_list` AS select `ln`.`name` AS `Access Log Server Name`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_servername` `ln` join `access_log` `l` on((`l`.`servernameid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `access_servername_list` AS select `ln`.`name` AS `Access Log Server Name`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`log_servername` `ln` join `access_log` `l` on((`l`.`servernameid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `access_servername_serverport_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `access_servername_serverport_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `access_servername_serverport_list` AS select `sn`.`name` AS `Access Log Server Name`,`sp`.`name` AS `Server Port`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from ((`access_log` `l` join `log_servername` `sn` on((`sn`.`id` = `l`.`servernameid`))) join `log_serverport` `sp` on((`sp`.`id` = `l`.`serverportid`))) group by `l`.`servernameid`,`l`.`serverportid` order by `sn`.`name`,`sp`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -4462,12 +5593,12 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
-/*!50001 VIEW `access_serverport_list` AS select `ln`.`name` AS `Access Log Server Port`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_serverport` `ln` join `access_log` `l` on((`l`.`serverportid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `access_serverport_list` AS select `ln`.`name` AS `Access Log Server Port`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`log_serverport` `ln` join `access_log` `l` on((`l`.`serverportid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -4480,11 +5611,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_ua_browser_family_list` AS select `ln`.`name` AS `Browser Family`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_browser_family` `ln` join `access_log` `l` on((`l`.`uabrowserfamilyid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4498,11 +5629,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_ua_browser_list` AS select `ln`.`name` AS `Browser`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_browser` `ln` join `access_log` `l` on((`l`.`uabrowserid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4516,11 +5647,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_ua_browser_version_list` AS select `ln`.`name` AS `Browser Version`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_browser_version` `ln` join `access_log` `l` on((`l`.`uabrowserversionid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4534,11 +5665,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_ua_device_brand_list` AS select `ln`.`name` AS `Device Brand`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_device_brand` `ln` join `access_log` `l` on((`l`.`uadevicebrandid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4552,11 +5683,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_ua_device_family_list` AS select `ln`.`name` AS `Device Family`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_device_family` `ln` join `access_log` `l` on((`l`.`uadevicefamilyid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4570,11 +5701,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_ua_device_list` AS select `ln`.`name` AS `Device`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_device` `ln` join `access_log` `l` on((`l`.`uadeviceid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4588,11 +5719,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_ua_device_model_list` AS select `ln`.`name` AS `Device Model`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_device_model` `ln` join `access_log` `l` on((`l`.`uadevicemodelid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4606,11 +5737,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_ua_list` AS select `ln`.`name` AS `Access Log User Agent`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua` `ln` join `access_log` `l` on((`l`.`uaid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4624,11 +5755,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_ua_os_family_list` AS select `ln`.`name` AS `Operating System Family`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_os_family` `ln` join `access_log` `l` on((`l`.`uaosfamilyid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4642,11 +5773,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_ua_os_list` AS select `ln`.`name` AS `Operating System`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_os` `ln` join `access_log` `l` on((`l`.`uaosid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4660,11 +5791,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_ua_os_version_list` AS select `ln`.`name` AS `Operating System Version`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_os_version` `ln` join `access_log` `l` on((`l`.`uaosversionid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4678,11 +5809,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_useragent_browser_family_list` AS select `ln`.`ua_browser_family` AS `Browser Family`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_useragent` `ln` join `access_log` `l` on((`l`.`useragentid` = `ln`.`id`))) group by `ln`.`ua_browser_family` order by `ln`.`ua_browser_family` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4696,11 +5827,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_useragent_browser_list` AS select `ln`.`ua_browser` AS `Browser`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_useragent` `ln` join `access_log` `l` on((`l`.`useragentid` = `ln`.`id`))) group by `ln`.`ua_browser` order by `ln`.`ua_browser` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4714,11 +5845,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_useragent_browser_version_list` AS select `ln`.`ua_browser_version` AS `Browser Version`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_useragent` `ln` join `access_log` `l` on((`l`.`useragentid` = `ln`.`id`))) group by `ln`.`ua_browser_version` order by `ln`.`ua_browser_version` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4732,11 +5863,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_useragent_device_brand_list` AS select `ln`.`ua_device_brand` AS `Device Brand`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_useragent` `ln` join `access_log` `l` on((`l`.`useragentid` = `ln`.`id`))) group by `ln`.`ua_device_brand` order by `ln`.`ua_device_brand` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4750,11 +5881,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_useragent_device_family_list` AS select `ln`.`ua_device_family` AS `Device Family`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_useragent` `ln` join `access_log` `l` on((`l`.`useragentid` = `ln`.`id`))) group by `ln`.`ua_device_family` order by `ln`.`ua_device_family` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4768,11 +5899,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_useragent_device_list` AS select `ln`.`ua_device` AS `Device`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_useragent` `ln` join `access_log` `l` on((`l`.`useragentid` = `ln`.`id`))) group by `ln`.`ua_device` order by `ln`.`ua_device` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4786,11 +5917,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_useragent_device_model_list` AS select `ln`.`ua_device_model` AS `Device Model`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_useragent` `ln` join `access_log` `l` on((`l`.`useragentid` = `ln`.`id`))) group by `ln`.`ua_device_model` order by `ln`.`ua_device_model` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4804,11 +5935,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_useragent_list` AS select `ln`.`name` AS `Access Log UserAgent`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_useragent` `ln` join `access_log` `l` on((`l`.`useragentid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4822,11 +5953,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_useragent_os_browser_device_list` AS select `ln`.`ua_os_family` AS `Operating System`,`ln`.`ua_browser_family` AS `Browser`,`ln`.`ua_device_family` AS `Device`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_useragent` `ln` join `access_log` `l` on((`l`.`useragentid` = `ln`.`id`))) group by `ln`.`ua_os_family`,`ln`.`ua_browser_family`,`ln`.`ua_device_family` order by `ln`.`ua_os_family`,`ln`.`ua_browser_family`,`ln`.`ua_device_family` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4840,11 +5971,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_useragent_os_family_list` AS select `ln`.`ua_os_family` AS `Operating System Family`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_useragent` `ln` join `access_log` `l` on((`l`.`useragentid` = `ln`.`id`))) group by `ln`.`ua_os_family` order by `ln`.`ua_os_family` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4858,11 +5989,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_useragent_os_list` AS select `ln`.`ua_os` AS `Operating System`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_useragent` `ln` join `access_log` `l` on((`l`.`useragentid` = `ln`.`id`))) group by `ln`.`ua_os` order by `ln`.`ua_os` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4876,11 +6007,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_useragent_os_version_list` AS select `ln`.`ua_os_version` AS `Operating System Version`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_useragent` `ln` join `access_log` `l` on((`l`.`useragentid` = `ln`.`id`))) group by `ln`.`ua_os_version` order by `ln`.`ua_os_version` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4894,11 +6025,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_useragent_pretty_list` AS select `ln`.`ua` AS `Access Log Pretty User Agent`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_useragent` `ln` join `access_log` `l` on((`l`.`useragentid` = `ln`.`id`))) group by `ln`.`ua` order by `ln`.`ua` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4912,11 +6043,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_apachecode_list` AS select `ln`.`name` AS `Error Log Apache Code`,count(`l`.`id`) AS `Log Count` from (`error_log_apachecode` `ln` join `error_log` `l` on((`l`.`apachecodeid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4930,12 +6061,66 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_apachemessage_list` AS select `ln`.`name` AS `Error Log Apache Message`,count(`l`.`id`) AS `Log Count` from (`error_log_apachemessage` `ln` join `error_log` `l` on((`l`.`apachemessageid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `error_client_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `error_client_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `error_client_list` AS select `ln`.`name` AS `Error Log Client Name`,count(`l`.`id`) AS `Log Count` from (`log_clientname` `ln` join `error_log` `l` on((`l`.`clientnameid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `error_client_port_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `error_client_port_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `error_client_port_list` AS select `ln`.`name` AS `Error Log Client Port`,count(`l`.`id`) AS `Log Count` from (`log_clientport` `ln` join `error_log` `l` on((`l`.`clientportid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `error_clientname_clientport_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `error_clientname_clientport_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `error_clientname_clientport_list` AS select `cn`.`name` AS `Error Log Server Name`,`cp`.`name` AS `Server Port`,count(`l`.`id`) AS `Log Count` from ((`error_log` `l` join `log_clientname` `cn` on((`cn`.`id` = `l`.`clientnameid`))) join `log_clientport` `cp` on((`cp`.`id` = `l`.`clientportid`))) group by `l`.`clientnameid`,`l`.`clientportid` order by `cn`.`name`,`cp`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -4948,11 +6133,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_importfile_list` AS select `ln`.`name` AS `Error Log Import File`,count(`l`.`id`) AS `Log Count` from (`import_file` `ln` join `error_log` `l` on((`l`.`importfileid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4966,11 +6151,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_level_list` AS select `ln`.`name` AS `Error Log Level`,count(`l`.`id`) AS `Log Count` from (`error_log_level` `ln` join `error_log` `l` on((`l`.`loglevelid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -4984,11 +6169,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_message_list` AS select `ln`.`name` AS `Error Log Message`,count(`l`.`id`) AS `Log Count` from (`error_log_message` `ln` join `error_log` `l` on((`l`.`logmessageid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -5002,11 +6187,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_module_list` AS select `ln`.`name` AS `Error Log Module`,count(`l`.`id`) AS `Log Count` from (`error_log_module` `ln` join `error_log` `l` on((`l`.`moduleid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -5020,11 +6205,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_processid_list` AS select `ln`.`name` AS `Error Log ProcessID`,count(`l`.`id`) AS `Log Count` from (`error_log_processid` `ln` join `error_log` `l` on((`l`.`processid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -5038,11 +6223,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_processid_threadid_list` AS select `pid`.`name` AS `ProcessID`,`tid`.`name` AS `ThreadID`,count(`l`.`id`) AS `Log Count` from ((`error_log` `l` join `error_log_processid` `pid` on((`l`.`processid` = `pid`.`id`))) join `error_log_threadid` `tid` on((`l`.`threadid` = `tid`.`id`))) group by `pid`.`id`,`tid`.`id` order by `pid`.`name`,`tid`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -5056,30 +6241,66 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
-/*!50001 VIEW `error_referer_list` AS select `ln`.`name` AS `Error Log Referer`,count(`l`.`id`) AS `Log Count` from (`error_log_referer` `ln` join `error_log` `l` on((`l`.`refererid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `error_referer_list` AS select `ln`.`name` AS `Error Log Referer`,count(`l`.`id`) AS `Log Count` from (`log_referer` `ln` join `error_log` `l` on((`l`.`refererid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
 
 --
--- Final view structure for view `error_reqclient_list`
+-- Final view structure for view `error_servername_list`
 --
 
-/*!50001 DROP VIEW IF EXISTS `error_reqclient_list`*/;
+/*!50001 DROP VIEW IF EXISTS `error_servername_list`*/;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
-/*!50001 VIEW `error_reqclient_list` AS select `ln`.`name` AS `Error Log Client`,count(`l`.`id`) AS `Log Count` from (`error_log_reqclient` `ln` join `error_log` `l` on((`l`.`reqclientid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `error_servername_list` AS select `ln`.`name` AS `Error Log Server Name`,count(`l`.`id`) AS `Log Count` from (`log_servername` `ln` join `error_log` `l` on((`l`.`servernameid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `error_servername_serverport_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `error_servername_serverport_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `error_servername_serverport_list` AS select `sn`.`name` AS `Error Log Server Name`,`sp`.`name` AS `Server Port`,count(`l`.`id`) AS `Log Count` from ((`error_log` `l` join `log_servername` `sn` on((`sn`.`id` = `l`.`servernameid`))) join `log_serverport` `sp` on((`sp`.`id` = `l`.`serverportid`))) group by `l`.`servernameid`,`l`.`serverportid` order by `sn`.`name`,`sp`.`name` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `error_serverport_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `error_serverport_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `error_serverport_list` AS select `ln`.`name` AS `Error Log Server Port`,count(`l`.`id`) AS `Log Count` from (`log_serverport` `ln` join `error_log` `l` on((`l`.`serverportid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -5092,11 +6313,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_systemcode_list` AS select `ln`.`name` AS `Error Log System Code`,count(`l`.`id`) AS `Log Count` from (`error_log_systemcode` `ln` join `error_log` `l` on((`l`.`systemcodeid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -5110,11 +6331,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_systemmessage_list` AS select `ln`.`name` AS `Error Log System Message`,count(`l`.`id`) AS `Log Count` from (`error_log_systemmessage` `ln` join `error_log` `l` on((`l`.`systemmessageid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -5128,11 +6349,11 @@ DELIMITER ;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`%` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_threadid_list` AS select `ln`.`name` AS `Error Log ThreadID`,count(`l`.`id`) AS `Log Count` from (`error_log_threadid` `ln` join `error_log` `l` on((`l`.`threadid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -5147,4 +6368,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-11-20  6:35:50
+-- Dump completed on 2024-11-30 12:21:10

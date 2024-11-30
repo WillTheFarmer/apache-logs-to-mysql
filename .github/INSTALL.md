@@ -1,14 +1,14 @@
 ## Installation Instructions
-The steps are very important to make installation painless. Please follow instructions in order.
+The steps are important to make installation painless.
 
 ### 1. MySQL Steps
-Before running `apachLogs2MySQL.sql` open file in your favorite editor and do a ***Find and Replace*** of the following User Account with a User Account with DBA Role on server you are installing on. This will make everything much easier. Copy below:
+Before running `apachLogs2MySQL.sql` if `root`@`localhost` does not exist open file and do a ***Find and Replace*** of User Account with a User Account with DBA Role on installation server. Copy below:
 ```
-`root`@`%`
+`root`@`localhost`
 ```
-Rename above <sup>user</sup> to a <sup>user</sup> on your server. For example - `root`@`%` to `dbadmin`@`localhost`
+Rename above <sup>user</sup> to a <sup>user</sup> on your server. For example - `root`@`localhost` to `dbadmin`@`localhost`
 
-The easiest way to install is use MySQL Command Line Client. Login as User with DBA Role and execute the following:
+The easiest way to install is MySQL Command Line Client. Login as User with DBA Role and execute the following:
 ```
 source yourpath/apacheLogs2MySQL.sql
 ```
@@ -20,7 +20,7 @@ local-infile=1
 After these 3 steps MySQL server should be good to go.
 
 ### 2. Python Steps
-Install all modules:
+Install all modules (`requirements.txt` in repository):
 ```
 pip install -r requirements.txt
 ```
@@ -32,7 +32,7 @@ python3 -m ensurepip --upgrade
 If any issues with ***pip install*** occur use individual install commands below:
 
 ### 3. Required Python Modules
-Python module links & install command lines for each platform. Single quotes around module name are required on macOS. The simplest option is run the command line under '5. Python Steps'. If that works you are all set. The `requirements.txt` file is included in repository.
+Python module links & install command lines for each platform. Single quotes around module name are required on macOS.
 |Python Package|Windows 10 & 11|Ubuntu 24.04|macOS 15.0.1 Darwin 24.0.0|GitHub Repository|
 |--------------|---------------|------------|--------------------------|-----------------|
 |[PyMySQL](https://pypi.org/project/PyMySQL/)|python -m pip install PyMySQL[rsa]|sudo apt-get install python3-pymysql|python3 -m pip install 'PyMySQL[rsa]'|[PyMySQL/PyMySQL](https://github.com/PyMySQL/PyMySQL)|
@@ -47,48 +47,45 @@ By default the load_dotenv() is looking for a file name .env which is standard n
 ```
 load_dotenv() # Loads variables from .env into the environment
 ```
-Windows requires double backslash:
-```
-C:\\Users\\farmf\\Documents\\apacheLogs\\
-```
-Lunix & macOS require single frontslash:
-```
-/home/will/apacheLogs/
-```
 Below is settings.env with default settings for running on Windows 11 Pro workstation. Make sure the correct logFormats are in correct logFormat folders. The application does not currently detect logFormats. Data will not be imported properly if folder settings are not correct.
 ### 5. Settings.env Variables
 ```
-MYSQL_HOST=localhost # MySQL server
-MYSQL_PORT=3306 # MySQL server port
-MYSQL_USER=root # MySQL server User 
-MYSQL_PASSWORD=password # MySQL server User Password
-MYSQL_SCHEMA=apache_logs # MySQL database schema ApacheLogs2MySQL will create
-WATCH_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\  # watch folder for new files
-WATCH_RECURSIVE=1 # watch all subfolders - 0=no 1=yes
-WATCH_INTERVAL=15 # seconds between watching for new files
-ERROR=1 # process error logs - 0=no 1=yes
-ERROR_LOG=2 # display process error processing to console in python - 0=none 1=summary 2=summary & each file being processed
-ERROR_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\**/*error*.* # process folder & file patterns for Error Log files - MUST BE Watch folder and can be Subfolders
-ERROR_RECURSIVE=1 # watch all subfolders - 0=no 1=yes
-ERROR_PROCESS=1 # execute MySQL Stored Procedure to import Error log staging table - 0=no 1=yes
-COMBINED=1 # process Common and Combined Access logs - 0=no 1=yes
-COMBINED_LOG=2 # display Common and Combined Access log processing to console in python - 0=none 1=summary 2=summary & each file being processed
-COMBINED_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\combined\\**/*access*.* # process folder & file patterns for Common and Combined Access files - MUST BE Watch subfolder
-COMBINED_RECURSIVE=1 # watch all subfolders - 0=no 1=yes
-COMBINED_PROCESS=1 # execute MySQL Stored Procedure to import Common and Combined Access staging table - 0=no 1=yes
-VHOST=1 # process Vhost Access logs - 0=no 1=yes
-VHOST_LOG=2 # display Vhost Access log processing to console in python - 0=none 1=summary 2=summary & each file being processed
-VHOST_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\vhost\\**/*access*.* # process folder & file patterns for Vhost Access files - MUST BE Watch subfolder
-VHOST_RECURSIVE=1 # watch all subfolders - 0=no 1=yes
-VHOST_PROCESS=1 # execute MySQL Stored Procedure to import Vhost Access log staging table - 0=no 1=yes
-CSV2MYSQL=1 # process error logs - 0=no 1=yes
-CSV2MYSQL_LOG=2 # display Csv2mysql Access log processing to console in python - 0=none 1=summary 2=summary & each file being processed
-CSV2MYSQL_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\csv2mysql\\**/*access*.* # process folder & file patterns for Csv2mysql Access files - MUST BE Watch subfolder
-CSV2MYSQL_RECURSIVE=1 # watch all subfolders - 0=no 1=yes
-CSV2MYSQL_PROCESS=1 # execute MySQL Stored Procedure to import Csv2mysql Access log staging table - 0=no 1=yes
-USERAGENT=1 # process csv2mysql Access logs - 0=no 1=yes
-USERAGENT_LOG=2 # display userAgent processing to console in python - 0=none 1=summary 2=summary & each file being processed
-USERAGENT_PROCESS=1 # execute MySQL Stored Procedure process userAgent parsed table into 14 normalized userAgent tables - 0=no 1=yes
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_USER=apache_upload
+MYSQL_PASSWORD=password
+MYSQL_SCHEMA=apache_logs
+WATCH_PATH=C:\Users\farmf\Documents\apacheLogs\
+WATCH_RECURSIVE=1
+WATCH_INTERVAL=15
+WATCH_LOG=2
+ERROR=1
+ERROR_LOG=2
+ERROR_PATH=C:\Users\farmf\Documents\apacheLogs\**/*error*.*
+ERROR_RECURSIVE=1
+ERROR_PROCESS=2
+ERROR_SERVERNAME=yourdomain.com
+ERROR_SERVERPORT=443
+COMBINED=1
+COMBINED_LOG=2
+COMBINED_PATH=C:\Users\farmf\Documents\apacheLogs\combined\**/*access*.*
+COMBINED_RECURSIVE=1
+COMBINED_PROCESS=2
+COMBINED_SERVERNAME=yourdomain.com
+COMBINED_SERVERPORT=443
+VHOST=1
+VHOST_LOG=2
+VHOST_PATH=C:\Users\farmf\Documents\apacheLogs\vhost\**/*access*.*
+VHOST_RECURSIVE=1
+VHOST_PROCESS=2
+CSV2MYSQL=1
+CSV2MYSQL_LOG=2
+CSV2MYSQL_PATH=C:\Users\farmf\Documents\apacheLogs\csv2mysql\**/*access*.*
+CSV2MYSQL_RECURSIVE=1
+CSV2MYSQL_PROCESS=2
+USERAGENT=1
+USERAGENT_LOG=2
+USERAGENT_PROCESS=1
 ```
 ### 6. Run Application
 If MySQL steps completed successfully, successfully installed Python modules, renamed file `settings.env` to `.env`, and updated MySQL server connection and log folder variables it is time to run application.

@@ -1,34 +1,40 @@
 # Apache Log Parser and Data Normalization Application
-ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema designed to automate importing Apache Access & Error Log files into a normalized database schema for reporting & data analysis.
+ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema to automate importing Apache Access & Error Log files into a normalized database schema for reporting & data analysis.
 
 Runs on Windows, Linux and MacOS & tested with MySQL versions 8.0.39, 8.4.3, 9.0.0 & 9.1.0.
 
-Imports Access Logs in Apache LogFormats - ***common***, ***combined*** and ***vhost_combined*** as well as the ***csv2mysql*** LogFormat defined below. 
+Version 2.0.0 fixes issues encountered running 4 weeks on 7 VPS with 2 to 6 VirtualHosts on each VPS. Each VPS is running `watch4logs.py` in PM2 connecting to one MySQL server `apache_logs` schema. Application currently consolidates Access and Error logs from 32 domains.
 
-Imports Error Logs in default LogFormat performing data harmonization on Apache Codes & Messages, System Codes & Messages, and Log Messages to create a unified, standardized dataset. See Error Log views below.
+Imports Access Logs in Apache LogFormats - ***common***, ***combined*** and ***vhost_combined*** & additional ***csv2mysql*** LogFormat defined below. 
 
-All 4 LogFormats can be imported in same process. Access LogFormats - ***common***, ***combined*** and Error logs can be associcated with a %v - ServerName by updating server_name COLUMN in import_file or import_load TABLE. Database system is designed to accommodate unlimited domains.
+Imports Error Logs in Apache default ErrorLogFormat & additional ErrorLogFormat defined below performing data harmonization on Apache Codes & Messages, System Codes & Messages, and Log Messages to create a unified, standardized dataset. Error Log view images below.
 
-Python executes all MySQL from command prompt or PM2. Easy MySQL database installation with 3 simple steps.
-## MySQL Access Log View by Browser - 1 of 50 schema views
-MySQL View - apache_logs.access_ua_browser_list - data from LogFormat: combined & csv2mysql
-![view-access_useragent_browser_list](https://github.com/user-attachments/assets/1550daf7-e591-47c4-a70a-cb4fc5fdefd9)
+Application has two options to associate ServerName & ServerPort with Access and Error logs missing `%v - canonical ServerName` and `%p - canonical ServerPort` Format Strings described below.
+
+All 6 LogFormats can be loaded and all 5 MySQL Stored Procedures can be processed in a single Python `ProcessLogs function` execution.
+
+Database system is designed to accommodate unlimited domains. Easy MySQL database installation with 3 simple steps.
+## MySQL Access Log View by Browser - 1 of 56 schema views
+MySQL View - apache_logs.access_ua_browser_family_list - data from LogFormat: combined & csv2mysql
+![view-access_ua_browser_family_list.png](./assets/access_ua_browser_list.png)
 ## Application Description
-This is a fast, reliable processing application with detailed event-logging and two-staged data conversation. Data manipulation can be fine tuned in second conversion stage if required for customizing LogFormats. Log-levels can be set to capture every process step, info messages and errors of the import process from log file to schema import_log table.
-
-The logging functionality, database design and table relationship contraints produce both physical integrity and logical integrity. This enables a complete audit trail providing the ability to determine when, where and what file each record originated from.
-
-There is no need to move log files either. Log files can be left in the folder they were imported from for later referencing. The application knows what files have been processed. This application will run with no need for user interaction.
-
-All folder pathnames, filename patterns, logging, MySQL connection settings are in .env file for easy installation and maintenance. The folder polling Python module runs great in PM2 daemon process manager for 24/7 online processing.
+This is a fast, reliable processing application with detailed logging and two-staged data conversation. Data manipulation can be fine tuned in process_access_parse and process_error_parse MySQL Stored Procedures if required to customize LogFormats.
 
 Python handles polling of log file folders and executing MySQL Database LOAD DATA statements, Stored Procedures & Functions and SQL Statements. Python drives the application but MySQL does all Data Manipulation & Processing.
 
-For Auditability logging of messages, events and errors of processes on client and server is extremely important. This application has both a client and server module. The client module can be run on multiple computers in different locations feeding a single server module.
+There is no need to move log files. Log files can be left in the folder they were imported from for later referencing. Application knows what files have been processed. Application runs with no need for user interaction.
+
+Log-level variables can be set to display info messages in console and inserted into PM2 logs for every process step. All import errors in Python processLogs (client) and MySQL Stored Procedures (server) are inserted into apache_logs.import_error TABLE. This is the only schema table that uses ENGINE=MYISAM to avoid TRANSACTION ROLLBACKS.
+
+Logging functionality, database design and table relationship contraints produce both physical integrity and logical integrity. This enables a complete audit trail providing the ability to determine when, where and what file each record originated from.
+
+All folder pathnames, filename patterns, logging, MySQL connection setting variables are in .env file for easy installation and maintenance.
+
+The Python modules can run in PM2 daemon process manager for 24/7 online processing. These modules can be run on multiple computers feeding a single server module.
 
 Application is developed with Python 3.12, MySQL and 4 Python modules. Modules are listed with Python Package Index link, install command for each platform & GitHub Repository link.
 ## Required Python Modules
-Python module links & install command lines for each platform. Single quotes around module name are required on macOS. The simplest option is run the command line under '2. Python Steps'. If that works you are all set. The `requirements.txt` is included in repository.
+Python module links & install command lines for each platform. Single quotes around module name are required on macOS. The simplest installation option is run the command line under '2. Python Steps' below. If that works you are all set.
 |Python Package|Windows 10 & 11|Ubuntu 24.04|macOS 15.0.1 Darwin 24.0.0|GitHub Repository|
 |--------------|---------------|------------|--------------------------|-----------------|
 |[PyMySQL](https://pypi.org/project/PyMySQL/)|python -m pip install PyMySQL[rsa]|sudo apt-get install python3-pymysql|python3 -m pip install 'PyMySQL[rsa]'|[PyMySQL/PyMySQL](https://github.com/PyMySQL/PyMySQL)|
@@ -36,7 +42,8 @@ Python module links & install command lines for each platform. Single quotes aro
 |[watchdog](https://pypi.org/project/watchdog/)|pip install watchdog|sudo apt-get install python3-watchdog|python3 -m pip install watchdog|[gorakhargosh/watchdog](https://github.com/gorakhargosh/watchdog/tree/master)|
 |[python-dotenv](https://pypi.org/project/python-dotenv/)|pip install python-dotenv|sudo apt-get install python3-dotenv|python3 -m pip install python-dotenv|[theskumar/python-dotenv](https://github.com/theskumar/python-dotenv)|
 ## Four Supported Access Log Formats
-Apache uses same Standard Access LogFormats (***common***, ***combined***, ***vhost_combined***) on all 3 platforms. Each LogFormat adds 2 Format Strings to the prior. Format String descriptions are listed below each LogFormat.
+Apache uses same Standard Access LogFormats (***common***, ***combined***, ***vhost_combined***) on all 3 platforms. Each LogFormat adds 2 Format Strings to 
+the prior. Format String descriptions are listed below each LogFormat.
 ```
 LogFormat "%h %l %u %t \"%r\" %>s %O" common
 ```
@@ -64,7 +71,8 @@ LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" v
 |%v|The canonical ServerName of the server serving the request.|
 |%p|The canonical port of the server serving the request.|
 
-Application is designed to use the ***csv2mysql*** LogFormat. LogFormat has comma-separated values and adds 7 Format Strings. A complete list of Format Strings with descriptions indicating added Format Strings below.
+Application is designed to use the ***csv2mysql*** LogFormat. LogFormat has comma-separated values and adds 7 Format Strings. A complete list of Format Strings
+with descriptions indicating added Format Strings below.
 ```
 LogFormat "%v,%p,%h,%l,%u,%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\",\"%q\",\"%{Referer}i\",\"%{User-Agent}i\",\"%{farmwork.app}C\"" csv2mysql
 ```
@@ -87,24 +95,63 @@ LogFormat "%v,%p,%h,%l,%u,%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\"
 |%H|The request protocol. Included in %r - First line of request.|
 |%m|The request method. Included in %r - First line of request.|
 |%U|The URL path requested, not including any query string. Included in %r - First line of request.|
-|%q|The query string (prepended with a ? if a query string exists, otherwise an empty string).  Included in %r - First line of request.|
-|%{Referer}i|The "Referer" (sic) HTTP request header. This gives the site that the client reports having been referred from. (This should be the page that links to or includes /apache_pb.gif).|
+|%q|The query string (prepended with a ? if a query string exists, otherwise an empty string). Included in %r - First line of request.|
+|%{Referer}i|The "Referer" (sic) HTTP request header. This gives the site that the client reports having been referred from.|
 |%{User-Agent}i|The User-Agent HTTP request header. This is the identifying information that the client browser reports about itself.|
 |%{VARNAME}C|ADDED - The contents of cookie VARNAME in request sent to server. Only version 0 cookies are fully supported. Format String is optional.|
-## Supported Error Log Format
-The application processes Error Logs with default format for threaded MPMs (Multi-Processing Modules). If you're running Apache 2.4 on any platform and ErrorLogFormat is not defined in config files this is the Error Log format.
+## Two supported Error Log Formats
+Application processes Error Logs with default format for threaded MPMs (Multi-Processing Modules). If you're running Apache 2.4 on any platform and 
+ErrorLogFormat is not defined in config files this is the Error Log format. Also processes additional format below which adds %v - The canonical ServerName of the current server.
+|Format String|Description|
+|-------------|-----------|
+|%{u}t|The current time including micro-seconds|
+|%m|Name of the module logging the message|
+|%l|Loglevel of the message|
+|%P|Process ID of current process|
+|%T|Thread ID of current thread|
+|%F|Source file name and line number of the log call. note %7F below - 7 means only display is LogLevel=debug|
+|%E|APR/OS error status code and string|
+|%a|Client IP address and port of the request|
+|%M|The actual log message|
+|%{Referer}i|The "Referer" (sic) HTTP request header. This gives the site that the client reports having been referred from.| 
 ```
 ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i"
 ```
+Application is designed to use this ErrorLogFormat. Easiest way to identify error logs for each domain is add %v to ErrorLogFormat. 
+
+Place the ErrorLogFormat before ErrorLog in apache2.conf to set error log format for Server and ALL VitualHosts on Server.
+|Format String|Description - The spaces on each side of comma are required.|
+|-------------|-----------|
+|%v|The canonical ServerName of the server serving the request.|
+```
+ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i , %v"
+```
+## Two options to attach ServerName & ServerPort to Access & Error logs
+
+Apache LogFormats - ***common***, ***combined*** and Apache ErrorLogFormat - ***default*** do not contain %v - canonical ServerName and %p - canonical ServerPort. 
+In order to consolidate logs from multiple domains these two data attributes are a requirement. The application provides 2 methods to associate ServerName and ServerPort
+to all Access and Error logs.
+
+1) Setting the `ERRORLOG_SERVERNAME`, `ERRORLOG_SERVERPORT`, `COMBINED_SERVERNAME`, `COMBINED_SERVERPORT` variables in .env file prior to Python LOAD DATA.
+
+2) Populating `server_name` and `server_port` COLUMNS in `import_file` TABLE prior to running import process. This option only updates records with NULL values
+in staging tables `server_name` and `server_port` COLUMNS while executing STORED PROCEDURES `process_access_import` and `process_error_import`. 
+
+UPDATE commands to populate both Access and Error Logs if ***"Log File Names"*** are related to VirtualHost. Log file naming conventions in VisualHost like `ErrorLog ${APACHE_LOG_DIR}/farmfreshsoftware.error.log` & `CustomLog ${APACHE_LOG_DIR}/farmfreshsoftware.access.log csv2mysql` enable the use of UPDATE statement examples:
+```
+UPDATE apache_logs.import_file SET server_name='farmfreshsoftware.com', server_port=443 WHERE server_name IS NULL AND name LIKE '%farmfreshsoftware%';
+UPDATE apache_logs.import_file SET server_name='farmwork.app', server_port=443 WHERE server_name IS NULL AND name LIKE '%farmwork%';
+```
+
 ## Installation Instructions
 The steps are very important to make installation painless. Please follow in the order instructions are listed.
 
 ### 1. MySQL Steps
-Before running `apachLogs2MySQL.sql` open file in your favorite editor and do a ***Find and Replace*** of the following User Account with a User Account with DBA Role on server you are installing on. This will make everything much easier. Copy below:
+Before running `apachLogs2MySQL.sql` if `root`@`localhost` does not exist open file and do a ***Find and Replace*** of User Account with a User Account with DBA Role on installation server. Copy below:
 ```
-root`@`%`
+root`@`localhost`
 ```
-Rename above <sup>user</sup> to a <sup>user</sup> on your server. For example - `root`@`%` to `dbadmin`@`localhost`
+Rename above <sup>user</sup> to a <sup>user</sup> on your server. For example - `root`@`localhost` to `dbadmin`@`localhost`
 
 The easiest way to install is use MySQL Command Line Client. Login as User with DBA Role and execute the following:
 ```
@@ -118,7 +165,7 @@ local-infile=1
 After these 3 steps MySQL server should be good to go.
 
 ### 2. Python Steps
-Install all modules:
+Install all modules (`requirements.txt` in repository):
 ```
 pip install -r requirements.txt
 ```
@@ -129,60 +176,28 @@ python3 -m ensurepip --upgrade
 ```
 If any issues with ***pip install*** occur use individual install commands included above.
 
-### 3. Settings.env steps
+### 3. Create MySQL USER and GRANTS
+To minimize data exposure and breach risks create a MySQL USER for Python module with GRANTS to only schema objects and privileges required to execute import processes. (`mysql_user_and_grants.sql` in repository)
+![mysql_user_and_grants.sql in repository](./assets/mysql_user_and_grants.png)
+
+### 4. Settings.env steps
 First rename the settings.env file to .env
 
-By default the load_dotenv() is looking for a file name .env which is standard name for setting files. The file is loaded in both the apacheLogs2MySQL.py and watch4files.py with the following line of code:
+By default the load_dotenv() looks for standard setting file name `.env`. The file is loaded in both `apacheLogs2MySQL.py` and `watch4files.py` with following line:
 ```
 load_dotenv() # Loads variables from .env into the environment
 ```
-Windows requires double backslash:
-```
-C:\\Users\\farmf\\Documents\\apacheLogs\\
-```
-Lunix & macOS require single frontslash:
-```
-/home/will/apacheLogs/
-```
-Below is settings.env with default settings for running on Windows 11 Pro workstation. Make sure the correct logFormats are in correct logFormat folders. The application does not currently detect logFormats. Data will not be imported properly if folder settings are not correct.
-### 4. Settings.env Variables
-```
-MYSQL_HOST=localhost
-MYSQL_PORT=3306
-MYSQL_USER=root
-MYSQL_PASSWORD=password
-MYSQL_SCHEMA=apache_logs
-WATCH_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\
-WATCH_RECURSIVE=1
-WATCH_INTERVAL=15
-ERROR=1
-ERROR_LOG=2
-ERROR_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\**/*error*.*
-ERROR_RECURSIVE=1
-ERROR_PROCESS=1
-COMBINED=1
-COMBINED_LOG=2
-COMBINED_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\combined\\**/*access*.*
-COMBINED_RECURSIVE=1
-COMBINED_PROCESS=1
-VHOST=1
-VHOST_LOG=2
-VHOST_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\vhost\\**/*access*.*
-VHOST_RECURSIVE=1
-VHOST_PROCESS=1
-CSV2MYSQL=1
-CSV2MYSQL_LOG=2
-CSV2MYSQL_PATH=C:\\Users\\farmf\\Documents\\apacheLogs\\csv2mysql\\**/*access*.*
-CSV2MYSQL_RECURSIVE=1
-CSV2MYSQL_PROCESS=1
-USERAGENT=1
-USERAGENT_LOG=2
-USERAGENT_PROCESS=1
-```
-### 5. Run Application
-If MySQL steps completed successfully, successfully installed Python modules, renamed file `settings.env` to `.env`, and updated MySQL server connection and log folder variables it is time to run application.
+settings.env with default settings to run on Windows 11 Pro workstation. Make sure the correct logFormats are in correct logFormat folders. Application does not currently
+detect logFormats. Data will not be imported properly if folder settings are not correct.
+### 5. Settings.env Variables
+(`settings.env` in repository)
+![settings.env in repository](./assets/settings.png)
+### 6. Run Application
+If MySQL steps completed successfully, installed Python modules successfully, renamed file `settings.env` to `.env`, and updated MySQL server connection and log folder 
+variables it is time to run application.
 
-If you have log files in the folders already run the apacheLogs2MySQL.py directly. It will process all the logs in all the folders. If you have empty folders and want to drop files into folders run the watch4logs.py.
+If you have log files in the folders already run the apacheLogs2MySQL.py directly. It will process all logs in all folders. If you have empty folders and want to drop 
+files into folders run the watch4logs.py.
 
 Run import process directly:
 ```
@@ -197,28 +212,46 @@ Run polling module from PM2:
 ```
 pm2 start watch4logs.py
 ```
-## Database Normalization
-Database normalization is the process of organizing data in a relational database to improve data integrity and reduce redundancy. Normalization ensures that data is organized in a way that makes sense for the data model and attributes, and that the database functions efficiently.
+Run MySQL Stored Procedures from Command Line Client or Workbench:
 
-Below are View Data and Schema Object images. There are currently 47 tables, 724 columns, 110 indexes, 50 views, 5 stored procedures and 42 functions in ***apache_logs*** schema. Database normalization at work!
+Passing 'ALL' as second parameter processes ALL files & records based process_status. 
+This can be multiple importloadid values. Passing an importloadid value as a STRING processes ONLY files & records related to that importloadid.
+
+Based on .env variable settings Python `processLogs function` will execute the 5 Stored Procedures passing the importloadid value to process 
+ONLY files & records processed by current `processLogs function` execution. 
+
+The secord parameter enables Python Client modules to run simultaneously on multiple servers uploading to a single MySQL Sever `apache_logs` schema.
+
+ (`call_processes.sql` in repository)
+![call_processes.sql comments and commands in repository](./assets/call_processes.png)
+
+## Database Normalization
+Database normalization is the process of organizing data in a relational database to improve data integrity and reduce redundancy. 
+Normalization ensures that data is organized in a way that makes sense for the data model and attributes, and that the database functions efficiently.
+
+MySQL `apache_logs` schema has 46 tables, 772 columns, 128 indexes, 56 views, 7 stored procedures and 41 functions to process Apache Access log in 4 formats 
+& Apache Error log in 2 formats. Database normalization at work!
 ## MySQL Access Log View by URI
 MySQL View - apache_logs.access_requri_list - data from LogFormat: combined & csv2mysql
-![view-access_requri_list](https://github.com/user-attachments/assets/7cf9ff89-a1d7-4e93-ae93-deeca87175f9)
+![view-access_requri_list](./assets/access_requri_list.png)
 ## MySQL Error Log Views
-The application imports and normalizes error log data as well. Here are some of the Error Log schema views. Error log attribute is name of first column or first and second column. Each attribute has an associated table in ***apache_logs*** Schema. Using these views it is quick and easy to identify the origin of errors.
-![Screenshot 2024-10-26 164911](https://github.com/user-attachments/assets/11094e41-9897-44ab-8c23-e8b75cb5916f)
-![Screenshot 2024-10-26 164842](https://github.com/user-attachments/assets/c1fcfb1a-2c45-4525-80ce-11702b0c609a)
-![Screenshot 2024-10-26 164449](https://github.com/user-attachments/assets/9bcf7ffe-c72f-43cb-8011-2cdf2978934a)
-![Screenshot 2024-10-26 164517](https://github.com/user-attachments/assets/b624d139-3d9f-4184-a63c-b3c70df6d53c)
-![Screenshot 2024-10-26 164645](https://github.com/user-attachments/assets/ec15619a-900d-4036-a7b4-fe610777d65d)
-![Screenshot 2024-10-26 164714](https://github.com/user-attachments/assets/caaac761-730e-4ccf-8a43-0ef40be7b164)
-![Screenshot 2024-10-26 164741](https://github.com/user-attachments/assets/7ab48d24-1d24-4733-ab57-e76654a28e14)
-![Screenshot 2024-10-26 164805](https://github.com/user-attachments/assets/d8fae147-69f2-4995-b800-f8c8bf14308e)
-![Screenshot 2024-10-26 164828](https://github.com/user-attachments/assets/485d24ea-2c34-4c01-8452-bd43e0993aab)
+Application imports and normalizes error log data. Some of the Error Log schema views below. Error log attribute is name of first column or first and second column.
+Each attribute has an associated table in ***apache_logs*** Schema. Using these views it is quick and easy to identify the origin of errors.
+![error_log_apache_message_list](./assets/error_log_apache_message_list.png)
+![error_log_system_message](./assets/error_log_system_message.png)
+![error_log_message_list](./assets/error_log_message_list.png)
+![error_processID_threadID_list](./assets/error_processID_threadID_list.png)
+![error_log_apache_code_list](./assets/error_log_apache_code_list.png)
+![error_log_client_list](./assets/error_log_client_list.png)
+![error_log_system_code_list](./assets/error_log_system_code_list.png)
+![error_log_module_list](./assets/error_log_module_list.png)
+![error_log_level_list](./assets/error_log_level_list.png)
 
 ## MySQL Schema Objects - Tables, Stored Procedures, Functions and Views
-Images of the ***apache_logs*** schema objects. Access and Error log attributes are normalized into separate entity tables. Each table is populated with unique values of the attribute. Entity Relationship Diagram will be posted in future.
+Images of the `apache_logs` schema objects. Access and Error log attributes are normalized into separate entity tables. Each table is populated with unique values of the attribute.
+Entity Relationship Diagram will be posted in future.
 
-Database normalization is a critical process in database design with objectives of optimizing data storage, improving data integrity, and reducing data anomalies. Organizing data into normalized tables greatly enhances efficiency and maintainability of a database system.
+Database normalization is a critical process in database design with objectives of optimizing data storage, improving data integrity, and reducing data anomalies.
+Organizing data into normalized tables greatly enhances efficiency and maintainability of a database system.
 
-![apache_logs.tables](<Screenshot 2024-11-20 053225.png>) ![apache_logs.stored_programs](<Screenshot 2024-11-18 025629.png>) ![apache_logs.views](<Screenshot 2024-11-18 025758.png>)
+![apache_logs.tables](<./assets/apache_logs.tables.png>) ![apache_logs.stored_programs](<./assets/apache_logs.stored_programs.png>) ![apache_logs.views](<./assets/apache_logs.views.png>)
