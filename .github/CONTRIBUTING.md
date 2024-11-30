@@ -11,7 +11,9 @@ There's not alot of code in the final version but I have 850 hours of research, 
 
 It is way more time then I intended to invest into this project and another project did get put on the back burner but it did produce my first open-source software!
 
-This started as a need for simple solution to import Apache logs into MySQL on a project I volenteered for. Now I incorporated this application into all VPS applications I oversee.
+This started as a need for simple solution to import Apache logs into MySQL on a project I volunteered for. Did research other open source solutions before starting. There are many out there that parse log files but none that normalized the parsed log data into a database. 
+
+I incorporated this application into all VPS applications I oversee 4 weeks ago and have been making improvements ever since. This version fixes all the major issues encountered.
 
 That's how my need, lack of a viable solution and rescheduling came together just right to allow me to dive deep into this project.
 

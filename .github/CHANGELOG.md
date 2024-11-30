@@ -29,5 +29,6 @@
 - [2.0.0] add WATCH_LOG to setting Log Level in watch4logs.py. 0=no messages, 1=message when files found, 2=message when checking for files & files found
 - [2.0.0] add class bcolors to place RED BACKGROUND on all ERROR - messsages
 - [2.0.0] add file - mysql_user_and_grants.sql - MySQL USER and GRANTS file for CREATE USER apache_upload for Python module
+- [2.0.0] add Start and End DATETIME to processLogs Function. Already had duration times.
 - [2.0.0] add file - call_processes.sql - description and CALL command lines for 5 Stored Procedures
 - [2.0.0] add file - CHANGLOG.md - for single place to list all code and database changes
