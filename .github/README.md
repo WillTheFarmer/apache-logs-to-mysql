@@ -142,6 +142,8 @@ UPDATE commands to populate both Access and Error Logs if ***"Log File Names"***
 UPDATE apache_logs.import_file SET server_name='farmfreshsoftware.com', server_port=443 WHERE server_name IS NULL AND name LIKE '%farmfreshsoftware%';
 UPDATE apache_logs.import_file SET server_name='farmwork.app', server_port=443 WHERE server_name IS NULL AND name LIKE '%farmwork%';
 ```
+First option requires uncommenting `os.getenv` to load variables at the top of apacheLogs2MySQL.py. By default, variables are set to an empty string.
+![load_settings_variables.png](./assets/load_settings_variables.png)
 
 ## Installation Instructions
 The steps are very important to make installation painless. Please follow in the order instructions are listed.
