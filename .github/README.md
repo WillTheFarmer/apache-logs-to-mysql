@@ -11,7 +11,7 @@ Imports Error Logs in Apache ***default*** ErrorLogFormat & ***additional*** Err
 
 Application has two options to associate ServerName & ServerPort with Access and Error logs missing `%v - canonical ServerName` and `%p - canonical ServerPort` Format Strings described below.
 
-All 6 LogFormats can be loaded and all 5 MySQL Stored Procedures can be processed in a single Python `ProcessLogs function` execution.
+4 LogFormats & 2 ErrorLogFormats can be loaded and 5 MySQL Stored Procedures can be processed in a single Python `ProcessLogs function` execution.
 
 Database system is designed to accommodate unlimited domains. Easy MySQL database installation with 3 simple steps.
 ## MySQL Access Log View by Browser - 1 of 56 schema views
