@@ -196,7 +196,7 @@ def processLogs():
                     print('Loading Error log - ' + errorFile )
                 errorLoadCreated = time.ctime(os.path.getctime(errorFile))
                 errorLoadModified = time.ctime(os.path.getmtime(errorFile))
-                errorLoadSize     = str(os.path.getsize(errorFile))
+                errorLoadSize = str(os.path.getsize(errorFile))
                 errorInsertSQL = ("SELECT apache_logs.importFileID('" + 
                                   errorLoadFile + 
                                   "', '" + errorLoadSize + 
@@ -292,7 +292,7 @@ def processLogs():
                 combinedDataLoaded = 1
                 combinedLoadCreated = time.ctime(os.path.getctime(combinedFile))
                 combinedLoadModified = time.ctime(os.path.getmtime(combinedFile))
-                combinedLoadSize     = str(os.path.getsize(combinedFile))
+                combinedLoadSize = str(os.path.getsize(combinedFile))
                 combinedInsertSQL = ("SELECT apache_logs.importFileID('" + 
                                   combinedLoadFile + 
                                   "', '" + combinedLoadSize + 
@@ -388,7 +388,7 @@ def processLogs():
                 vhostDataLoaded = 1
                 vhostLoadCreated = time.ctime(os.path.getctime(vhostFile))
                 vhostLoadModified = time.ctime(os.path.getmtime(vhostFile))
-                vhostLoadSize     = str(os.path.getsize(vhostFile))
+                vhostLoadSize = str(os.path.getsize(vhostFile))
                 vhostInsertSQL = ("SELECT apache_logs.importFileID('" + 
                                   vhostLoadFile + 
                                   "', '" + vhostLoadSize + 
@@ -479,7 +479,7 @@ def processLogs():
                 csv2mysqlDataLoaded = 1
                 csv2mysqlLoadCreated = time.ctime(os.path.getctime(csv2mysqlFile))
                 csv2mysqlLoadModified = time.ctime(os.path.getmtime(csv2mysqlFile))
-                csv2mysqlLoadSize     = str(os.path.getsize(csv2mysqlFile))
+                csv2mysqlLoadSize = str(os.path.getsize(csv2mysqlFile))
                 csv2mysqlInsertSQL = ("SELECT apache_logs.importFileID('" + 
                                   csv2mysqlLoadFile + 
                                   "', '" + csv2mysqlLoadSize + 

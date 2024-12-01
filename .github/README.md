@@ -128,21 +128,20 @@ ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ re
 ```
 ## Two options to attach ServerName & ServerPort to Access & Error logs
 
-Apache LogFormats - ***common***, ***combined*** and Apache ErrorLogFormat - ***default*** do not contain %v - canonical ServerName and %p - canonical ServerPort. 
-In order to consolidate logs from multiple domains these two data attributes are a requirement. The application provides 2 methods to associate ServerName and ServerPort
-to all Access and Error logs.
+Apache LogFormats - ***common***, ***combined*** and Apache ErrorLogFormat - ***default*** do not contain %v - canonical ServerName and %p - canonical ServerPort.
 
-1) Setting the `ERRORLOG_SERVERNAME`, `ERRORLOG_SERVERPORT`, `COMBINED_SERVERNAME`, `COMBINED_SERVERPORT` variables in .env file prior to Python LOAD DATA.
+In order to consolidate logs from multiple domains these two data attributes are a requirement. The application provides 2 methods to associate ServerName and ServerPort to all Access and Error logs.
 
-2) Populating `server_name` and `server_port` COLUMNS in `import_file` TABLE prior to running import process. This option only updates records with NULL values
-in staging tables `server_name` and `server_port` COLUMNS while executing STORED PROCEDURES `process_access_import` and `process_error_import`. 
+1) Set `ERRORLOG_SERVERNAME`, `ERRORLOG_SERVERPORT`, `COMBINED_SERVERNAME`, `COMBINED_SERVERPORT` variables in .env file prior to Python LOAD DATA.
 
-UPDATE commands to populate both Access and Error Logs if ***"Log File Names"*** are related to VirtualHost. Log file naming conventions in VisualHost like `ErrorLog ${APACHE_LOG_DIR}/farmfreshsoftware.error.log` & `CustomLog ${APACHE_LOG_DIR}/farmfreshsoftware.access.log csv2mysql` enable the use of UPDATE statement examples:
+2) Populate `server_name` and `server_port` COLUMNS in `import_file` TABLE prior to running import process. This option only updates records with NULL values in staging tables `server_name` and `server_port` COLUMNS while executing STORED PROCEDURES `process_access_import` and `process_error_import`. 
+
+UPDATE commands to populate both Access and Error Logs if ***"Log File Names"*** are related to VirtualHost. Log file naming conventions in VisualHost similar to `ErrorLog ${APACHE_LOG_DIR}/farmfreshsoftware.error.log` & `CustomLog ${APACHE_LOG_DIR}/farmfreshsoftware.access.log csv2mysql` enable the use of UPDATE statement examples:
 ```
 UPDATE apache_logs.import_file SET server_name='farmfreshsoftware.com', server_port=443 WHERE server_name IS NULL AND name LIKE '%farmfreshsoftware%';
 UPDATE apache_logs.import_file SET server_name='farmwork.app', server_port=443 WHERE server_name IS NULL AND name LIKE '%farmwork%';
 ```
-First option requires uncommenting `os.getenv` to load variables at the top of apacheLogs2MySQL.py. By default, variables are set to an empty string.
+First option requires uncommenting `os.getenv` to load variables at top of `apacheLogs2MySQL.py`. By default, variables are defined and set to an empty string. Below is a screenshot of the variables loaded at top of `apacheLogs2MySQL.py` with commented `os.getenv` code.
 ![load_settings_variables.png](./assets/load_settings_variables.png)
 
 ## Installation Instructions
