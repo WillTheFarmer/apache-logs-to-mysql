@@ -102,8 +102,7 @@ LogFormat "%v,%p,%h,%l,%u,%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\"
 |%{User-Agent}i|The User-Agent HTTP request header. This is the identifying information that the client browser reports about itself.|
 |%{VARNAME}C|ADDED - The contents of cookie VARNAME in request sent to server. Only version 0 cookies are fully supported. Format String is optional.|
 ## Two supported Error Log Formats
-Application processes Error Logs with default format for threaded MPMs (Multi-Processing Modules). If you're running Apache 2.4 on any platform and 
-ErrorLogFormat is not defined in config files this is the Error Log format. Also processes additional format below which adds %v - The canonical ServerName of the current server.
+Application processes Error Logs with ***default format*** for threaded MPMs (Multi-Processing Modules). If you're running Apache 2.4 on any platform and ErrorLogFormat is not defined in config files this is the Error Log format.
 |Format String|Description|
 |-------------|-----------|
 |%{u}t|The current time including micro-seconds|
@@ -119,9 +118,9 @@ ErrorLogFormat is not defined in config files this is the Error Log format. Also
 ```
 ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i"
 ```
-Application is designed to use this ErrorLogFormat. Easiest way to identify error logs for each domain is add %v to ErrorLogFormat. 
+Application also processes Error Logs with this ***additional format*** which adds `%v - The canonical ServerName`. Easiest way to identify error logs for each domain is add `%v` to ErrorLogFormat.
 
-Place the ErrorLogFormat before ErrorLog in apache2.conf to set error log format for Server and ALL VitualHosts on Server.
+To use this format place the `ErrorLogFormat` before `ErrorLog` in `apache2.conf` to set error log format for Server and ALL VitualHosts on Server.
 |Format String|Description - The spaces on each side of comma are required.|
 |-------------|-----------|
 |%v|The canonical ServerName of the server serving the request.|
