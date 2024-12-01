@@ -7,7 +7,7 @@ Version 2.0.0 fixes issues encountered running 4 weeks on 7 VPS with 2 to 6 Virt
 
 Imports Access Logs in Apache LogFormats - ***common***, ***combined*** and ***vhost_combined*** & additional ***csv2mysql*** LogFormat defined below. 
 
-Imports Error Logs in Apache default ErrorLogFormat & additional ErrorLogFormat defined below performing data harmonization on Apache Codes & Messages, System Codes & Messages, and Log Messages to create a unified, standardized dataset. Error Log view images below.
+Imports Error Logs in Apache ***default*** ErrorLogFormat & ***additional*** ErrorLogFormat defined below performing data harmonization on Apache Codes & Messages, System Codes & Messages, and Log Messages to create a unified, standardized dataset. Error Log view images below.
 
 Application has two options to associate ServerName & ServerPort with Access and Error logs missing `%v - canonical ServerName` and `%p - canonical ServerPort` Format Strings described below.
 
@@ -18,7 +18,9 @@ Database system is designed to accommodate unlimited domains. Easy MySQL databas
 MySQL View - apache_logs.access_ua_browser_family_list - data from LogFormat: combined & csv2mysql
 ![view-access_ua_browser_family_list.png](./assets/access_ua_browser_list.png)
 ## Application Description
-This is a fast, reliable processing application with detailed logging and two-staged data conversation. Data manipulation can be fine tuned in process_access_parse and process_error_parse MySQL Stored Procedures if required to customize LogFormats.
+This is a fast, reliable processing application with detailed logging and two-staged data parsing. First stage is performed in LOAD DATA statements and second stage is performed in _parse Stored Procedures.
+
+Data parsing can be customize in process_access_parse and process_error_parse MySQL Stored Procedures by adding or modifying SQL UPDATE statements if required.
 
 Python handles polling of log file folders and executing MySQL Database LOAD DATA statements, Stored Procedures & Functions and SQL Statements. Python drives the application but MySQL does all Data Manipulation & Processing.
 
@@ -128,15 +130,25 @@ ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ re
 ```
 ## Two options to attach ServerName & ServerPort to Access & Error logs
 
-Apache LogFormats - ***common***, ***combined*** and Apache ErrorLogFormat - ***default*** do not contain %v - canonical ServerName and %p - canonical ServerPort.
+Apache LogFormats - ***common***, ***combined*** and Apache ErrorLogFormat - ***default*** do not contain `%v - canonical ServerName` and `%p - canonical ServerPort`.
 
-In order to consolidate logs from multiple domains these two data attributes are a requirement. The application provides 2 methods to associate ServerName and ServerPort to all Access and Error logs.
+In order to consolidate logs from multiple domains `%v - canonical ServerName` is required and `%p - canonical ServerPort` is optional. 
+
+The application provides 2 methods to associate ServerName and ServerPort to all Access and Error logs.
 
 1) Set `ERRORLOG_SERVERNAME`, `ERRORLOG_SERVERPORT`, `COMBINED_SERVERNAME`, `COMBINED_SERVERPORT` variables in .env file prior to Python LOAD DATA.
 
-2) Populate `server_name` and `server_port` COLUMNS in `import_file` TABLE prior to running import process. This option only updates records with NULL values in staging tables `server_name` and `server_port` COLUMNS while executing STORED PROCEDURES `process_access_import` and `process_error_import`. 
+Manually UPDATING load_ tables `server_name` and `server_port` COLUMNS prior to executing STORED PROCEDURES `process_access_import` and `process_error_import` which perform the Database Normalization is another option.
 
-UPDATE commands to populate both Access and Error Logs if ***"Log File Names"*** are related to VirtualHost. Log file naming conventions in VisualHost similar to `ErrorLog ${APACHE_LOG_DIR}/farmfreshsoftware.error.log` & `CustomLog ${APACHE_LOG_DIR}/farmfreshsoftware.access.log csv2mysql` enable the use of UPDATE statement examples:
+2) Populate `server_name` and `server_port` COLUMNS in `import_file` TABLE prior to running import process. This option only updates records with NULL values in load_ tables `server_name` and `server_port` COLUMNS while executing STORED PROCEDURES `process_access_import` and `process_error_import`. 
+
+UPDATE commands to populate both Access and Error Logs if ***"Log File Names"*** are related to VirtualHost similar to:
+```
+ ErrorLog ${APACHE_LOG_DIR}/farmfreshsoftware.error.log
+ CustomLog ${APACHE_LOG_DIR}/farmfreshsoftware.access.log csv2mysql
+ ```
+Log file naming conventions enable the use of UPDATE statements:
+
 ```
 UPDATE apache_logs.import_file SET server_name='farmfreshsoftware.com', server_port=443 WHERE server_name IS NULL AND name LIKE '%farmfreshsoftware%';
 UPDATE apache_logs.import_file SET server_name='farmwork.app', server_port=443 WHERE server_name IS NULL AND name LIKE '%farmwork%';
