@@ -232,7 +232,7 @@ This can be multiple importloadid values. Passing an importloadid value as a STR
 Based on .env variable settings Python `processLogs function` will execute the 5 Stored Procedures passing the importloadid value to process 
 ONLY files & records processed by current `processLogs function` execution. 
 
-The secord parameter enables Python Client modules to run simultaneously on multiple servers uploading to a single MySQL Sever `apache_logs` schema.
+The second parameter enables Python Client modules to run simultaneously on multiple servers uploading to a single MySQL Sever `apache_logs` schema.
 
  (`call_processes.sql` in repository)
 ![call_processes.sql comments and commands in repository](./assets/call_processes.png)
