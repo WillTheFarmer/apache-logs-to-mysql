@@ -43,7 +43,8 @@ Python module links & install command lines for each platform. Single quotes aro
 |[python-dotenv](https://pypi.org/project/python-dotenv/)|pip install python-dotenv|sudo apt-get install python3-dotenv|python3 -m pip install python-dotenv|[theskumar/python-dotenv](https://github.com/theskumar/python-dotenv)|
 ## Four Supported Access Log Formats
 Apache uses same Standard Access LogFormats (***common***, ***combined***, ***vhost_combined***) on all 3 platforms. Each LogFormat adds 2 Format Strings to 
-the prior. Format String descriptions are listed below each LogFormat.
+the prior. Format String descriptions are listed below each LogFormat. Information is from link:
+https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#logformat 
 ```
 LogFormat "%h %l %u %t \"%r\" %>s %O" common
 ```
@@ -101,7 +102,8 @@ LogFormat "%v,%p,%h,%l,%u,%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\"
 |%{VARNAME}C|ADDED - The contents of cookie VARNAME in request sent to server. Only version 0 cookies are fully supported. Format String is optional.|
 |%L|ADDED - The request log ID from the error log (or '-' if nothing has been logged to the error log for this request). Look for the matching error log line to see what request| caused what error.
 ## Two supported Error Log Formats
-Application processes Error Logs with ***default format*** for threaded MPMs (Multi-Processing Modules). If you're running Apache 2.4 on any platform and ErrorLogFormat is not defined in config files this is the Error Log format.
+Application processes Error Logs with ***default format*** for threaded MPMs (Multi-Processing Modules). If you're running Apache 2.4 on any platform and ErrorLogFormat is not defined in config files this is the Error Log format. Information is from link:
+https://httpd.apache.org/docs/2.4/mod/core.html#errorlogformat
 ```
 ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i"
 ```
