@@ -102,6 +102,9 @@ LogFormat "%v,%p,%h,%l,%u,%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\"
 |%L|ADDED - The request log ID from the error log (or '-' if nothing has been logged to the error log for this request). Look for the matching error log line to see what request| caused what error.
 ## Two supported Error Log Formats
 Application processes Error Logs with ***default format*** for threaded MPMs (Multi-Processing Modules). If you're running Apache 2.4 on any platform and ErrorLogFormat is not defined in config files this is the Error Log format.
+```
+ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i"
+```
 |Format String|Description|
 |-------------|-----------|
 |%{u}t|The current time including micro-seconds|
@@ -114,23 +117,21 @@ Application processes Error Logs with ***default format*** for threaded MPMs (Mu
 |%a|Client IP address and port of the request|
 |%M|The actual log message|
 |%{Referer}i|The "Referer" (sic) HTTP request header. This gives the site that the client reports having been referred from.| 
-```
-ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i"
-```
+
 Application also processes Error Logs with ***additional format*** which adds:
  1) `%v - The canonical ServerName` - This is easiest way to identify error logs for each domain is add `%v` to ErrorLogFormat. 
  2) `%L - Log ID of the request` - This is easiest way to associate Access record that created an Error record. Apache mod_unique_id.generate_log_id() only called when error occurs and will not cause performance degradation under error-free operations. 
 
+***Important:*** `Space` required on left-side of `Commas` as defined below:
+```
+ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i ,%v ,%L"
+```
 To use this format place `ErrorLogFormat` before `ErrorLog` in `apache2.conf` to set error log format for ***Server*** and ***VitualHosts*** on Server.
 |Format String|Description - `Space` required on left-side of `Commas` to parse data properly|
 |-------------|-----------|
 |%v|The canonical ServerName of the server serving the request.|
 |%L|Log ID of the request. A %L format string is also available in `mod_log_config` to allow to correlate access log entries with error log lines. If `mod_unique_id` is loaded, its unique id will be used as log ID for requests.|
 
-***Important:*** `Space` required on left-side of `Commas` as defined below:
-```
-ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i ,%v ,%L"
-```
 ## Two options to attach ServerName & ServerPort to Access & Error logs
 
 Apache LogFormats - ***common***, ***combined*** and Apache ErrorLogFormat - ***default*** do not contain `%v - canonical ServerName` and `%p - canonical ServerPort`.
@@ -246,7 +247,7 @@ The second parameter enables Python Client modules to run simultaneously on mult
 Database normalization is the process of organizing data in a relational database to improve data integrity and reduce redundancy. 
 Normalization ensures that data is organized in a way that makes sense for the data model and attributes, and that the database functions efficiently.
 
-MySQL `apache_logs` schema has 47 tables, 779 columns, 125 indexes, 56 views, 7 stored procedures and 42 functions to process Apache Access log in 4 formats 
+MySQL `apache_logs` Schema has 47 Tables, 779 Columns, 125 Indexes, 56 Views, 7 Stored Procedures and 42 Functions to process Apache Access log in 4 formats 
 & Apache Error log in 2 formats. Database normalization at work!
 ## MySQL Access Log View by URI
 MySQL View - apache_logs.access_requri_list - data from LogFormat: combined & csv2mysql
