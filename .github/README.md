@@ -3,8 +3,6 @@ ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema to automate i
 
 Runs on Windows, Linux and MacOS & tested with MySQL versions 8.0.39, 8.4.3, 9.0.0 & 9.1.0.
 
-Version 2.0.0 fixes issues encountered running 4 weeks on 7 VPS with 2 to 6 VirtualHosts on each VPS. Each VPS is running `watch4logs.py` in PM2 connecting to one MySQL server `apache_logs` schema. Application currently consolidates Access and Error logs from 32 domains.
-
 Imports Access Logs in Apache LogFormats - ***common***, ***combined*** and ***vhost_combined*** & additional ***csv2mysql*** LogFormat defined below. 
 
 Imports Error Logs in Apache ***default*** ErrorLogFormat & ***additional*** ErrorLogFormat defined below performing data harmonization on Apache Codes & Messages, System Codes & Messages, and Log Messages to create a unified, standardized dataset. Error Log view images below.
@@ -73,10 +71,10 @@ LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" v
 |%v|The canonical ServerName of the server serving the request.|
 |%p|The canonical port of the server serving the request.|
 
-Application is designed to use the ***csv2mysql*** LogFormat. LogFormat has comma-separated values and adds 7 Format Strings. A complete list of Format Strings
+Application is designed to use the ***csv2mysql*** LogFormat. LogFormat has comma-separated values and adds 8 Format Strings. A complete list of Format Strings
 with descriptions indicating added Format Strings below.
 ```
-LogFormat "%v,%p,%h,%l,%u,%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\",\"%q\",\"%{Referer}i\",\"%{User-Agent}i\",\"%{farmwork.app}C\"" csv2mysql
+LogFormat "%v,%p,%h,%l,%u,%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\",\"%q\",\"%{Referer}i\",\"%{User-Agent}i\",\"%{farmwork.app}C\",%L" csv2mysql
 ```
 |Format String|Description|
 |-------------|-----------|
@@ -101,6 +99,7 @@ LogFormat "%v,%p,%h,%l,%u,%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\"
 |%{Referer}i|The "Referer" (sic) HTTP request header. This gives the site that the client reports having been referred from.|
 |%{User-Agent}i|The User-Agent HTTP request header. This is the identifying information that the client browser reports about itself.|
 |%{VARNAME}C|ADDED - The contents of cookie VARNAME in request sent to server. Only version 0 cookies are fully supported. Format String is optional.|
+|%L|ADDED - The request log ID from the error log (or '-' if nothing has been logged to the error log for this request). Look for the matching error log line to see what request| caused what error.
 ## Two supported Error Log Formats
 Application processes Error Logs with ***default format*** for threaded MPMs (Multi-Processing Modules). If you're running Apache 2.4 on any platform and ErrorLogFormat is not defined in config files this is the Error Log format.
 |Format String|Description|
@@ -118,14 +117,19 @@ Application processes Error Logs with ***default format*** for threaded MPMs (Mu
 ```
 ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i"
 ```
-Application also processes Error Logs with this ***additional format*** which adds `%v - The canonical ServerName`. Easiest way to identify error logs for each domain is add `%v` to ErrorLogFormat.
+Application also processes Error Logs with ***additional format*** which adds:
+ 1) `%v - The canonical ServerName` - This is easiest way to identify error logs for each domain is add `%v` to ErrorLogFormat. 
+ 2) `%L - Log ID of the request` - This is easiest way to associate Access record that created an Error record. Apache mod_unique_id.generate_log_id() only called when error occurs and will not cause performance degradation under error-free operations. 
 
-To use this format place the `ErrorLogFormat` before `ErrorLog` in `apache2.conf` to set error log format for Server and ALL VitualHosts on Server.
-|Format String|Description - The spaces on each side of comma are required.|
+To use this format place `ErrorLogFormat` before `ErrorLog` in `apache2.conf` to set error log format for ***Server*** and ***VitualHosts*** on Server.
+|Format String|Description - `Space` required on left-side of `Commas` to parse data properly|
 |-------------|-----------|
 |%v|The canonical ServerName of the server serving the request.|
+|%L|Log ID of the request. A %L format string is also available in `mod_log_config` to allow to correlate access log entries with error log lines. If `mod_unique_id` is loaded, its unique id will be used as log ID for requests.|
+
+***Important:*** `Space` required on left-side of `Commas` as defined below:
 ```
-ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i , %v"
+ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i ,%v ,%L"
 ```
 ## Two options to attach ServerName & ServerPort to Access & Error logs
 
@@ -151,6 +155,7 @@ Log file naming conventions enable the use of UPDATE statements:
 ```
 UPDATE apache_logs.import_file SET server_name='farmfreshsoftware.com', server_port=443 WHERE server_name IS NULL AND name LIKE '%farmfreshsoftware%';
 UPDATE apache_logs.import_file SET server_name='farmwork.app', server_port=443 WHERE server_name IS NULL AND name LIKE '%farmwork%';
+UPDATE apache_logs.import_file SET server_name='ip255-255-255-255.us-east.com', server_port=443 WHERE server_name IS NULL AND name LIKE '%error%';
 ```
 First option requires uncommenting `os.getenv` to load variables at top of `apacheLogs2MySQL.py`. By default, variables are defined and set to an empty string. Below is a screenshot of the variables loaded at top of `apacheLogs2MySQL.py` with commented `os.getenv` code.
 ![load_settings_variables.png](./assets/load_settings_variables.png)
@@ -241,7 +246,7 @@ The second parameter enables Python Client modules to run simultaneously on mult
 Database normalization is the process of organizing data in a relational database to improve data integrity and reduce redundancy. 
 Normalization ensures that data is organized in a way that makes sense for the data model and attributes, and that the database functions efficiently.
 
-MySQL `apache_logs` schema has 46 tables, 772 columns, 128 indexes, 56 views, 7 stored procedures and 41 functions to process Apache Access log in 4 formats 
+MySQL `apache_logs` schema has 47 tables, 779 columns, 125 indexes, 56 views, 7 stored procedures and 42 functions to process Apache Access log in 4 formats 
 & Apache Error log in 2 formats. Database normalization at work!
 ## MySQL Access Log View by URI
 MySQL View - apache_logs.access_requri_list - data from LogFormat: combined & csv2mysql

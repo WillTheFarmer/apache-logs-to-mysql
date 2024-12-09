@@ -1,8 +1,3 @@
-# coding: utf-8
-# version 2.0.0 - 11/30/2024 - Comprehensive Update
-#
-# Copyright 2024 Will Raymond <farmfreshsoftware@gmail.com>
-#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -15,13 +10,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# CHANGELOG.md in GitHub repository - https://github.com/WillTheFarmer/ApacheLogs2MySQL
+# version 2.1.0 - 12/09/2024 - add request_log_id to error & access formats
+#
+# Copyright 2024 Will Raymond <farmfreshsoftware@gmail.com>
+#
+# CHANGELOG.md in repository - https://github.com/WillTheFarmer/ApacheLogs2MySQL
 """
 :module: watch4logs
 :class:: importLogs
 :function: processLogs()
 :synopsis: Polling for apache logs and calls apacheLogs2MySQL.processLogs().
-:author: farmfreshsoftware@gmail.com (Will Raymond)
+:author: Will Raymond <farmfreshsoftware@gmail.com>
 """
 import time
 import os

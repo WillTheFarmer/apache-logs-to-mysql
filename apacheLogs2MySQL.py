@@ -1,8 +1,3 @@
-# coding: utf-8
-# version 2.0.0 - 11/30/2024 - Comprehensive Update
-#
-# Copyright 2024 Will Raymond <farmfreshsoftware@gmail.com>
-#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -15,12 +10,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# CHANGELOG.md in GitHub repository - https://github.com/WillTheFarmer/ApacheLogs2MySQL
+# version 2.1.0 - 12/09/2024 - add request_log_id to error & access formats
+#
+# Copyright 2024 Will Raymond <farmfreshsoftware@gmail.com>
+#
+# CHANGELOG.md in repository - https://github.com/WillTheFarmer/ApacheLogs2MySQL
 """
 :module: apacheLogs2MySQL
 :function: processLogs()
 :synopsis: processes apache access and error logs into MySQL for apachelogs2MySQL application.
-:author: farmfreshsoftware@gmail.com (Will Raymond)
+:author: Will Raymond <farmfreshsoftware@gmail.com>
 """
 import os
 import platform
@@ -567,22 +566,34 @@ def processLogs():
             if useragent_log >= 2:
                 print('Parsing record ' + str(recID) + ' - ' + str(ua) )
             # Accessing user agent's browser attributes
-            # br = str(ua.browser)  # returns Browser(family=u'Mobile Safari', version=(5, 1), version_string='5.1')
+            strua = str(ua)
+            strua = strua.replace('"', ' in.') # must replace " in string for error occurs
+            br = str(ua.browser)  # returns Browser(family=u'Mobile Safari', version=(5, 1), version_string='5.1')
+            br = br.replace('"', ' in.') # must replace " in string for error occurs
             br_family = str(ua.browser.family)  # returns 'Mobile Safari'
+            br_family = br_family.replace('"', ' in.') # must replace " in string for error occurs
             #ua.browser.version  # returns (5, 1)
             br_version = ua.browser.version_string   # returns '5.1'
+            br_version = br_version.replace('"', ' in.') # must replace " in string for error occurs
             # Accessing user agent's operating system properties
             os = str(ua.os)  # returns OperatingSystem(family=u'iOS', version=(5, 1), version_string='5.1')
+            os = os.replace('"', ' in.') # must replace " in string for error occurs
             os_family = str(ua.os.family)  # returns 'iOS'
+            os_family = os_family.replace('"', ' in.') # must replace " in string for error occurs
             #ua.os.version  # returns (5, 1)
             os_version = ua.os.version_string  # returns '5.1'
+            os_version = os_version.replace('"', ' in.') # must replace " in string for error occurs
             # Accessing user agent's device properties
             dv = str(ua.device)  # returns Device(family=u'iPhone', brand=u'Apple', model=u'iPhone')
+            dv = dv.replace('"', ' in.') # must replace " in string for error occurs
             dv_family = str(ua.device.family)  # returns 'iPhone'
+            dv_family = dv_family.replace('"', ' in.') # must replace " in string for error occurs
             dv_brand = str(ua.device.brand) # returns 'Apple'
+            dv_brand = dv_brand.replace('"', ' in.') # must replace " in string for error occurs
             dv_model = str(ua.device.model) # returns 'iPhone'
-            updateSql = ('UPDATE access_log_useragent SET ua="'+str(ua) + 
-                         '", ua_browser="' + br_family + 
+            dv_model = dv_model.replace('"', ' in.') # must replace " in string for error occurs
+            updateSql = ('UPDATE access_log_useragent SET ua="'+ strua + 
+                         '", ua_browser="' + br + 
                          '", ua_browser_family="' + br_family + 
                          '", ua_browser_version="' + br_version + 
                          '", ua_os="' + os + 

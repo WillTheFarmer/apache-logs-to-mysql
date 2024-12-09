@@ -2,6 +2,7 @@
 - version 1.1.0 - 11/18/2024 - major changes
 - version 1.1.1 - 11/20/2024 - keyword replacement
 - version 2.0.0 - 11/30/2024 - backward incompatible
+- version 2.1.0 - 12/09/2024 - request_log_id functionality
 - [1.0.1] apache_logs.error_systemCodeID corrected line - INTO logsystemCode to INTO logsystemCodeID
 - [1.0.1] remove debugging - SELECT statement from apache_logs.process_access_import, process_error_import & normalize_useragent.
 - [1.0.1] remove whitespace and commented out old code on all stored programs
@@ -38,3 +39,14 @@
 - [2.0.0] add file - CHANGLOG.md - for single place to list all code and database changes
 - [2.0.0] The rest of changes made last month are many modifications and additions from previous version will remain undocumented. 
 - [2.0.0] This version is the application baseline
+- [2.1.0] add request_log_id to access and error formats functionality. Enables easier association with access and error records. 
+- [2.1.0] add columns to load_error_default & load_access_csv2mysql TABLES
+- [2.1.0] modify process_error_parse - replace POSITION function with LOCATE function, removed unrequired brackets, add parsing logic for %v and %L String Formats.
+- [2.1.0] modify process_error_import - add normalization for request_log_id, replace POSITION function with LOCATE function
+- [2.1.0] modify process_access_parse - add parsing for request_log_id, replace POSITION function with LOCATE function
+- [2.1.0] modify process_access_import - add normalization for request_log_id, replace POSITION function with LOCATE function
+- [2.1.0] modify process_access_import - cookie,remoteuser,remoteLogName,referer,requestLogID values of '-' set to NULL. No normalized table value is created.
+- [2.1.0] modify process_access_import - add servernameid to requestlogid before normalization to avoid duplicate requestlogid on consolidation of multiple domain logs.
+- [2.1.0] modify process_error_import - add servernameid to requestlogid before normalization to avoid duplicate requestlogid on consolidation of multiple domain logs.
+- [2.1.0] modify apacheLogs2MySQL.py - add .replace('"', ' in.') to all useragent attributes before UPDATE statement execute. The " in attribute value breaks UPDATE String.
+- [2.1.0] update README.md to describe and explain additional request_log_id functionality
