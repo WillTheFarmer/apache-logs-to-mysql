@@ -3,6 +3,7 @@
 - version 1.1.1 - 11/20/2024 - keyword replacement
 - version 2.0.0 - 11/30/2024 - backward incompatible
 - version 2.1.0 - 12/09/2024 - request_log_id functionality
+- version 2.1.1 - 12/11/2024 - rename column timeStamp to logged - add 4 indexes and 10 views
 - [1.0.1] apache_logs.error_systemCodeID corrected line - INTO logsystemCode to INTO logsystemCodeID
 - [1.0.1] remove debugging - SELECT statement from apache_logs.process_access_import, process_error_import & normalize_useragent.
 - [1.0.1] remove whitespace and commented out old code on all stored programs
@@ -50,3 +51,9 @@
 - [2.1.0] modify process_error_import - add servernameid to requestlogid before normalization to avoid duplicate requestlogid on consolidation of multiple domain logs.
 - [2.1.0] modify apacheLogs2MySQL.py - add .replace('"', ' in.') to all useragent attributes before UPDATE statement execute. The " in attribute value breaks UPDATE String.
 - [2.1.0] update README.md to describe and explain additional request_log_id functionality
+- [2.1.1] rename COLUMN `timeStamp` to `logged` in TABLES `access_log` and `error_log`.
+- [2.1.1] add access_log INDEXES `I_access_log_logged` and `I_access_log_servernameid_logged`.
+- [2.1.1] add error_log INDEXES `I_error_log_logged` and `I_error_log_servernameid_logged`.
+- [2.1.1] modify `process_access_import` and `process_error_imort` for COLUMN rename `timeStamp` to `logged` in TABLES `access_log` and `error_log`.
+- [2.1.1] add access_log views `access_period_year_list`, `access_period_month_list`, `access_period_week_list`, `access_period_day_list`, `access_period_hour_list`.
+- [2.1.1] add error_log views `error_period_year_list`, `error_period_month_list`, `error_period_week_list`, `error_period_day_list`, `error_period_hour_list`.

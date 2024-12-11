@@ -10,7 +10,7 @@
 -- # See the License for the specific language governing permissions and
 -- # limitations under the License.
 -- #
--- # version 2.1.0 - 12/09/2024 - add request_log_id to error & access formats
+-- # version 2.1.1 - 12/11/2024 - rename column timeStamp to logged - add 4 indexes and 10 views
 -- #
 -- # Copyright 2024 Will Raymond <farmfreshsoftware@gmail.com>
 -- #
@@ -112,7 +112,7 @@ DROP TABLE IF EXISTS `access_log`;
 CREATE TABLE `access_log` (
   `id` int NOT NULL AUTO_INCREMENT,
   `importfileid` int NOT NULL,
-  `timeStamp` datetime DEFAULT NULL,
+  `logged` datetime DEFAULT NULL,
   `bytes_received` int NOT NULL,
   `bytes_sent` int NOT NULL,
   `bytes_transferred` int NOT NULL,
@@ -161,6 +161,8 @@ CREATE TABLE `access_log` (
   KEY `F_access_clientname` (`clientnameid`),
   KEY `F_access_referer` (`refererid`),
   KEY `F_access_serverport` (`serverportid`),
+  KEY `I_access_log_logged` (`logged`),
+  KEY `I_access_log_servernameid_logged` (`servernameid`,`logged`),
   KEY `I_access_log_servernameid_serverportid` (`servernameid`,`serverportid`),
   CONSTRAINT `F_access_clientname` FOREIGN KEY (`clientnameid`) REFERENCES `log_clientname` (`id`),
   CONSTRAINT `F_access_cookie` FOREIGN KEY (`cookieid`) REFERENCES `access_log_cookie` (`id`),
@@ -517,6 +519,119 @@ CREATE TABLE `access_log_useragent` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Temporary view structure for view `access_period_day_list`
+--
+
+DROP TABLE IF EXISTS `access_period_day_list`;
+/*!50001 DROP VIEW IF EXISTS `access_period_day_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `access_period_day_list` AS SELECT 
+ 1 AS `Year`,
+ 1 AS `Month`,
+ 1 AS `Day`,
+ 1 AS `Log Count`,
+ 1 AS `HTTP Bytes`,
+ 1 AS `Bytes Sent`,
+ 1 AS `Bytes Received`,
+ 1 AS `Bytes Transferred`,
+ 1 AS `Max Request Time`,
+ 1 AS `Min Request Time`,
+ 1 AS `Max Delay Time`,
+ 1 AS `Min Delay Time`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `access_period_hour_list`
+--
+
+DROP TABLE IF EXISTS `access_period_hour_list`;
+/*!50001 DROP VIEW IF EXISTS `access_period_hour_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `access_period_hour_list` AS SELECT 
+ 1 AS `Year`,
+ 1 AS `Month`,
+ 1 AS `Day`,
+ 1 AS `Hour`,
+ 1 AS `Log Count`,
+ 1 AS `HTTP Bytes`,
+ 1 AS `Bytes Sent`,
+ 1 AS `Bytes Received`,
+ 1 AS `Bytes Transferred`,
+ 1 AS `Max Request Time`,
+ 1 AS `Min Request Time`,
+ 1 AS `Max Delay Time`,
+ 1 AS `Min Delay Time`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `access_period_month_list`
+--
+
+DROP TABLE IF EXISTS `access_period_month_list`;
+/*!50001 DROP VIEW IF EXISTS `access_period_month_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `access_period_month_list` AS SELECT 
+ 1 AS `Year`,
+ 1 AS `Month`,
+ 1 AS `Log Count`,
+ 1 AS `HTTP Bytes`,
+ 1 AS `Bytes Sent`,
+ 1 AS `Bytes Received`,
+ 1 AS `Bytes Transferred`,
+ 1 AS `Max Request Time`,
+ 1 AS `Min Request Time`,
+ 1 AS `Max Delay Time`,
+ 1 AS `Min Delay Time`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `access_period_week_list`
+--
+
+DROP TABLE IF EXISTS `access_period_week_list`;
+/*!50001 DROP VIEW IF EXISTS `access_period_week_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `access_period_week_list` AS SELECT 
+ 1 AS `Year`,
+ 1 AS `Month`,
+ 1 AS `Week`,
+ 1 AS `Log Count`,
+ 1 AS `HTTP Bytes`,
+ 1 AS `Bytes Sent`,
+ 1 AS `Bytes Received`,
+ 1 AS `Bytes Transferred`,
+ 1 AS `Max Request Time`,
+ 1 AS `Min Request Time`,
+ 1 AS `Max Delay Time`,
+ 1 AS `Min Delay Time`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `access_period_year_list`
+--
+
+DROP TABLE IF EXISTS `access_period_year_list`;
+/*!50001 DROP VIEW IF EXISTS `access_period_year_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `access_period_year_list` AS SELECT 
+ 1 AS `Year`,
+ 1 AS `Log Count`,
+ 1 AS `HTTP Bytes`,
+ 1 AS `Bytes Sent`,
+ 1 AS `Bytes Received`,
+ 1 AS `Bytes Transferred`,
+ 1 AS `Max Request Time`,
+ 1 AS `Min Request Time`,
+ 1 AS `Max Delay Time`,
+ 1 AS `Min Delay Time`*/;
+SET character_set_client = @saved_cs_client;
 
 --
 -- Temporary view structure for view `access_referer_list`
@@ -1358,7 +1473,7 @@ DROP TABLE IF EXISTS `error_log`;
 CREATE TABLE `error_log` (
   `id` int NOT NULL AUTO_INCREMENT,
   `importfileid` int NOT NULL,
-  `timeStamp` datetime NOT NULL,
+  `logged` datetime NOT NULL,
   `loglevelid` int DEFAULT NULL,
   `moduleid` int DEFAULT NULL,
   `processid` int DEFAULT NULL,
@@ -1388,9 +1503,11 @@ CREATE TABLE `error_log` (
   KEY `F_error_clientport` (`clientportid`),
   KEY `F_error_referer` (`refererid`),
   KEY `F_error_serverport` (`serverportid`),
+  KEY `I_error_log_logged` (`logged`),
+  KEY `I_error_log_servernameid_logged` (`servernameid`,`logged`),
+  KEY `I_error_log_servernameid_serverportid` (`servernameid`,`serverportid`),
   KEY `I_error_log_clientnameid_clientportid` (`clientnameid`,`clientportid`),
   KEY `I_error_log_processid_threadid` (`processid`,`threadid`),
-  KEY `I_error_log_servernameid_serverportid` (`servernameid`,`serverportid`),
   CONSTRAINT `F_error_apachecode` FOREIGN KEY (`apachecodeid`) REFERENCES `error_log_apachecode` (`id`),
   CONSTRAINT `F_error_apachemessage` FOREIGN KEY (`apachemessageid`) REFERENCES `error_log_apachemessage` (`id`),
   CONSTRAINT `F_error_clientname` FOREIGN KEY (`clientnameid`) REFERENCES `log_clientname` (`id`),
@@ -1576,6 +1693,79 @@ SET @saved_cs_client     = @@character_set_client;
 /*!50503 SET character_set_client = utf8mb4 */;
 /*!50001 CREATE VIEW `error_module_list` AS SELECT 
  1 AS `Error Log Module`,
+ 1 AS `Log Count`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `error_period_day_list`
+--
+
+DROP TABLE IF EXISTS `error_period_day_list`;
+/*!50001 DROP VIEW IF EXISTS `error_period_day_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `error_period_day_list` AS SELECT 
+ 1 AS `Year`,
+ 1 AS `Month`,
+ 1 AS `Day`,
+ 1 AS `Log Count`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `error_period_hour_list`
+--
+
+DROP TABLE IF EXISTS `error_period_hour_list`;
+/*!50001 DROP VIEW IF EXISTS `error_period_hour_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `error_period_hour_list` AS SELECT 
+ 1 AS `Year`,
+ 1 AS `Month`,
+ 1 AS `Day`,
+ 1 AS `Hour`,
+ 1 AS `Log Count`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `error_period_month_list`
+--
+
+DROP TABLE IF EXISTS `error_period_month_list`;
+/*!50001 DROP VIEW IF EXISTS `error_period_month_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `error_period_month_list` AS SELECT 
+ 1 AS `Year`,
+ 1 AS `Month`,
+ 1 AS `Log Count`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `error_period_week_list`
+--
+
+DROP TABLE IF EXISTS `error_period_week_list`;
+/*!50001 DROP VIEW IF EXISTS `error_period_week_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `error_period_week_list` AS SELECT 
+ 1 AS `Year`,
+ 1 AS `Month`,
+ 1 AS `Week`,
+ 1 AS `Log Count`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `error_period_year_list`
+--
+
+DROP TABLE IF EXISTS `error_period_year_list`;
+/*!50001 DROP VIEW IF EXISTS `error_period_year_list`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `error_period_year_list` AS SELECT 
+ 1 AS `Year`,
  1 AS `Log Count`*/;
 SET character_set_client = @saved_cs_client;
 
@@ -4396,7 +4586,7 @@ INNER JOIN apache_logs.import_file f
 			SET requestLog_Id = apache_logs.log_requestLogID(requestLogID);
 		END IF;
 		INSERT INTO apache_logs.access_log 
-      (timeStamp, 
+      (logged, 
 		  bytes_received,
 		  bytes_sent,
 		  bytes_transferred,
@@ -5093,7 +5283,7 @@ INNER JOIN apache_logs.import_file f
 			SET requestLog_Id = apache_logs.log_requestLogID(requestLogID);
 		END IF;
 		INSERT INTO apache_logs.error_log 
-			(timeStamp, 
+			(logged, 
 			loglevelid,
 			moduleid,
 			processid, 
@@ -5491,6 +5681,96 @@ DELIMITER ;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_importfile_list` AS select `ln`.`name` AS `Access Log Import File`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`import_file` `ln` join `access_log` `l` on((`l`.`importfileid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `access_period_day_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `access_period_day_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `access_period_day_list` AS select year(`l`.`logged`) AS `Year`,month(`l`.`logged`) AS `Month`,dayofmonth(`l`.`logged`) AS `Day`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from `access_log` `l` group by year(`l`.`logged`),month(`l`.`logged`),dayofmonth(`l`.`logged`) order by 'Year','Month','Day' */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `access_period_hour_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `access_period_hour_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `access_period_hour_list` AS select year(`l`.`logged`) AS `Year`,month(`l`.`logged`) AS `Month`,dayofmonth(`l`.`logged`) AS `Day`,hour(`l`.`logged`) AS `Hour`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from `access_log` `l` group by year(`l`.`logged`),month(`l`.`logged`),dayofmonth(`l`.`logged`),hour(`l`.`logged`) order by 'Year','Month','Day','Hour' */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `access_period_month_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `access_period_month_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `access_period_month_list` AS select year(`l`.`logged`) AS `Year`,month(`l`.`logged`) AS `Month`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from `access_log` `l` group by year(`l`.`logged`),month(`l`.`logged`) order by 'Year','Month' */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `access_period_week_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `access_period_week_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `access_period_week_list` AS select year(`l`.`logged`) AS `Year`,month(`l`.`logged`) AS `Month`,week(`l`.`logged`,0) AS `Week`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from `access_log` `l` group by year(`l`.`logged`),month(`l`.`logged`),week(`l`.`logged`,0) order by 'Year','Month','Week' */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `access_period_year_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `access_period_year_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `access_period_year_list` AS select year(`l`.`logged`) AS `Year`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from `access_log` `l` group by year(`l`.`logged`) order by 'Year' */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -6288,6 +6568,96 @@ DELIMITER ;
 /*!50001 SET collation_connection      = @saved_col_connection */;
 
 --
+-- Final view structure for view `error_period_day_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `error_period_day_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `error_period_day_list` AS select year(`l`.`logged`) AS `Year`,month(`l`.`logged`) AS `Month`,dayofmonth(`l`.`logged`) AS `Day`,count(`l`.`id`) AS `Log Count` from `error_log` `l` group by year(`l`.`logged`),month(`l`.`logged`),dayofmonth(`l`.`logged`) order by 'Year','Month','Day' */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `error_period_hour_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `error_period_hour_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `error_period_hour_list` AS select year(`l`.`logged`) AS `Year`,month(`l`.`logged`) AS `Month`,dayofmonth(`l`.`logged`) AS `Day`,hour(`l`.`logged`) AS `Hour`,count(`l`.`id`) AS `Log Count` from `error_log` `l` group by year(`l`.`logged`),month(`l`.`logged`),dayofmonth(`l`.`logged`),hour(`l`.`logged`) order by 'Year','Month','Day','Hour' */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `error_period_month_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `error_period_month_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `error_period_month_list` AS select year(`l`.`logged`) AS `Year`,month(`l`.`logged`) AS `Month`,count(`l`.`id`) AS `Log Count` from `error_log` `l` group by year(`l`.`logged`),month(`l`.`logged`) order by 'Year','Month' */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `error_period_week_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `error_period_week_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `error_period_week_list` AS select year(`l`.`logged`) AS `Year`,month(`l`.`logged`) AS `Month`,week(`l`.`logged`,0) AS `Week`,count(`l`.`id`) AS `Log Count` from `error_log` `l` group by year(`l`.`logged`),month(`l`.`logged`),week(`l`.`logged`,0) order by 'Year','Month','Week' */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `error_period_year_list`
+--
+
+/*!50001 DROP VIEW IF EXISTS `error_period_year_list`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = cp850 */;
+/*!50001 SET character_set_results     = cp850 */;
+/*!50001 SET collation_connection      = cp850_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `error_period_year_list` AS select year(`l`.`logged`) AS `Year`,count(`l`.`id`) AS `Log Count` from `error_log` `l` group by year(`l`.`logged`) order by 'Year' */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
 -- Final view structure for view `error_processid_list`
 --
 
@@ -6458,4 +6828,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-12-09  0:10:44
+-- Dump completed on 2024-12-11  2:00:36

@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# version 2.1.0 - 12/09/2024 - add request_log_id to error & access formats
+# version 2.1.1 - 12/11/2024 - rename column timeStamp to logged - add 4 indexes and 10 views
 #
 # Copyright 2024 Will Raymond <farmfreshsoftware@gmail.com>
 #

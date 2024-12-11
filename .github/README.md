@@ -7,30 +7,30 @@ Imports Access Logs in Apache LogFormats - ***common***, ***combined*** and ***v
 
 Imports Error Logs in Apache ***default*** ErrorLogFormat & ***additional*** ErrorLogFormat defined below performing data harmonization on Apache Codes & Messages, System Codes & Messages, and Log Messages to create a unified, standardized dataset. Error Log view images below.
 
-Application has two options to associate ServerName & ServerPort with Access and Error logs missing `%v - canonical ServerName` and `%p - canonical ServerPort` Format Strings described below.
+Two options to associate ServerName & ServerPort with Access and Error logs missing `%v - canonical ServerName` and `%p - canonical ServerPort` Format Strings described below.
 
 4 LogFormats & 2 ErrorLogFormats can be loaded and 5 MySQL Stored Procedures can be processed in a single Python `ProcessLogs function` execution.
 
-Database system is designed to accommodate unlimited domains. Easy MySQL database installation with 3 simple steps.
-## MySQL Access Log View by Browser - 1 of 56 schema views
+Database system designed to accommodate unlimited domains. Easy MySQL database install with 3 simple steps.
+## MySQL Access Log View by Browser - 1 of 66 schema views
 MySQL View - apache_logs.access_ua_browser_family_list - data from LogFormat: combined & csv2mysql
 ![view-access_ua_browser_family_list.png](./assets/access_ua_browser_list.png)
 ## Application Description
-This is a fast, reliable processing application with detailed logging and two-staged data parsing. First stage is performed in LOAD DATA statements and second stage is performed in _parse Stored Procedures.
+This is a fast, reliable processing application with detailed logging and two stages of data parsing. First stage is performed in LOAD DATA statements and second stage is performed in _parse Stored Procedures.
 
-Data parsing can be customize in process_access_parse and process_error_parse MySQL Stored Procedures by adding or modifying SQL UPDATE statements if required.
+If required data parsing can be customize in process_access_parse and process_error_parse MySQL Stored Procedures by adding or modifying SQL UPDATE statements.
 
-Python handles polling of log file folders and executing MySQL Database LOAD DATA statements, Stored Procedures & Functions and SQL Statements. Python drives the application but MySQL does all Data Manipulation & Processing.
+Python handles polling of log file folders and executing MySQL Database LOAD DATA statements, Stored Procedures, Stored Functions and SQL Statements. Python drives the application but MySQL does all Data Manipulation & Processing.
 
-There is no need to move log files. Log files can be left in the folder they were imported from for later referencing. Application knows what files have been processed. Application runs with no need for user interaction.
+There is no need to move log files. Log files can be left in the folder they were imported from for later referencing. Application records what files have been processed in `apache_logs.import_file` TABLE. Application runs with no need for user interaction.
 
-Log-level variables can be set to display info messages in console and inserted into PM2 logs for every process step. All import errors in Python processLogs (client) and MySQL Stored Procedures (server) are inserted into apache_logs.import_error TABLE. This is the only schema table that uses ENGINE=MYISAM to avoid TRANSACTION ROLLBACKS.
+Log-level variables can be set to display info messages in console or insert into PM2 logs for every process step. All import errors in Python processLogs (client) and MySQL Stored Procedures (server) are inserted into `apache_logs.import_error` TABLE. This is the only schema table that uses ENGINE=MYISAM to avoid TRANSACTION ROLLBACKS.
 
-Logging functionality, database design and table relationship contraints produce both physical integrity and logical integrity. This enables a complete audit trail providing the ability to determine when, where and what file each record originated from.
+Logging functionality, database design and table relationship contraints produce both physical integrity and logical integrity. This enables a complete audit trail providing ability to determine when, where and what file each record originated from.
 
-All folder pathnames, filename patterns, logging, MySQL connection setting variables are in .env file for easy installation and maintenance.
+All folder paths, filename patterns, logging, processing, MySQL connection setting variables are in .env file for easy installation and maintenance.
 
-The Python modules can run in PM2 daemon process manager for 24/7 online processing. These modules can be run on multiple computers feeding a single server module.
+Two Python modules can run in PM2 daemon process manager for 24/7 online processing. Client modules can be run on multiple computers feeding a single Server module simultaneous.
 
 Application is developed with Python 3.12, MySQL and 4 Python modules. Modules are listed with Python Package Index link, install command for each platform & GitHub Repository link.
 ## Required Python Modules
@@ -42,9 +42,7 @@ Python module links & install command lines for each platform. Single quotes aro
 |[watchdog](https://pypi.org/project/watchdog/)|pip install watchdog|sudo apt-get install python3-watchdog|python3 -m pip install watchdog|[gorakhargosh/watchdog](https://github.com/gorakhargosh/watchdog/tree/master)|
 |[python-dotenv](https://pypi.org/project/python-dotenv/)|pip install python-dotenv|sudo apt-get install python3-dotenv|python3 -m pip install python-dotenv|[theskumar/python-dotenv](https://github.com/theskumar/python-dotenv)|
 ## Four Supported Access Log Formats
-Apache uses same Standard Access LogFormats (***common***, ***combined***, ***vhost_combined***) on all 3 platforms. Each LogFormat adds 2 Format Strings to 
-the prior. Format String descriptions are listed below each LogFormat. Information from:
-https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#logformat 
+Apache uses same Standard Access LogFormats (***common***, ***combined***, ***vhost_combined***) on all 3 platforms. Each LogFormat adds 2 Format Strings to the prior. Format String descriptions are listed below each LogFormat. Information from: https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#logformat 
 ```
 LogFormat "%h %l %u %t \"%r\" %>s %O" common
 ```
@@ -102,8 +100,7 @@ LogFormat "%v,%p,%h,%l,%u,%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\"
 |%{VARNAME}C|ADDED - The contents of cookie VARNAME in request sent to server. Only version 0 cookies are fully supported. Format String is optional.|
 |%L|ADDED - The request log ID from the error log (or '-' if nothing has been logged to the error log for this request). Look for the matching error log line to see what request| caused what error.
 ## Two supported Error Log Formats
-Application processes Error Logs with ***default format*** for threaded MPMs (Multi-Processing Modules). If you're running Apache 2.4 on any platform and ErrorLogFormat is not defined in config files this is the Error Log format. Information from:
-https://httpd.apache.org/docs/2.4/mod/core.html#errorlogformat
+Application processes Error Logs with ***default format*** for threaded MPMs (Multi-Processing Modules). If you're running Apache 2.4 on any platform and ErrorLogFormat is not defined in config files this is the Error Log format. Information from: https://httpd.apache.org/docs/2.4/mod/core.html#errorlogformat
 ```
 ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i"
 ```
@@ -249,7 +246,7 @@ The second parameter enables Python Client modules to run simultaneously on mult
 Database normalization is the process of organizing data in a relational database to improve data integrity and reduce redundancy. 
 Normalization ensures that data is organized in a way that makes sense for the data model and attributes, and that the database functions efficiently.
 
-MySQL `apache_logs` Schema has 47 Tables, 779 Columns, 125 Indexes, 56 Views, 7 Stored Procedures and 42 Functions to process Apache Access log in 4 formats 
+MySQL `apache_logs` Schema has 47 Tables, 855 Columns, 131 Indexes, 66 Views, 7 Stored Procedures and 42 Functions to process Apache Access log in 4 formats 
 & Apache Error log in 2 formats. Database normalization at work!
 ## MySQL Access Log View by URI
 MySQL View - apache_logs.access_requri_list - data from LogFormat: combined & csv2mysql
