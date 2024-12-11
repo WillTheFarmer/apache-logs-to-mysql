@@ -16,9 +16,9 @@ Database system designed to accommodate unlimited domains. Easy MySQL database i
 MySQL View - apache_logs.access_ua_browser_family_list - data from LogFormat: combined & csv2mysql
 ![view-access_ua_browser_family_list.png](./assets/access_ua_browser_list.png)
 ## Application Description
-This is a fast, reliable processing application with detailed logging and two stages of data parsing. First stage is performed in LOAD DATA statements and second stage is performed in _parse Stored Procedures.
+This is a fast, reliable processing application with detailed logging and two stages of data parsing. First stage is performed in `LOAD DATA LOCAL INFILE` statements. Second stage is performed in `process_access_parse` and `process_error_parse` Stored Procedures.
 
-If required data parsing can be customize in process_access_parse and process_error_parse MySQL Stored Procedures by adding or modifying SQL UPDATE statements.
+If required, data parsing can be customize in `process_access_parse` and `process_error_parse` Stored Procedures by adding or modifying `SQL UPDATE` statements.
 
 Python handles polling of log file folders and executing MySQL Database LOAD DATA statements, Stored Procedures, Stored Functions and SQL Statements. Python drives the application but MySQL does all Data Manipulation & Processing.
 
