@@ -7,7 +7,7 @@ Imports Access Logs in Apache LogFormats - ***common***, ***combined*** and ***v
 
 Imports Error Logs in Apache ***default*** ErrorLogFormat & ***additional*** ErrorLogFormat defined below performing data harmonization on Apache Codes & Messages, System Codes & Messages, and Log Messages to create a unified, standardized dataset. Error Log view images below.
 
-Two options to associate ServerName & ServerPort with Access and Error logs missing `%v - canonical ServerName` and `%p - canonical ServerPort` Format Strings described below.
+Three options to associate ServerName & ServerPort with Access and Error logs missing `%v - canonical ServerName` and `%p - canonical ServerPort` Format Strings described below.
 
 4 LogFormats & 2 ErrorLogFormats can be loaded and 5 MySQL Stored Procedures can be processed in a single Python `ProcessLogs function` execution.
 
@@ -133,35 +133,33 @@ To use this format place `ErrorLogFormat` before `ErrorLog` in `apache2.conf` to
 |%v|The canonical ServerName of the server serving the request.|
 |%L|Log ID of the request. A %L format string is also available in `mod_log_config` to allow to correlate access log entries with error log lines. If [mod_unique_id](https://httpd.apache.org/docs/current/mod/mod_unique_id.html) is loaded, its unique id will be used as log ID for requests.|
 
-## Two options to attach ServerName & ServerPort to Access & Error logs
+## Three options to attach ServerName & ServerPort to Access & Error logs
 
 Apache LogFormats - ***common***, ***combined*** and Apache ErrorLogFormat - ***default*** do not contain `%v - canonical ServerName` and `%p - canonical ServerPort`.
 
 In order to consolidate logs from multiple domains `%v - canonical ServerName` is required and `%p - canonical ServerPort` is optional. 
 
-The application provides 2 methods to associate ServerName and ServerPort to all Access and Error logs.
+Listed are different methods to associate ServerName and ServerPort to all Access and Error logs.
 
-1) Set `ERRORLOG_SERVERNAME`, `ERRORLOG_SERVERPORT`, `COMBINED_SERVERNAME`, `COMBINED_SERVERPORT` variables in .env file prior to Python LOAD DATA.
+1) Set `ERRORLOG_SERVERNAME`, `ERRORLOG_SERVERPORT`, `COMBINED_SERVERNAME`, `COMBINED_SERVERPORT` variables in .env file and uncomment `os.getenv` lines at top of `apacheLogs2MySQL.py`. By default, variables are defined and set to an empty string. Below is screenshot of `apacheLogs2MySQL.py` with commented `os.getenv` code. `server_name` and `server_port` COLUMNS of `load_error_default` and `load_access_combined` TABLES will be SET during Python `LOAD DATA LOCAL INFILE` execution.
 
-Manually UPDATING load_ tables `server_name` and `server_port` COLUMNS prior to executing STORED PROCEDURES `process_access_import` and `process_error_import` which perform the Database Normalization is another option.
+![load_settings_variables.png](./assets/load_settings_variables.png)
 
-2) Populate `server_name` and `server_port` COLUMNS in `import_file` TABLE prior to running import process. This option only updates records with NULL values in load_ tables `server_name` and `server_port` COLUMNS while executing STORED PROCEDURES `process_access_import` and `process_error_import`. 
+2) Manually ***UPDATE*** `server_name` and `server_port` COLUMNS of `load_error_default` and `load_access_combined` TABLES after Python LOAD DATA and before STORED PROCEDURES `process_access_import` and `process_error_import`. Data Normalization is performed in import processes. 
+
+3) Populate `server_name` and `server_port` COLUMNS in `import_file` TABLE before import processes. This will populate all records associated with file. This option only updates records with NULL values in ***load_tables*** `server_name` and `server_port` COLUMNS while executing STORED PROCEDURES `process_access_import` and `process_error_import`. 
 
 UPDATE commands to populate both Access and Error Logs if ***"Log File Names"*** are related to VirtualHost similar to:
 ```
  ErrorLog ${APACHE_LOG_DIR}/farmfreshsoftware.error.log
  CustomLog ${APACHE_LOG_DIR}/farmfreshsoftware.access.log csv2mysql
- ```
+```
 Log file naming conventions enable the use of UPDATE statements:
-
 ```
 UPDATE apache_logs.import_file SET server_name='farmfreshsoftware.com', server_port=443 WHERE server_name IS NULL AND name LIKE '%farmfreshsoftware%';
 UPDATE apache_logs.import_file SET server_name='farmwork.app', server_port=443 WHERE server_name IS NULL AND name LIKE '%farmwork%';
 UPDATE apache_logs.import_file SET server_name='ip255-255-255-255.us-east.com', server_port=443 WHERE server_name IS NULL AND name LIKE '%error%';
 ```
-First option requires uncommenting `os.getenv` to load variables at top of `apacheLogs2MySQL.py`. By default, variables are defined and set to an empty string. Below is a screenshot of the variables loaded at top of `apacheLogs2MySQL.py` with commented `os.getenv` code.
-![load_settings_variables.png](./assets/load_settings_variables.png)
-
 ## Installation Instructions
 The steps are very important to make installation painless. Please follow in the order instructions are listed.
 
