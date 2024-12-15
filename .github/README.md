@@ -12,9 +12,8 @@ Two options to associate ServerName & ServerPort with Access and Error logs miss
 4 LogFormats & 2 ErrorLogFormats can be loaded and 5 MySQL Stored Procedures can be processed in a single Python `ProcessLogs function` execution.
 
 Database system designed to accommodate unlimited domains. Easy MySQL database install with 3 simple steps.
-## MySQL Access Log View by Browser - 1 of 66 schema views
-MySQL View - apache_logs.access_ua_browser_family_list - data from LogFormat: combined & csv2mysql
-![view-access_ua_browser_family_list.png](./assets/access_ua_browser_list.png)
+## Entity Relationship Diagram of apache_logs schema tables
+![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
 ## Application Description
 This is a fast, reliable processing application with detailed logging and two stages of data parsing. First stage is performed in `LOAD DATA LOCAL INFILE` statements. Second stage is performed in `process_access_parse` and `process_error_parse` Stored Procedures.
 
@@ -33,6 +32,9 @@ All folder paths, filename patterns, logging, processing, MySQL connection setti
 Two Python modules can run in PM2 daemon process manager for 24/7 online processing. Client modules can be run on multiple computers feeding a single Server module simultaneous.
 
 Application is developed with Python 3.12, MySQL and 4 Python modules. Modules are listed with Python Package Index link, install command for each platform & GitHub Repository link.
+## MySQL Access Log View by Browser - 1 of 66 schema views
+MySQL View - apache_logs.access_ua_browser_family_list - data from LogFormat: combined & csv2mysql
+![view-access_ua_browser_family_list.png](./assets/access_ua_browser_list.png)
 ## Required Python Modules
 Python module links & install command lines for each platform. Single quotes around module name are required on macOS. The simplest installation option is run the command line under '2. Python Steps' below. If that works you are all set.
 |Python Package|Windows 10 & 11|Ubuntu 24.04|macOS 15.0.1 Darwin 24.0.0|GitHub Repository|
@@ -246,7 +248,7 @@ The second parameter enables Python Client modules to run simultaneously on mult
 Database normalization is the process of organizing data in a relational database to improve data integrity and reduce redundancy. 
 Normalization ensures that data is organized in a way that makes sense for the data model and attributes, and that the database functions efficiently.
 
-MySQL `apache_logs` Schema has 47 Tables, 855 Columns, 131 Indexes, 66 Views, 7 Stored Procedures and 42 Functions to process Apache Access log in 4 formats 
+MySQL `apache_logs` Schema has 47 Tables, 855 Columns, 146 Indexes, 66 Views, 7 Stored Procedures and 42 Functions to process Apache Access log in 4 formats 
 & Apache Error log in 2 formats. Database normalization at work!
 ## MySQL Access Log View by URI
 MySQL View - apache_logs.access_requri_list - data from LogFormat: combined & csv2mysql
@@ -266,7 +268,6 @@ Each attribute has an associated table in ***apache_logs*** Schema. Using these 
 
 ## MySQL Schema Objects - Tables, Stored Procedures, Functions and Views
 Images of the `apache_logs` schema objects. Access and Error log attributes are normalized into separate entity tables. Each table is populated with unique values of the attribute.
-Entity Relationship Diagram will be posted in future.
 
 Database normalization is a critical process in database design with objectives of optimizing data storage, improving data integrity, and reducing data anomalies.
 Organizing data into normalized tables greatly enhances efficiency and maintainability of a database system.
