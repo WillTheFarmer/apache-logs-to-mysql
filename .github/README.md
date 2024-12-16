@@ -14,7 +14,7 @@ Three options to associate ServerName & ServerPort with Access and Error logs mi
 Database system designed to accommodate unlimited domains. Easy MySQL database install with 3 simple steps.
 ## Entity Relationship Diagram of apache_logs schema tables
 ![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
-Diagram created with awesome Open-source database diagrams editor [chartdb/chartdb](https://github.com/chartdb/chartdb)
+Diagram created with Open-source database diagrams editor [chartdb/chartdb](https://github.com/chartdb/chartdb)
 ## Application Description
 This is a fast, reliable processing application with detailed logging and two stages of data parsing. First stage is performed in `LOAD DATA LOCAL INFILE` statements. Second stage is performed in `process_access_parse` and `process_error_parse` Stored Procedures.
 
