@@ -36,14 +36,6 @@ Application is developed with Python 3.12, MySQL and 4 Python modules. Modules a
 ## MySQL Access Log View by Browser - 1 of 66 schema views
 MySQL View - apache_logs.access_ua_browser_family_list - data from LogFormat: combined & csv2mysql
 ![view-access_ua_browser_family_list.png](./assets/access_ua_browser_list.png)
-## Required Python Modules
-Python module links & install command lines for each platform. Single quotes around module name are required on macOS. The simplest installation option is run the command line under '2. Python Steps' below. If that works you are all set.
-|Python Package|Windows 10 & 11|Ubuntu 24.04|macOS 15.0.1 Darwin 24.0.0|GitHub Repository|
-|--------------|---------------|------------|--------------------------|-----------------|
-|[PyMySQL](https://pypi.org/project/PyMySQL/)|python -m pip install PyMySQL[rsa]|sudo apt-get install python3-pymysql|python3 -m pip install 'PyMySQL[rsa]'|[PyMySQL/PyMySQL](https://github.com/PyMySQL/PyMySQL)|
-|[user-agents](https://pypi.org/project/user-agents/)|pip install pyyaml ua-parser user-agents|sudo apt-get install python3-user-agents|python3 -m pip install user-agents|[selwin/python-user-agents](https://github.com/selwin/python-user-agents)|
-|[watchdog](https://pypi.org/project/watchdog/)|pip install watchdog|sudo apt-get install python3-watchdog|python3 -m pip install watchdog|[gorakhargosh/watchdog](https://github.com/gorakhargosh/watchdog/tree/master)|
-|[python-dotenv](https://pypi.org/project/python-dotenv/)|pip install python-dotenv|sudo apt-get install python3-dotenv|python3 -m pip install python-dotenv|[theskumar/python-dotenv](https://github.com/theskumar/python-dotenv)|
 ## Four Supported Access Log Formats
 Apache uses same Standard Access LogFormats (***common***, ***combined***, ***vhost_combined***) on all 3 platforms. Each LogFormat adds 2 Format Strings to the prior. Format String descriptions are listed below each LogFormat. Information from: https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#logformat 
 ```
@@ -135,7 +127,6 @@ To use this format place `ErrorLogFormat` before `ErrorLog` in `apache2.conf` to
 |%L|Log ID of the request. A %L format string is also available in `mod_log_config` to allow to correlate access log entries with error log lines. If [mod_unique_id](https://httpd.apache.org/docs/current/mod/mod_unique_id.html) is loaded, its unique id will be used as log ID for requests.|
 
 ## Three options to attach ServerName & ServerPort to Access & Error logs
-
 Apache LogFormats - ***common***, ***combined*** and Apache ErrorLogFormat - ***default*** do not contain `%v - canonical ServerName` and `%p - canonical ServerPort`.
 
 In order to consolidate logs from multiple domains `%v - canonical ServerName` is required and `%p - canonical ServerPort` is optional. 
@@ -161,6 +152,15 @@ UPDATE apache_logs.import_file SET server_name='farmfreshsoftware.com', server_p
 UPDATE apache_logs.import_file SET server_name='farmwork.app', server_port=443 WHERE server_name IS NULL AND name LIKE '%farmwork%';
 UPDATE apache_logs.import_file SET server_name='ip255-255-255-255.us-east.com', server_port=443 WHERE server_name IS NULL AND name LIKE '%error%';
 ```
+## Required Python Modules
+Python module links & install command lines for each platform. Single quotes around module name are required on macOS. The simplest installation option is run the command line under '2. Python Steps' below. If that works you are all set.
+|Python Package|Windows 10 & 11|Ubuntu 24.04|macOS 15.0.1 Darwin 24.0.0|GitHub Repository|
+|--------------|---------------|------------|--------------------------|-----------------|
+|[PyMySQL](https://pypi.org/project/PyMySQL/)|python -m pip install PyMySQL[rsa]|sudo apt-get install python3-pymysql|python3 -m pip install 'PyMySQL[rsa]'|[PyMySQL/PyMySQL](https://github.com/PyMySQL/PyMySQL)|
+|[user-agents](https://pypi.org/project/user-agents/)|pip install pyyaml ua-parser user-agents|sudo apt-get install python3-user-agents|python3 -m pip install user-agents|[selwin/python-user-agents](https://github.com/selwin/python-user-agents)|
+|[watchdog](https://pypi.org/project/watchdog/)|pip install watchdog|sudo apt-get install python3-watchdog|python3 -m pip install watchdog|[gorakhargosh/watchdog](https://github.com/gorakhargosh/watchdog/tree/master)|
+|[python-dotenv](https://pypi.org/project/python-dotenv/)|pip install python-dotenv|sudo apt-get install python3-dotenv|python3 -m pip install python-dotenv|[theskumar/python-dotenv](https://github.com/theskumar/python-dotenv)|
+
 ## Installation Instructions
 The steps are very important to make installation painless. Please follow in the order instructions are listed.
 
@@ -197,25 +197,20 @@ If any issues with ***pip install*** occur use individual install commands inclu
 ### 3. Create MySQL USER and GRANTS
 To minimize data exposure and breach risks create a MySQL USER for Python module with GRANTS to only schema objects and privileges required to execute import processes. (`mysql_user_and_grants.sql` in repository)
 ![mysql_user_and_grants.sql in repository](./assets/mysql_user_and_grants.png)
-
-### 4. Settings.env steps
-First rename the settings.env file to .env
-
+### 4. Settings.env Variables
+settings.env with default settings to run on Windows 11 Pro workstation. Make sure the correct logFormats are in correct logFormat folders. Application does not currently
+detect logFormats. Data will not be imported properly if folder settings are not correct. (`settings.env` in repository)
+![settings.env in repository](./assets/settings.png)
+### 5. Rename settings.env file to .env
 By default the load_dotenv() looks for standard setting file name `.env`. The file is loaded in both `apacheLogs2MySQL.py` and `watch4files.py` with following line:
 ```
 load_dotenv() # Loads variables from .env into the environment
 ```
-settings.env with default settings to run on Windows 11 Pro workstation. Make sure the correct logFormats are in correct logFormat folders. Application does not currently
-detect logFormats. Data will not be imported properly if folder settings are not correct.
-### 5. Settings.env Variables
-(`settings.env` in repository)
-![settings.env in repository](./assets/settings.png)
 ### 6. Run Application
-If MySQL steps completed successfully, installed Python modules successfully, renamed file `settings.env` to `.env`, and updated MySQL server connection and log folder 
-variables it is time to run application.
+If MySQL steps are completed, Python modules are installed, MySQL server connection and log folder variables are updated and file `settings.env` is renamed to `.env` it is time to run application.
 
-If you have log files in the folders already run the apacheLogs2MySQL.py directly. It will process all logs in all folders. If you have empty folders and want to drop 
-files into folders run the watch4logs.py.
+If log files exist in folders run `apacheLogs2MySQL.py` directly. It will process all logs in all folders. Run `watch4logs.py` drop a file or files into folders and `apacheLogs2MySQL.py` will be executed. 
+If folders are empty or contain files when a file is drop into folder any unprocessed files in folders will be processed.
 
 Run import process directly:
 ```
@@ -225,7 +220,7 @@ Run polling module:
 ```
 python watch4logs.py
 ```
-Once you get all logs processed & a better understanding of application use PM2 to run application 24/7 waiting to process files on arrival.
+Once all logs processed & a better understanding of application is acquired use PM2 to run application 24/7 waiting to process files on arrival.
 Run polling module from PM2:
 ```
 pm2 start watch4logs.py
@@ -238,9 +233,7 @@ This can be multiple importloadid values. Passing an importloadid value as a STR
 Based on .env variable settings Python `processLogs function` will execute the 5 Stored Procedures passing the importloadid value to process 
 ONLY files & records processed by current `processLogs function` execution. 
 
-The second parameter enables Python Client modules to run simultaneously on multiple servers uploading to a single MySQL Sever `apache_logs` schema.
-
- (`call_processes.sql` in repository)
+The second parameter enables Python Client modules to run simultaneously on multiple servers uploading to a single MySQL Sever `apache_logs` schema. (`call_processes.sql` in repository)
 ![call_processes.sql comments and commands in repository](./assets/call_processes.png)
 
 ## Database Normalization
@@ -270,5 +263,4 @@ Images of the `apache_logs` schema objects. Access and Error log attributes are 
 
 Database normalization is a critical process in database design with objectives of optimizing data storage, improving data integrity, and reducing data anomalies.
 Organizing data into normalized tables greatly enhances efficiency and maintainability of a database system.
-
 ![apache_logs.tables](<./assets/apache_logs.tables.png>) ![apache_logs.stored_programs](<./assets/apache_logs.stored_programs.png>) ![apache_logs.views](<./assets/apache_logs.views.png>)
