@@ -263,4 +263,5 @@ Images of the `apache_logs` schema objects. Access and Error log attributes are 
 
 Database normalization is a critical process in database design with objectives of optimizing data storage, improving data integrity, and reducing data anomalies.
 Organizing data into normalized tables greatly enhances efficiency and maintainability of a database system.
+
 ![apache_logs.tables](<./assets/apache_logs.tables.png>) ![apache_logs.stored_programs](<./assets/apache_logs.stored_programs.png>) ![apache_logs.views](<./assets/apache_logs.views.png>)
