@@ -10,7 +10,7 @@
 -- # See the License for the specific language governing permissions and
 -- # limitations under the License.
 -- #
--- # version 2.1.1 - 12/11/2024 - rename column timeStamp to logged - add 4 indexes and 10 views
+-- # version 2.1.2 - 12/20/2024 - several improvements - see changelog
 -- #
 -- # Copyright 2024 Will Raymond <farmfreshsoftware@gmail.com>
 -- #
@@ -135,17 +135,6 @@ CREATE TABLE `access_log` (
   `requestlogid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_requestlogid',
   `cookieid` int DEFAULT NULL,
   `useragentid` int DEFAULT NULL,
-  `uaid` int DEFAULT NULL,
-  `uabrowserid` int DEFAULT NULL,
-  `uabrowserfamilyid` int DEFAULT NULL,
-  `uabrowserversionid` int DEFAULT NULL,
-  `uadeviceid` int DEFAULT NULL,
-  `uadevicefamilyid` int DEFAULT NULL,
-  `uadevicebrandid` int DEFAULT NULL,
-  `uadevicemodelid` int DEFAULT NULL,
-  `uaosid` int DEFAULT NULL,
-  `uaosfamilyid` int DEFAULT NULL,
-  `uaosversionid` int DEFAULT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `F_access_reqstatus` (`reqstatusid`),
@@ -158,13 +147,16 @@ CREATE TABLE `access_log` (
   KEY `F_access_useragent` (`useragentid`),
   KEY `F_access_cookie` (`cookieid`),
   KEY `F_access_importfile` (`importfileid`),
-  KEY `F_access_clientname` (`clientnameid`),
+  KEY `F_access_clientport` (`clientportid`),
   KEY `F_access_referer` (`refererid`),
   KEY `F_access_serverport` (`serverportid`),
+  KEY `F_access_requestlogid` (`requestlogid`),
   KEY `I_access_log_logged` (`logged`),
   KEY `I_access_log_servernameid_logged` (`servernameid`,`logged`),
   KEY `I_access_log_servernameid_serverportid` (`servernameid`,`serverportid`),
+  KEY `I_access_log_clientnameid_clientportid` (`clientnameid`,`clientportid`),
   CONSTRAINT `F_access_clientname` FOREIGN KEY (`clientnameid`) REFERENCES `log_clientname` (`id`),
+  CONSTRAINT `F_access_clientport` FOREIGN KEY (`clientportid`) REFERENCES `log_clientport` (`id`),
   CONSTRAINT `F_access_cookie` FOREIGN KEY (`cookieid`) REFERENCES `access_log_cookie` (`id`),
   CONSTRAINT `F_access_importfile` FOREIGN KEY (`importfileid`) REFERENCES `import_file` (`id`),
   CONSTRAINT `F_access_referer` FOREIGN KEY (`refererid`) REFERENCES `log_referer` (`id`),
@@ -174,12 +166,22 @@ CREATE TABLE `access_log` (
   CONSTRAINT `F_access_reqprotocol` FOREIGN KEY (`reqprotocolid`) REFERENCES `access_log_reqprotocol` (`id`),
   CONSTRAINT `F_access_reqquery` FOREIGN KEY (`reqqueryid`) REFERENCES `access_log_reqquery` (`id`),
   CONSTRAINT `F_access_reqstatus` FOREIGN KEY (`reqstatusid`) REFERENCES `access_log_reqstatus` (`id`),
+  CONSTRAINT `F_access_requestlogid` FOREIGN KEY (`requestlogid`) REFERENCES `log_requestlogid` (`id`),
   CONSTRAINT `F_access_requri` FOREIGN KEY (`requriid`) REFERENCES `access_log_requri` (`id`),
   CONSTRAINT `F_access_servername` FOREIGN KEY (`servernameid`) REFERENCES `log_servername` (`id`),
   CONSTRAINT `F_access_serverport` FOREIGN KEY (`serverportid`) REFERENCES `log_serverport` (`id`),
   CONSTRAINT `F_access_useragent` FOREIGN KEY (`useragentid`) REFERENCES `access_log_useragent` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table is core table for access logs and contains foreign keys to relate to log attribute tables.';
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `access_log`
+--
+
+LOCK TABLES `access_log` WRITE;
+/*!40000 ALTER TABLE `access_log` DISABLE KEYS */;
+/*!40000 ALTER TABLE `access_log` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `access_log_cookie`
@@ -198,6 +200,15 @@ CREATE TABLE `access_log_cookie` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `access_log_cookie`
+--
+
+LOCK TABLES `access_log_cookie` WRITE;
+/*!40000 ALTER TABLE `access_log_cookie` DISABLE KEYS */;
+/*!40000 ALTER TABLE `access_log_cookie` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `access_log_remotelogname`
 --
 
@@ -212,6 +223,15 @@ CREATE TABLE `access_log_remotelogname` (
   UNIQUE KEY `U_access_remotelogname_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `access_log_remotelogname`
+--
+
+LOCK TABLES `access_log_remotelogname` WRITE;
+/*!40000 ALTER TABLE `access_log_remotelogname` DISABLE KEYS */;
+/*!40000 ALTER TABLE `access_log_remotelogname` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `access_log_remoteuser`
@@ -230,6 +250,15 @@ CREATE TABLE `access_log_remoteuser` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `access_log_remoteuser`
+--
+
+LOCK TABLES `access_log_remoteuser` WRITE;
+/*!40000 ALTER TABLE `access_log_remoteuser` DISABLE KEYS */;
+/*!40000 ALTER TABLE `access_log_remoteuser` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `access_log_reqmethod`
 --
 
@@ -244,6 +273,15 @@ CREATE TABLE `access_log_reqmethod` (
   UNIQUE KEY `U_access_reqmethod_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `access_log_reqmethod`
+--
+
+LOCK TABLES `access_log_reqmethod` WRITE;
+/*!40000 ALTER TABLE `access_log_reqmethod` DISABLE KEYS */;
+/*!40000 ALTER TABLE `access_log_reqmethod` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `access_log_reqprotocol`
@@ -262,6 +300,15 @@ CREATE TABLE `access_log_reqprotocol` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `access_log_reqprotocol`
+--
+
+LOCK TABLES `access_log_reqprotocol` WRITE;
+/*!40000 ALTER TABLE `access_log_reqprotocol` DISABLE KEYS */;
+/*!40000 ALTER TABLE `access_log_reqprotocol` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `access_log_reqquery`
 --
 
@@ -275,6 +322,15 @@ CREATE TABLE `access_log_reqquery` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `access_log_reqquery`
+--
+
+LOCK TABLES `access_log_reqquery` WRITE;
+/*!40000 ALTER TABLE `access_log_reqquery` DISABLE KEYS */;
+/*!40000 ALTER TABLE `access_log_reqquery` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `access_log_reqstatus`
@@ -293,6 +349,15 @@ CREATE TABLE `access_log_reqstatus` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `access_log_reqstatus`
+--
+
+LOCK TABLES `access_log_reqstatus` WRITE;
+/*!40000 ALTER TABLE `access_log_reqstatus` DISABLE KEYS */;
+/*!40000 ALTER TABLE `access_log_reqstatus` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `access_log_requri`
 --
 
@@ -306,6 +371,15 @@ CREATE TABLE `access_log_requri` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `access_log_requri`
+--
+
+LOCK TABLES `access_log_requri` WRITE;
+/*!40000 ALTER TABLE `access_log_requri` DISABLE KEYS */;
+/*!40000 ALTER TABLE `access_log_requri` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `access_log_ua`
@@ -324,6 +398,15 @@ CREATE TABLE `access_log_ua` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `access_log_ua`
+--
+
+LOCK TABLES `access_log_ua` WRITE;
+/*!40000 ALTER TABLE `access_log_ua` DISABLE KEYS */;
+/*!40000 ALTER TABLE `access_log_ua` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `access_log_ua_browser`
 --
 
@@ -338,6 +421,15 @@ CREATE TABLE `access_log_ua_browser` (
   UNIQUE KEY `U_access_ua_browser_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `access_log_ua_browser`
+--
+
+LOCK TABLES `access_log_ua_browser` WRITE;
+/*!40000 ALTER TABLE `access_log_ua_browser` DISABLE KEYS */;
+/*!40000 ALTER TABLE `access_log_ua_browser` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `access_log_ua_browser_family`
@@ -356,6 +448,15 @@ CREATE TABLE `access_log_ua_browser_family` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `access_log_ua_browser_family`
+--
+
+LOCK TABLES `access_log_ua_browser_family` WRITE;
+/*!40000 ALTER TABLE `access_log_ua_browser_family` DISABLE KEYS */;
+/*!40000 ALTER TABLE `access_log_ua_browser_family` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `access_log_ua_browser_version`
 --
 
@@ -370,6 +471,15 @@ CREATE TABLE `access_log_ua_browser_version` (
   UNIQUE KEY `U_access_ua_browser_version_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `access_log_ua_browser_version`
+--
+
+LOCK TABLES `access_log_ua_browser_version` WRITE;
+/*!40000 ALTER TABLE `access_log_ua_browser_version` DISABLE KEYS */;
+/*!40000 ALTER TABLE `access_log_ua_browser_version` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `access_log_ua_device`
@@ -388,6 +498,15 @@ CREATE TABLE `access_log_ua_device` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `access_log_ua_device`
+--
+
+LOCK TABLES `access_log_ua_device` WRITE;
+/*!40000 ALTER TABLE `access_log_ua_device` DISABLE KEYS */;
+/*!40000 ALTER TABLE `access_log_ua_device` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `access_log_ua_device_brand`
 --
 
@@ -402,6 +521,15 @@ CREATE TABLE `access_log_ua_device_brand` (
   UNIQUE KEY `U_access_ua_device_brand_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `access_log_ua_device_brand`
+--
+
+LOCK TABLES `access_log_ua_device_brand` WRITE;
+/*!40000 ALTER TABLE `access_log_ua_device_brand` DISABLE KEYS */;
+/*!40000 ALTER TABLE `access_log_ua_device_brand` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `access_log_ua_device_family`
@@ -420,6 +548,15 @@ CREATE TABLE `access_log_ua_device_family` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `access_log_ua_device_family`
+--
+
+LOCK TABLES `access_log_ua_device_family` WRITE;
+/*!40000 ALTER TABLE `access_log_ua_device_family` DISABLE KEYS */;
+/*!40000 ALTER TABLE `access_log_ua_device_family` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `access_log_ua_device_model`
 --
 
@@ -434,6 +571,15 @@ CREATE TABLE `access_log_ua_device_model` (
   UNIQUE KEY `U_access_ua_device_model_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `access_log_ua_device_model`
+--
+
+LOCK TABLES `access_log_ua_device_model` WRITE;
+/*!40000 ALTER TABLE `access_log_ua_device_model` DISABLE KEYS */;
+/*!40000 ALTER TABLE `access_log_ua_device_model` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `access_log_ua_os`
@@ -452,6 +598,15 @@ CREATE TABLE `access_log_ua_os` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `access_log_ua_os`
+--
+
+LOCK TABLES `access_log_ua_os` WRITE;
+/*!40000 ALTER TABLE `access_log_ua_os` DISABLE KEYS */;
+/*!40000 ALTER TABLE `access_log_ua_os` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `access_log_ua_os_family`
 --
 
@@ -468,6 +623,15 @@ CREATE TABLE `access_log_ua_os_family` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `access_log_ua_os_family`
+--
+
+LOCK TABLES `access_log_ua_os_family` WRITE;
+/*!40000 ALTER TABLE `access_log_ua_os_family` DISABLE KEYS */;
+/*!40000 ALTER TABLE `access_log_ua_os_family` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `access_log_ua_os_version`
 --
 
@@ -482,6 +646,15 @@ CREATE TABLE `access_log_ua_os_version` (
   UNIQUE KEY `U_access_ua_os_version_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `access_log_ua_os_version`
+--
+
+LOCK TABLES `access_log_ua_os_version` WRITE;
+/*!40000 ALTER TABLE `access_log_ua_os_version` DISABLE KEYS */;
+/*!40000 ALTER TABLE `access_log_ua_os_version` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `access_log_useragent`
@@ -516,9 +689,40 @@ CREATE TABLE `access_log_useragent` (
   `uaosfamilyid` int DEFAULT NULL,
   `uaosversionid` int DEFAULT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `F_useragent_ua` (`uaid`),
+  KEY `F_useragent_ua_browser` (`uabrowserid`),
+  KEY `F_useragent_ua_browser_family` (`uabrowserfamilyid`),
+  KEY `F_useragent_ua_browser_version` (`uabrowserversionid`),
+  KEY `F_useragent_ua_device` (`uadeviceid`),
+  KEY `F_useragent_ua_device_brand` (`uadevicebrandid`),
+  KEY `F_useragent_ua_device_family` (`uadevicefamilyid`),
+  KEY `F_useragent_ua_device_model` (`uadevicemodelid`),
+  KEY `F_useragent_ua_os` (`uaosid`),
+  KEY `F_useragent_ua_os_family` (`uaosfamilyid`),
+  KEY `F_useragent_ua_os_version` (`uaosversionid`),
+  CONSTRAINT `F_useragent_ua` FOREIGN KEY (`uaid`) REFERENCES `access_log_ua` (`id`),
+  CONSTRAINT `F_useragent_ua_browser` FOREIGN KEY (`uabrowserid`) REFERENCES `access_log_ua_browser` (`id`),
+  CONSTRAINT `F_useragent_ua_browser_family` FOREIGN KEY (`uabrowserfamilyid`) REFERENCES `access_log_ua_browser_family` (`id`),
+  CONSTRAINT `F_useragent_ua_browser_version` FOREIGN KEY (`uabrowserversionid`) REFERENCES `access_log_ua_browser_version` (`id`),
+  CONSTRAINT `F_useragent_ua_device` FOREIGN KEY (`uadeviceid`) REFERENCES `access_log_ua_device` (`id`),
+  CONSTRAINT `F_useragent_ua_device_brand` FOREIGN KEY (`uadevicebrandid`) REFERENCES `access_log_ua_device_brand` (`id`),
+  CONSTRAINT `F_useragent_ua_device_family` FOREIGN KEY (`uadevicefamilyid`) REFERENCES `access_log_ua_device_family` (`id`),
+  CONSTRAINT `F_useragent_ua_device_model` FOREIGN KEY (`uadevicemodelid`) REFERENCES `access_log_ua_device_model` (`id`),
+  CONSTRAINT `F_useragent_ua_os` FOREIGN KEY (`uaosid`) REFERENCES `access_log_ua_os` (`id`),
+  CONSTRAINT `F_useragent_ua_os_family` FOREIGN KEY (`uaosfamilyid`) REFERENCES `access_log_ua_os_family` (`id`),
+  CONSTRAINT `F_useragent_ua_os_version` FOREIGN KEY (`uaosversionid`) REFERENCES `access_log_ua_os_version` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `access_log_useragent`
+--
+
+LOCK TABLES `access_log_useragent` WRITE;
+/*!40000 ALTER TABLE `access_log_useragent` DISABLE KEYS */;
+/*!40000 ALTER TABLE `access_log_useragent` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Temporary view structure for view `access_period_day_list`
@@ -1503,6 +1707,7 @@ CREATE TABLE `error_log` (
   KEY `F_error_clientport` (`clientportid`),
   KEY `F_error_referer` (`refererid`),
   KEY `F_error_serverport` (`serverportid`),
+  KEY `F_error_requestlogid` (`requestlogid`),
   KEY `I_error_log_logged` (`logged`),
   KEY `I_error_log_servernameid_logged` (`servernameid`,`logged`),
   KEY `I_error_log_servernameid_serverportid` (`servernameid`,`serverportid`),
@@ -1518,6 +1723,7 @@ CREATE TABLE `error_log` (
   CONSTRAINT `F_error_module` FOREIGN KEY (`moduleid`) REFERENCES `error_log_module` (`id`),
   CONSTRAINT `F_error_processid` FOREIGN KEY (`processid`) REFERENCES `error_log_processid` (`id`),
   CONSTRAINT `F_error_referer` FOREIGN KEY (`refererid`) REFERENCES `log_referer` (`id`),
+  CONSTRAINT `F_error_requestlogid` FOREIGN KEY (`requestlogid`) REFERENCES `log_requestlogid` (`id`),
   CONSTRAINT `F_error_servername` FOREIGN KEY (`servernameid`) REFERENCES `log_servername` (`id`),
   CONSTRAINT `F_error_serverport` FOREIGN KEY (`serverportid`) REFERENCES `log_serverport` (`id`),
   CONSTRAINT `F_error_systemcode` FOREIGN KEY (`systemcodeid`) REFERENCES `error_log_systemcode` (`id`),
@@ -1525,6 +1731,15 @@ CREATE TABLE `error_log` (
   CONSTRAINT `F_error_threadid` FOREIGN KEY (`threadid`) REFERENCES `error_log_threadid` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `error_log`
+--
+
+LOCK TABLES `error_log` WRITE;
+/*!40000 ALTER TABLE `error_log` DISABLE KEYS */;
+/*!40000 ALTER TABLE `error_log` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `error_log_apachecode`
@@ -1543,6 +1758,15 @@ CREATE TABLE `error_log_apachecode` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `error_log_apachecode`
+--
+
+LOCK TABLES `error_log_apachecode` WRITE;
+/*!40000 ALTER TABLE `error_log_apachecode` DISABLE KEYS */;
+/*!40000 ALTER TABLE `error_log_apachecode` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `error_log_apachemessage`
 --
 
@@ -1557,6 +1781,15 @@ CREATE TABLE `error_log_apachemessage` (
   UNIQUE KEY `U_error_apachemessage_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `error_log_apachemessage`
+--
+
+LOCK TABLES `error_log_apachemessage` WRITE;
+/*!40000 ALTER TABLE `error_log_apachemessage` DISABLE KEYS */;
+/*!40000 ALTER TABLE `error_log_apachemessage` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `error_log_level`
@@ -1575,6 +1808,15 @@ CREATE TABLE `error_log_level` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `error_log_level`
+--
+
+LOCK TABLES `error_log_level` WRITE;
+/*!40000 ALTER TABLE `error_log_level` DISABLE KEYS */;
+/*!40000 ALTER TABLE `error_log_level` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `error_log_message`
 --
 
@@ -1589,6 +1831,15 @@ CREATE TABLE `error_log_message` (
   UNIQUE KEY `U_error_message_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `error_log_message`
+--
+
+LOCK TABLES `error_log_message` WRITE;
+/*!40000 ALTER TABLE `error_log_message` DISABLE KEYS */;
+/*!40000 ALTER TABLE `error_log_message` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `error_log_module`
@@ -1607,6 +1858,15 @@ CREATE TABLE `error_log_module` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `error_log_module`
+--
+
+LOCK TABLES `error_log_module` WRITE;
+/*!40000 ALTER TABLE `error_log_module` DISABLE KEYS */;
+/*!40000 ALTER TABLE `error_log_module` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `error_log_processid`
 --
 
@@ -1621,6 +1881,15 @@ CREATE TABLE `error_log_processid` (
   UNIQUE KEY `U_error_processid_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `error_log_processid`
+--
+
+LOCK TABLES `error_log_processid` WRITE;
+/*!40000 ALTER TABLE `error_log_processid` DISABLE KEYS */;
+/*!40000 ALTER TABLE `error_log_processid` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `error_log_systemcode`
@@ -1639,6 +1908,15 @@ CREATE TABLE `error_log_systemcode` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `error_log_systemcode`
+--
+
+LOCK TABLES `error_log_systemcode` WRITE;
+/*!40000 ALTER TABLE `error_log_systemcode` DISABLE KEYS */;
+/*!40000 ALTER TABLE `error_log_systemcode` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `error_log_systemmessage`
 --
 
@@ -1655,6 +1933,15 @@ CREATE TABLE `error_log_systemmessage` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `error_log_systemmessage`
+--
+
+LOCK TABLES `error_log_systemmessage` WRITE;
+/*!40000 ALTER TABLE `error_log_systemmessage` DISABLE KEYS */;
+/*!40000 ALTER TABLE `error_log_systemmessage` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `error_log_threadid`
 --
 
@@ -1669,6 +1956,15 @@ CREATE TABLE `error_log_threadid` (
   UNIQUE KEY `U_error_threadid_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `error_log_threadid`
+--
+
+LOCK TABLES `error_log_threadid` WRITE;
+/*!40000 ALTER TABLE `error_log_threadid` DISABLE KEYS */;
+/*!40000 ALTER TABLE `error_log_threadid` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Temporary view structure for view `error_message_list`
@@ -1913,6 +2209,15 @@ CREATE TABLE `import_client` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `import_client`
+--
+
+LOCK TABLES `import_client` WRITE;
+/*!40000 ALTER TABLE `import_client` DISABLE KEYS */;
+/*!40000 ALTER TABLE `import_client` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `import_error`
 --
 
@@ -1936,6 +2241,15 @@ CREATE TABLE `import_error` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `import_error`
+--
+
+LOCK TABLES `import_error` WRITE;
+/*!40000 ALTER TABLE `import_error` DISABLE KEYS */;
+/*!40000 ALTER TABLE `import_error` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `import_file`
 --
 
@@ -1953,17 +2267,56 @@ CREATE TABLE `import_file` (
   `filemodified` datetime NOT NULL,
   `server_name` varchar(253) DEFAULT NULL COMMENT 'Common & Combined logs. Added to populate ServerName for multiple domains import. Must be poulated before import process.',
   `server_port` int DEFAULT NULL COMMENT 'Common & Combined logs. Added to populate ServerPort for multiple domains import. Must be poulated before import process.',
+  `importformatid` int NOT NULL COMMENT 'Import File Format - 1=common,2=combined,3=vhost,4=csv2mysql,5=error_default,6=error_vhost',
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `U_import_file_name` (`name`),
+  KEY `F_importfile_importformat` (`importformatid`),
   KEY `F_importfile_importload` (`importloadid`),
   KEY `F_importfile_parseprocess` (`parseprocessid`),
   KEY `F_importfile_importprocess` (`importprocessid`),
+  CONSTRAINT `F_importfile_importformat` FOREIGN KEY (`importformatid`) REFERENCES `import_format` (`id`),
   CONSTRAINT `F_importfile_importload` FOREIGN KEY (`importloadid`) REFERENCES `import_load` (`id`),
   CONSTRAINT `F_importfile_importprocess` FOREIGN KEY (`importprocessid`) REFERENCES `import_process` (`id`),
   CONSTRAINT `F_importfile_parseprocess` FOREIGN KEY (`parseprocessid`) REFERENCES `import_process` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table contains all access and error log files loaded and processed. Created, modified and size of each file at time of loading is captured for auditability. Each file processed by Server Application must exist in this table.';
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `import_file`
+--
+
+LOCK TABLES `import_file` WRITE;
+/*!40000 ALTER TABLE `import_file` DISABLE KEYS */;
+/*!40000 ALTER TABLE `import_file` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `import_format`
+--
+
+DROP TABLE IF EXISTS `import_format`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `import_format` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `comments` varchar(100) DEFAULT NULL,
+  `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `U_import_format_name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table contains import file formats imported by application. These values are inserted in schema DDL script. This table is only added for reporting purposes.';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `import_format`
+--
+
+LOCK TABLES `import_format` WRITE;
+/*!40000 ALTER TABLE `import_format` DISABLE KEYS */;
+INSERT INTO `import_format` VALUES (1,'common',NULL,'2024-12-20 16:31:09'),(2,'combined',NULL,'2024-12-20 16:31:09'),(3,'vhost',NULL,'2024-12-20 16:31:09'),(4,'csc2mysql',NULL,'2024-12-20 16:31:09'),(5,'error_default',NULL,'2024-12-20 16:31:09'),(6,'error_vhost',NULL,'2024-12-20 16:31:09');
+/*!40000 ALTER TABLE `import_format` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `import_load`
@@ -2004,6 +2357,15 @@ CREATE TABLE `import_load` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `import_load`
+--
+
+LOCK TABLES `import_load` WRITE;
+/*!40000 ALTER TABLE `import_load` DISABLE KEYS */;
+/*!40000 ALTER TABLE `import_load` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `import_process`
 --
 
@@ -2031,6 +2393,15 @@ CREATE TABLE `import_process` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `import_process`
+--
+
+LOCK TABLES `import_process` WRITE;
+/*!40000 ALTER TABLE `import_process` DISABLE KEYS */;
+/*!40000 ALTER TABLE `import_process` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `import_server`
 --
 
@@ -2049,6 +2420,15 @@ CREATE TABLE `import_server` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table for keeping track of log processing servers and login information.';
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `import_server`
+--
+
+LOCK TABLES `import_server` WRITE;
+/*!40000 ALTER TABLE `import_server` DISABLE KEYS */;
+/*!40000 ALTER TABLE `import_server` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `load_access_combined`
@@ -2085,6 +2465,15 @@ CREATE TABLE `load_access_combined` (
   CONSTRAINT `F_load_access_combined_importfile` FOREIGN KEY (`importfileid`) REFERENCES `import_file` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Used for LOAD DATA command for LogFormat combined and common to bring text files into MySQL and start the process.';
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `load_access_combined`
+--
+
+LOCK TABLES `load_access_combined` WRITE;
+/*!40000 ALTER TABLE `load_access_combined` DISABLE KEYS */;
+/*!40000 ALTER TABLE `load_access_combined` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `load_access_csv2mysql`
@@ -2128,6 +2517,15 @@ CREATE TABLE `load_access_csv2mysql` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `load_access_csv2mysql`
+--
+
+LOCK TABLES `load_access_csv2mysql` WRITE;
+/*!40000 ALTER TABLE `load_access_csv2mysql` DISABLE KEYS */;
+/*!40000 ALTER TABLE `load_access_csv2mysql` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `load_access_vhost`
 --
 
@@ -2163,6 +2561,15 @@ CREATE TABLE `load_access_vhost` (
   CONSTRAINT `F_load_access_combined_vhost_importfile` FOREIGN KEY (`importfileid`) REFERENCES `import_file` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Used for LOAD DATA command for LogFormat vhost to bring text files into MySQL and start the process.';
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `load_access_vhost`
+--
+
+LOCK TABLES `load_access_vhost` WRITE;
+/*!40000 ALTER TABLE `load_access_vhost` DISABLE KEYS */;
+/*!40000 ALTER TABLE `load_access_vhost` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `load_error_default`
@@ -2206,6 +2613,15 @@ CREATE TABLE `load_error_default` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `load_error_default`
+--
+
+LOCK TABLES `load_error_default` WRITE;
+/*!40000 ALTER TABLE `load_error_default` DISABLE KEYS */;
+/*!40000 ALTER TABLE `load_error_default` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `log_clientname`
 --
 
@@ -2220,6 +2636,15 @@ CREATE TABLE `log_clientname` (
   UNIQUE KEY `U_log_clientname_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table is used by Access and Error logs.';
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `log_clientname`
+--
+
+LOCK TABLES `log_clientname` WRITE;
+/*!40000 ALTER TABLE `log_clientname` DISABLE KEYS */;
+/*!40000 ALTER TABLE `log_clientname` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `log_clientport`
@@ -2238,6 +2663,15 @@ CREATE TABLE `log_clientport` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `log_clientport`
+--
+
+LOCK TABLES `log_clientport` WRITE;
+/*!40000 ALTER TABLE `log_clientport` DISABLE KEYS */;
+/*!40000 ALTER TABLE `log_clientport` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `log_referer`
 --
 
@@ -2254,6 +2688,15 @@ CREATE TABLE `log_referer` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `log_referer`
+--
+
+LOCK TABLES `log_referer` WRITE;
+/*!40000 ALTER TABLE `log_referer` DISABLE KEYS */;
+/*!40000 ALTER TABLE `log_referer` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `log_requestlogid`
 --
 
@@ -2267,6 +2710,15 @@ CREATE TABLE `log_requestlogid` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table is used by Access and Error logs.';
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `log_requestlogid`
+--
+
+LOCK TABLES `log_requestlogid` WRITE;
+/*!40000 ALTER TABLE `log_requestlogid` DISABLE KEYS */;
+/*!40000 ALTER TABLE `log_requestlogid` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `log_servername`
@@ -2285,6 +2737,15 @@ CREATE TABLE `log_servername` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `log_servername`
+--
+
+LOCK TABLES `log_servername` WRITE;
+/*!40000 ALTER TABLE `log_servername` DISABLE KEYS */;
+/*!40000 ALTER TABLE `log_servername` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `log_serverport`
 --
 
@@ -2299,6 +2760,15 @@ CREATE TABLE `log_serverport` (
   UNIQUE KEY `U_log_serverport_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table is used by Access and Error logs.';
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `log_serverport`
+--
+
+LOCK TABLES `log_serverport` WRITE;
+/*!40000 ALTER TABLE `log_serverport` DISABLE KEYS */;
+/*!40000 ALTER TABLE `log_serverport` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Dumping routines for database 'apache_logs'
@@ -3371,13 +3841,15 @@ CREATE DEFINER=`root`@`localhost` FUNCTION `importFileID`(importFile varchar(300
   file_Size varchar(30),
   file_Created varchar(30),
   file_Modified varchar(30),
-  import_load_id varchar(30)) RETURNS int
+  import_load_id varchar(10),
+  fileformat varchar(10)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE e1 INT UNSIGNED;
   DECLARE e2, e3 VARCHAR(128);
   DECLARE importFile_ID INTEGER DEFAULT null;
   DECLARE importload_id INTEGER DEFAULT null;
+  DECLARE formatfile_id INTEGER DEFAULT 0;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION 
 	BEGIN
     GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
@@ -3391,19 +3863,24 @@ BEGIN
     IF NOT CONVERT(import_load_id, UNSIGNED) = 0 THEN
   	  SET importload_id = CONVERT(import_load_id, UNSIGNED);
     END IF;
-	INSERT INTO apache_logs.import_file 
+    IF NOT CONVERT(fileformat, UNSIGNED) = 0 THEN
+  	  SET formatfile_id = CONVERT(fileformat, UNSIGNED);
+    END IF;
+    INSERT INTO apache_logs.import_file 
 			(name,
 			filesize,
 			filecreated,
 			filemodified,
-      importloadid)
+      importloadid,
+      importformatid)
     VALUES 
-		(importFile, 
-         CONVERT(file_Size, UNSIGNED),
-         STR_TO_DATE(file_Created,'%a %b %e %H:%i:%s %Y'),
-         STR_TO_DATE(file_Modified,'%a %b %e %H:%i:%s %Y'),
-         importload_id);
-	SET importFile_ID = LAST_INSERT_ID();
+      (importFile, 
+      CONVERT(file_Size, UNSIGNED),
+      STR_TO_DATE(file_Created,'%a %b %e %H:%i:%s %Y'),
+      STR_TO_DATE(file_Modified,'%a %b %e %H:%i:%s %Y'),
+      importload_id,
+      formatfile_id);
+    SET importFile_ID = LAST_INSERT_ID();
   END IF;
   RETURN importFile_ID;
 END ;;
@@ -3987,17 +4464,6 @@ BEGIN
     			uadevicefamilyid = uadevicefamily_id,
     			uadevicebrandid = uadevicebrand_id,
     			uadevicemodelid = uadevicemodel_id WHERE id = userAgent_id;
-		UPDATE apache_logs.access_log SET uaid = ua_id,
-    			uabrowserid = uabrowser_id,
-    			uabrowserfamilyid = uabrowserfamily_id,
-    			uabrowserversionid = uabrowserversion_id,
-    			uaosid = uaos_id,
-    			uaosfamilyid = uaosfamily_id,
-    			uaosversionid = uaosversion_id,
-    			uadeviceid = uadevice_id,
-    			uadevicefamilyid = uadevicefamily_id,
-    			uadevicebrandid = uadevicebrand_id,
-    			uadevicemodelid = uadevicemodel_id WHERE useragentid = userAgent_id;
   END LOOP;
   -- to remove SQL calculating filesProcessed when recordsProcessed = 0. Set=1 by default.
   IF recordsProcessed=0 THEN
@@ -4700,6 +5166,7 @@ BEGIN
   DECLARE importLoad_ID INTEGER DEFAULT NULL;
   DECLARE importRecordID INTEGER DEFAULT NULL;
   DECLARE importFile_ID INTEGER DEFAULT NULL;
+  DECLARE importFile_common_ID INTEGER DEFAULT NULL;
   DECLARE recordsProcessed INTEGER DEFAULT 0;
   DECLARE filesProcessed INTEGER DEFAULT 0;
   DECLARE loadsProcessed INTEGER DEFAULT 1;
@@ -4709,7 +5176,12 @@ BEGIN
       SELECT l.id,
              l.importfileid
         FROM apache_logs.load_access_csv2mysql l
-       WHERE l.process_status=0;
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+  INNER JOIN apache_logs.import_load il 
+          ON f.importloadid = il.id
+       WHERE il.completed IS NOT NULL 
+         AND l.process_status = 0;
   -- declare cursor for csv2mysql format - single importLoadID
 	DECLARE csv2mysqlLoadID CURSOR FOR 
       SELECT l.id,
@@ -4724,7 +5196,12 @@ BEGIN
       SELECT l.id,
              l.importfileid
   	    FROM apache_logs.load_access_vhost l
-       WHERE l.process_status=0;
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+  INNER JOIN apache_logs.import_load il 
+          ON f.importloadid = il.id
+       WHERE il.completed IS NOT NULL 
+         AND l.process_status = 0;
   -- declare cursor for combined format - single importLoadID
 	DECLARE vhostLoadID CURSOR FOR 
       SELECT l.id,
@@ -4739,7 +5216,23 @@ BEGIN
       SELECT l.id,
              l.importfileid
         FROM apache_logs.load_access_combined l
-       WHERE l.process_status=0;
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+  INNER JOIN apache_logs.import_load il 
+          ON f.importloadid = il.id
+       WHERE il.completed IS NOT NULL 
+         AND l.process_status = 0;
+  -- declare cursor for importformatid SET=2 in Python check if common format
+	DECLARE commonStatus CURSOR FOR 
+      SELECT DISTINCT(l.importfileid)
+        FROM apache_logs.load_access_combined l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+  INNER JOIN apache_logs.import_load il 
+          ON f.importloadid = il.id
+       WHERE il.completed IS NOT NULL 
+         AND l.process_status = 0
+         AND l.log_useragent IS NULL;
   -- declare cursor for combined format - single importLoadID
 	DECLARE combinedLoadID CURSOR FOR 
       SELECT l.id,
@@ -4749,6 +5242,15 @@ BEGIN
           ON l.importfileid = f.id
        WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
          AND l.process_status=0;
+  -- declare cursor for importformatid SET=2 in Python check if common format
+	DECLARE commonLoadID CURSOR FOR 
+      SELECT DISTINCT(l.importfileid)
+        FROM apache_logs.load_access_combined l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE f.importloadid = importLoad_ID
+         AND l.process_status = 0
+         AND l.log_useragent IS NULL;
   -- declare NOT FOUND handler
 	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION 
@@ -4772,13 +5274,21 @@ BEGIN
     SELECT COUNT(DISTINCT(l.importfileid))
       INTO filesProcessed
       FROM apache_logs.load_access_csv2mysql l
-     WHERE l.process_status = 0;
+INNER JOIN apache_logs.import_file f
+        ON l.importfileid = f.id
+INNER JOIN apache_logs.import_load il 
+        ON f.importloadid = il.id
+     WHERE il.completed IS NOT NULL 
+       AND l.process_status = 0;
     SELECT COUNT(DISTINCT(f.importloadid))
       INTO loadsProcessed
       FROM apache_logs.load_access_csv2mysql l
 INNER JOIN apache_logs.import_file f 
         ON l.importfileid = f.id
-     WHERE l.process_status = 0;
+INNER JOIN apache_logs.import_load il 
+        ON f.importloadid = il.id
+     WHERE il.completed IS NOT NULL 
+       AND l.process_status = 0;
 	ELSEIF in_processName = 'csv2mysql' THEN
     SELECT COUNT(DISTINCT(l.importfileid))
       INTO filesProcessed
@@ -4791,13 +5301,21 @@ INNER JOIN apache_logs.import_file f
     SELECT COUNT(DISTINCT(l.importfileid))
       INTO filesProcessed
       FROM apache_logs.load_access_vhost l
-     WHERE l.process_status = 0;
+INNER JOIN apache_logs.import_file f 
+        ON l.importfileid = f.id
+INNER JOIN apache_logs.import_load il 
+        ON f.importloadid = il.id
+     WHERE il.completed IS NOT NULL 
+       AND l.process_status = 0;
     SELECT COUNT(DISTINCT(f.importloadid))
       INTO loadsProcessed
       FROM apache_logs.load_access_vhost l
 INNER JOIN apache_logs.import_file f 
         ON l.importfileid = f.id
-     WHERE l.process_status = 0;
+INNER JOIN apache_logs.import_load il 
+        ON f.importloadid = il.id
+     WHERE il.completed IS NOT NULL 
+       AND l.process_status = 0;
 	ELSEIF in_processName = 'vhost' THEN
     SELECT COUNT(DISTINCT(l.importfileid))
       INTO filesProcessed
@@ -4810,13 +5328,21 @@ INNER JOIN apache_logs.import_file f
     SELECT COUNT(DISTINCT(l.importfileid))
       INTO filesProcessed
       FROM apache_logs.load_access_combined l
-     WHERE l.process_status = 0;
+INNER JOIN apache_logs.import_file f 
+        ON l.importfileid = f.id
+INNER JOIN apache_logs.import_load il 
+        ON f.importloadid = il.id
+     WHERE il.completed IS NOT NULL 
+       AND l.process_status = 0;
     SELECT COUNT(DISTINCT(f.importloadid))
       INTO loadsProcessed
       FROM apache_logs.load_access_combined l
 INNER JOIN apache_logs.import_file f 
         ON l.importfileid = f.id
-     WHERE l.process_status = 0;
+INNER JOIN apache_logs.import_load il 
+        ON f.importloadid = il.id
+     WHERE il.completed IS NOT NULL 
+       AND l.process_status = 0;
 	ELSE
     SELECT COUNT(DISTINCT(l.importfileid))
       INTO filesProcessed
@@ -4828,19 +5354,46 @@ INNER JOIN apache_logs.import_file f
 	END IF;	
   SET importProcessID = apache_logs.importProcessID('access_parse', in_processName);
 	START TRANSACTION;
-	IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
-		OPEN csv2mysqlStatus;
-	ELSEIF in_processName = 'csv2mysql' THEN
-		OPEN csv2mysqlLoadID;
-	ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
-		OPEN vhostStatus;
-	ELSEIF in_processName = 'vhost' THEN
-		OPEN vhostLoadID;
-	ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
-		OPEN combinedStatus;
-	ELSE
-		OPEN combinedLoadID;
+	IF in_processName = 'combined' THEN 
+    -- importformatid SET=2 in Python check if common format - 'Import File Format - 1=common,2=combined,3=vhost,4=csv2mysql,5=error_default,6=error_vhost'
+    IF importLoad_ID IS NULL THEN
+      OPEN commonStatus;
+    ELSE
+      OPEN commonLoadID;
+	  END IF;	
+    set_commonformat: LOOP
+      IF importLoad_ID IS NULL THEN
+        FETCH commonStatus INTO importFile_common_ID;
+      ELSE
+        FETCH commonLoadID INTO importFile_common_ID;
+      END IF;
+      IF done = true THEN 
+        LEAVE set_commonformat;
+      END IF;
+      UPDATE apache_logs.import_file 
+         SET importformatid=1 
+       WHERE id = importFile_common_ID;
+    END LOOP;
+    IF importLoad_ID IS NULL THEN
+      CLOSE commonStatus;
+    ELSE
+      CLOSE commonLoadID;
+	  END IF;
+    SET done = false;
 	END IF;	
+  IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
+    OPEN csv2mysqlStatus;
+  ELSEIF in_processName = 'csv2mysql' THEN
+    OPEN csv2mysqlLoadID;
+  ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
+    OPEN vhostStatus;
+	ELSEIF in_processName = 'vhost' THEN
+    OPEN vhostLoadID;
+	ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
+    OPEN combinedStatus;
+	ELSE
+    OPEN combinedLoadID;
+  END IF;	
   process_parse: LOOP
   	IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
 	  	FETCH csv2mysqlStatus INTO importRecordID, importFile_ID;
@@ -4863,7 +5416,8 @@ INNER JOIN apache_logs.import_file f
 			LEAVE process_parse;
     END IF;
 		SET recordsProcessed = recordsProcessed + 1;
-    -- 	IF in_processName = 'csv2mysql' THEN
+    -- IF in_processName = 'csv2mysql' THEN
+    -- by default, no parsing required for csv2mysql format 
     IF in_processName = 'vhost' THEN
       UPDATE apache_logs.load_access_vhost 
       SET server_name = SUBSTR(log_server, 1, LOCATE(':', log_server)-1) 
@@ -5371,6 +5925,7 @@ BEGIN
   DECLARE importLoad_ID INTEGER DEFAULT NULL;
   DECLARE importRecordID INTEGER DEFAULT NULL;
   DECLARE importFile_ID INTEGER DEFAULT NULL;
+  DECLARE importFile_vhost_ID INTEGER DEFAULT NULL;
   DECLARE recordsProcessed INTEGER DEFAULT 0;
   DECLARE filesProcessed INTEGER DEFAULT 0;
   DECLARE loadsProcessed INTEGER DEFAULT 1;
@@ -5388,7 +5943,30 @@ BEGIN
       SELECT l.id,
              l.importfileid
         FROM apache_logs.load_error_default l 
-       WHERE l.process_status = 0;
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+  INNER JOIN apache_logs.import_load il 
+          ON f.importloadid = il.id
+       WHERE il.completed IS NOT NULL 
+         AND l.process_status = 0;
+  DECLARE vhostByLoadID CURSOR FOR 
+      SELECT DISTINCT(l.importfileid)
+        FROM apache_logs.load_error_default l 
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
+         AND l.process_status = 0
+         AND LOCATE(' ,', l.log_parse1)>0 OR LOCATE(' ,', l.log_parse2)>0;
+  DECLARE vhostByStatus CURSOR FOR
+      SELECT DISTINCT(l.importfileid)
+        FROM apache_logs.load_error_default l 
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+  INNER JOIN apache_logs.import_load il 
+          ON f.importloadid = il.id
+       WHERE il.completed IS NOT NULL 
+         AND l.process_status = 0
+         AND LOCATE(' ,', l.log_parse1)>0 OR LOCATE(' ,', l.log_parse2)>0;
 	-- declare NOT FOUND handler
   DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION 
@@ -5412,13 +5990,21 @@ BEGIN
     SELECT COUNT(DISTINCT(l.importfileid))
       INTO filesProcessed
       FROM apache_logs.load_error_default l 
-     WHERE l.process_status = 0;
+INNER JOIN apache_logs.import_file f 
+        ON l.importfileid = f.id
+INNER JOIN apache_logs.import_load il 
+        ON f.importloadid = il.id
+     WHERE il.completed IS NOT NULL 
+       AND l.process_status = 0;
     SELECT COUNT(DISTINCT(f.importloadid))
       INTO loadsProcessed
       FROM apache_logs.load_error_default l 
 INNER JOIN apache_logs.import_file f 
         ON l.importfileid = f.id
-     WHERE l.process_status = 0;
+INNER JOIN apache_logs.import_load il 
+        ON f.importloadid = il.id
+     WHERE il.completed IS NOT NULL 
+       AND l.process_status = 0;
   ELSE
     SELECT COUNT(DISTINCT(l.importfileid))
       INTO filesProcessed
@@ -5430,6 +6016,32 @@ INNER JOIN apache_logs.import_file f
   END IF;
   SET importProcessID = apache_logs.importProcessID('error_parse', in_processName);
   START TRANSACTION;
+  IF importLoad_ID IS NULL THEN
+    -- importformatid SET=5 in Python check if error_vhost format - 'Import File Format - 1=common,2=combined,3=vhost,4=csv2mysql,5=error_default,6=error_vhost'
+    OPEN vhostByStatus;
+  ELSE
+    -- importformatid SET=5 in Python check if error_vhost format - 'Import File Format - 1=common,2=combined,3=vhost,4=csv2mysql,5=error_default,6=error_vhost'
+    OPEN vhostByLoadID;
+  END IF;
+  set_vhostformat: LOOP
+    IF importLoad_ID IS NULL THEN
+      FETCH vhostByStatus INTO importFile_vhost_ID;
+    ELSE
+      FETCH vhostByLoadID INTO importFile_vhost_ID;
+    END IF;
+    IF done = true THEN 
+      LEAVE set_vhostformat;
+    END IF;
+    UPDATE apache_logs.import_file 
+       SET importformatid=6 
+     WHERE id = importFile_vhost_ID;
+  END LOOP;
+  IF importLoad_ID IS NULL THEN
+    CLOSE vhostByStatus;
+  ELSE
+    CLOSE vhostByLoadID;
+  END IF;
+  SET done = false;
   IF importLoad_ID IS NULL THEN
     OPEN defaultByStatus;
   ELSE
@@ -5986,7 +6598,7 @@ DELIMITER ;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `access_ua_browser_family_list` AS select `ln`.`name` AS `Browser Family`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_browser_family` `ln` join `access_log` `l` on((`l`.`uabrowserfamilyid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 VIEW `access_ua_browser_family_list` AS select `ln`.`name` AS `Browser Family`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from ((`access_log_ua_browser_family` `ln` join `access_log_useragent` `lua` on((`lua`.`uabrowserfamilyid` = `ln`.`id`))) join `access_log` `l` on((`l`.`useragentid` = `lua`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -6004,7 +6616,7 @@ DELIMITER ;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `access_ua_browser_list` AS select `ln`.`name` AS `Browser`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_browser` `ln` join `access_log` `l` on((`l`.`uabrowserid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 VIEW `access_ua_browser_list` AS select `ln`.`name` AS `Browser`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from ((`access_log_ua_browser` `ln` join `access_log_useragent` `lua` on((`lua`.`uabrowserid` = `ln`.`id`))) join `access_log` `l` on((`l`.`useragentid` = `lua`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -6022,7 +6634,7 @@ DELIMITER ;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `access_ua_browser_version_list` AS select `ln`.`name` AS `Browser Version`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_browser_version` `ln` join `access_log` `l` on((`l`.`uabrowserversionid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 VIEW `access_ua_browser_version_list` AS select `ln`.`name` AS `Browser Version`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from ((`access_log_ua_browser_version` `ln` join `access_log_useragent` `lua` on((`lua`.`uabrowserversionid` = `ln`.`id`))) join `access_log` `l` on((`l`.`useragentid` = `lua`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -6040,7 +6652,7 @@ DELIMITER ;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `access_ua_device_brand_list` AS select `ln`.`name` AS `Device Brand`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_device_brand` `ln` join `access_log` `l` on((`l`.`uadevicebrandid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 VIEW `access_ua_device_brand_list` AS select `ln`.`name` AS `Device Brand`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from ((`access_log_ua_device_brand` `ln` join `access_log_useragent` `lua` on((`lua`.`uadevicebrandid` = `ln`.`id`))) join `access_log` `l` on((`l`.`useragentid` = `lua`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -6058,7 +6670,7 @@ DELIMITER ;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `access_ua_device_family_list` AS select `ln`.`name` AS `Device Family`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_device_family` `ln` join `access_log` `l` on((`l`.`uadevicefamilyid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 VIEW `access_ua_device_family_list` AS select `ln`.`name` AS `Device Family`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from ((`access_log_ua_device_family` `ln` join `access_log_useragent` `lua` on((`lua`.`uadevicefamilyid` = `ln`.`id`))) join `access_log` `l` on((`l`.`useragentid` = `lua`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -6076,7 +6688,7 @@ DELIMITER ;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `access_ua_device_list` AS select `ln`.`name` AS `Device`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_device` `ln` join `access_log` `l` on((`l`.`uadeviceid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 VIEW `access_ua_device_list` AS select `ln`.`name` AS `Device`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from ((`access_log_ua_device` `ln` join `access_log_useragent` `lua` on((`lua`.`uadeviceid` = `ln`.`id`))) join `access_log` `l` on((`l`.`useragentid` = `lua`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -6094,7 +6706,7 @@ DELIMITER ;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `access_ua_device_model_list` AS select `ln`.`name` AS `Device Model`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_device_model` `ln` join `access_log` `l` on((`l`.`uadevicemodelid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 VIEW `access_ua_device_model_list` AS select `ln`.`name` AS `Device Model`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from ((`access_log_ua_device_model` `ln` join `access_log_useragent` `lua` on((`lua`.`uadevicefamilyid` = `ln`.`id`))) join `access_log` `l` on((`l`.`useragentid` = `lua`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -6112,7 +6724,7 @@ DELIMITER ;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `access_ua_list` AS select `ln`.`name` AS `Access Log User Agent`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua` `ln` join `access_log` `l` on((`l`.`uaid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 VIEW `access_ua_list` AS select `ln`.`name` AS `Access Log User Agent`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from ((`access_log_ua` `ln` join `access_log_useragent` `lua` on((`lua`.`uaid` = `ln`.`id`))) join `access_log` `l` on((`l`.`useragentid` = `lua`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -6130,7 +6742,7 @@ DELIMITER ;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `access_ua_os_family_list` AS select `ln`.`name` AS `Operating System Family`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_os_family` `ln` join `access_log` `l` on((`l`.`uaosfamilyid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 VIEW `access_ua_os_family_list` AS select `ln`.`name` AS `Operating System Family`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from ((`access_log_ua_os_family` `ln` join `access_log_useragent` `lua` on((`lua`.`uaosfamilyid` = `ln`.`id`))) join `access_log` `l` on((`l`.`useragentid` = `lua`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -6148,7 +6760,7 @@ DELIMITER ;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `access_ua_os_list` AS select `ln`.`name` AS `Operating System`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_os` `ln` join `access_log` `l` on((`l`.`uaosid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 VIEW `access_ua_os_list` AS select `ln`.`name` AS `Operating System`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from ((`access_log_ua_os` `ln` join `access_log_useragent` `lua` on((`lua`.`uaosid` = `ln`.`id`))) join `access_log` `l` on((`l`.`useragentid` = `lua`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -6166,7 +6778,7 @@ DELIMITER ;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `access_ua_os_version_list` AS select `ln`.`name` AS `Operating System Version`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_ua_os_version` `ln` join `access_log` `l` on((`l`.`uaosversionid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
+/*!50001 VIEW `access_ua_os_version_list` AS select `ln`.`name` AS `Operating System Version`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from ((`access_log_ua_os_version` `ln` join `access_log_useragent` `lua` on((`lua`.`uaosversionid` = `ln`.`id`))) join `access_log` `l` on((`l`.`useragentid` = `lua`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -6828,4 +7440,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-12-11  2:00:36
+-- Dump completed

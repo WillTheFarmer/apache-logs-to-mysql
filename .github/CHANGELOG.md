@@ -4,6 +4,7 @@
 - version 2.0.0 - 11/30/2024 - backward incompatible
 - version 2.1.0 - 12/09/2024 - request_log_id functionality
 - version 2.1.1 - 12/11/2024 - rename column timeStamp to logged - add 4 indexes and 10 views
+- version 2.1.2 - 12/20/2024 - several improvements
 - [1.0.1] apache_logs.error_systemCodeID corrected line - INTO logsystemCode to INTO logsystemCodeID
 - [1.0.1] remove debugging - SELECT statement from apache_logs.process_access_import, process_error_import & normalize_useragent.
 - [1.0.1] remove whitespace and commented out old code on all stored programs
@@ -54,6 +55,18 @@
 - [2.1.1] rename COLUMN `timeStamp` to `logged` in TABLES `access_log` and `error_log`.
 - [2.1.1] add access_log INDEXES `I_access_log_logged` and `I_access_log_servernameid_logged`.
 - [2.1.1] add error_log INDEXES `I_error_log_logged` and `I_error_log_servernameid_logged`.
-- [2.1.1] modify `process_access_import` and `process_error_imort` for COLUMN rename `timeStamp` to `logged` in TABLES `access_log` and `error_log`.
+- [2.1.1] modify `process_access_import` and `process_error_import` for COLUMN rename `timeStamp` to `logged` in TABLES `access_log` and `error_log`.
 - [2.1.1] add access_log views `access_period_year_list`, `access_period_month_list`, `access_period_week_list`, `access_period_day_list`, `access_period_hour_list`.
 - [2.1.1] add error_log views `error_period_year_list`, `error_period_month_list`, `error_period_week_list`, `error_period_day_list`, `error_period_hour_list`.
+- [2.1.2] modify TABLE `access_log` ADD CONSTRAINT `F_access_requestlogid` FOREIGN KEY (requestlogid) REFERENCES `log_requestlogid`(id)
+- [2.1.2] modify TABLE `error_log` ADD index CONSTRAINT `F_error_requestlogid` FOREIGN KEY (requestlogid) REFERENCES `log_requestlogid`(id)
+- [2.1.2] add TABLE `import_format` for reporting and filtering features. Allows adjusted File Format names in tables rather than hardcoding. Also enables addtional formats, 
+- [2.1.2] add COLUMN `importformatid` to TABLE `import_file` for reporting and filtering features. This is FOREIGN KEY to `import_format` TABLE. 
+- [2.1.2] modify `process_access_parse` and `process_error_parse` - WHERE CLAUSE for parameter `ALL` to select ONLY completed LOAD processes.  
+- [2.1.2] modify `importFileID` STORED FUNCTION to add fileformat PARAMETER.
+- [2.1.2] modify `apacheLog2MySQL.py` to pass `importFileID` parameters 2=`common` and `combined` OR 5=`error_default` and `error_vhost`. Does not determine format difference here. 
+- [2.1.2] modify `process_access_parse` and `process_error_parse` - to SET 'Import File Format - `1=common`,2=combined,3=vhost,4=csv2mysql,5=error_default,`6=error_vhost`'
+- [2.1.2] modify `process_access_parse` and `process_error_parse` - WHERE CLAUSE for parameter `ALL` to select ONLY completed LOAD processes.  
+- [2.1.2] reformatted SQL statements in all 66 schema views for code standardization in SQL files used to create `apacheLogs2MySQL.sql`
+- [2.1.2] modify all 11 `access_ua_` views SQL statements `FROM apache_logs.access_log_ua ln INNER JOIN apache_logs.access_log_useragent lua INNER JOIN apache_logs.access_log`
+- [2.1.2] created new `entity_relationship_diagram.png` to reflect database changes.

@@ -240,7 +240,7 @@ The second parameter enables Python Client modules to run simultaneously on mult
 Database normalization is the process of organizing data in a relational database to improve data integrity and reduce redundancy. 
 Normalization ensures that data is organized in a way that makes sense for the data model and attributes, and that the database functions efficiently.
 
-MySQL `apache_logs` Schema has 47 Tables, 855 Columns, 146 Indexes, 66 Views, 7 Stored Procedures and 42 Functions to process Apache Access log in 4 formats 
+MySQL `apache_logs` Schema has 48 Tables, 849 Columns, 149 Indexes, 66 Views, 7 Stored Procedures and 42 Functions to process Apache Access log in 4 formats 
 & Apache Error log in 2 formats. Database normalization at work!
 ## MySQL Access Log View by URI
 MySQL View - apache_logs.access_requri_list - data from LogFormat: combined & csv2mysql

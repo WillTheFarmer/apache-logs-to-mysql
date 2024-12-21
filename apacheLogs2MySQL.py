@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# version 2.1.1 - 12/11/2024 - rename column timeStamp to logged - add 4 indexes and 10 views
+# version 2.1.2 - 12/20/2024 - several improvements - see changelog
 #
 # Copyright 2024 Will Raymond <farmfreshsoftware@gmail.com>
 #
@@ -201,7 +201,7 @@ def processLogs():
                                   "', '" + errorLoadSize + 
                                   "', '"  + errorLoadCreated + 
                                   "', '"  + errorLoadModified + 
-                                  "', '"  + str(importLoadID) + "' );")
+                                  "', '"  + str(importLoadID) + "', '5' );")
                 try:
                     errorInsertCursor.execute( errorInsertSQL )
                 except:
@@ -297,7 +297,7 @@ def processLogs():
                                   "', '" + combinedLoadSize + 
                                   "', '"  + combinedLoadCreated + 
                                   "', '"  + combinedLoadModified + 
-                                  "', '"  + str(importLoadID) + "' );")
+                                  "', '"  + str(importLoadID) + "', '2' );")
                 try:
                     combinedInsertCursor.execute( combinedInsertSQL )
                 except:
@@ -393,7 +393,7 @@ def processLogs():
                                   "', '" + vhostLoadSize + 
                                   "', '"  + vhostLoadCreated + 
                                   "', '"  + vhostLoadModified + 
-                                  "', '"  + str(importLoadID) + "' );")
+                                  "', '"  + str(importLoadID) + "', '3' );")
                 try:
                     vhostInsertCursor.execute( vhostInsertSQL )
                 except:
@@ -484,7 +484,7 @@ def processLogs():
                                   "', '" + csv2mysqlLoadSize + 
                                   "', '"  + csv2mysqlLoadCreated + 
                                   "', '"  + csv2mysqlLoadModified + 
-                                  "', '"  + str(importLoadID) + "' );")
+                                  "', '"  + str(importLoadID) + "', '4' );")
                 try:
                     csv2mysqlInsertCursor.execute( csv2mysqlInsertSQL )
                 except:
