@@ -106,7 +106,7 @@ ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ re
 |%l|Loglevel of the message|
 |%P|Process ID of current process|
 |%T|Thread ID of current thread|
-|%F|Source file name and line number of the log call. note %7F below - 7 means only display is LogLevel=debug|
+|%F|Source file name and line number of the log call. %7F - the 7 means only display when LogLevel=debug|
 |%E|APR/OS error status code and string|
 |%a|Client IP address and port of the request|
 |%M|The actual log message|
