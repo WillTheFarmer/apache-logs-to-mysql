@@ -5,6 +5,7 @@
 - version 2.1.0 - 12/09/2024 - request_log_id functionality
 - version 2.1.1 - 12/11/2024 - rename column timeStamp to logged - add 4 indexes and 10 views
 - version 2.1.2 - 12/20/2024 - several improvements
+- version 2.1.3 - 12/27/2024 - process improvements
 - [1.0.1] apache_logs.error_systemCodeID corrected line - INTO logsystemCode to INTO logsystemCodeID
 - [1.0.1] remove debugging - SELECT statement from apache_logs.process_access_import, process_error_import & normalize_useragent.
 - [1.0.1] remove whitespace and commented out old code on all stored programs
@@ -70,3 +71,7 @@
 - [2.1.2] reformatted SQL statements in all 66 schema views for code standardization in SQL files used to create `apacheLogs2MySQL.sql`
 - [2.1.2] modify all 11 `access_ua_` views SQL statements `FROM apache_logs.access_log_ua ln INNER JOIN apache_logs.access_log_useragent lua INNER JOIN apache_logs.access_log`
 - [2.1.2] created new `entity_relationship_diagram.png` to reflect database changes.
+- [2.1.3] modify `access_log` and `error_log` TABLES reordering COLUMNS to improve database design readability.
+- [2.1.3] modify `normalize_useragent` to removed first parameter restriction. Any string 8 characters are more can be passed.
+- [2.1.3] modify `apacheLogs2MySQL.py` add `completed` COLUMN to UPDATE statement to fix processing `process_access_import` and `process_error_import` with `ALL` parameter.
+- [2.1.3] modify `call_processes.sql` adding more comments to better describe options and parameters and overall processing.

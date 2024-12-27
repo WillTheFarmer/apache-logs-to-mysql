@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# version 2.1.2 - 12/20/2024 - several improvements - see changelog
+# version 2.1.3 - 12/27/2024 - process improvements - see changelog
 #
 # Copyright 2024 Will Raymond <farmfreshsoftware@gmail.com>
 #
@@ -651,6 +651,7 @@ def processLogs():
                   ', csv2mysqlLogProcessed=' + str(csv2mysqlFileProcessed) + 
                   ', userAgentProcessed=' + str(useragentFileProcessed) + 
                   ', errorOccurred=' + str(processError) + 
+                  ', completed=now()' + 
                   ', processSeconds=' + str(processSeconds) + ' WHERE id=' + str(importLoadID) +';')
     importLoadCursor = conn.cursor()
     try:

@@ -10,7 +10,7 @@
 -- # See the License for the specific language governing permissions and
 -- # limitations under the License.
 -- #
--- # version 2.1.2 - 12/20/2024 - several improvements - see changelog
+-- # version 2.1.3 - 12/27/2024 - process improvements - see changelog
 -- #
 -- # Copyright 2024 Will Raymond <farmfreshsoftware@gmail.com>
 -- #
@@ -111,8 +111,13 @@ DROP TABLE IF EXISTS `access_log`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `access_log` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `importfileid` int NOT NULL,
-  `logged` datetime DEFAULT NULL,
+  `logged` datetime NOT NULL,
+  `servernameid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_servername',
+  `serverportid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_serverport',
+  `clientnameid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_clientname',
+  `clientportid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_clientport',
+  `refererid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_referer',
+  `requestlogid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_requestlogid',
   `bytes_received` int NOT NULL,
   `bytes_sent` int NOT NULL,
   `bytes_transferred` int NOT NULL,
@@ -127,14 +132,9 @@ CREATE TABLE `access_log` (
   `reqqueryid` int DEFAULT NULL,
   `remoteuserid` int DEFAULT NULL,
   `remotelognameid` int DEFAULT NULL,
-  `refererid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_referer',
-  `clientnameid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_clientname',
-  `clientportid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_clientport',
-  `servernameid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_servername',
-  `serverportid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_serverport',
-  `requestlogid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_requestlogid',
   `cookieid` int DEFAULT NULL,
   `useragentid` int DEFAULT NULL,
+  `importfileid` int NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `F_access_reqstatus` (`reqstatusid`),
@@ -1676,8 +1676,13 @@ DROP TABLE IF EXISTS `error_log`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `error_log` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `importfileid` int NOT NULL,
   `logged` datetime NOT NULL,
+  `servernameid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_servername',
+  `serverportid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_serverport',
+  `clientnameid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_clientname',
+  `clientportid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_clientport',
+  `refererid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_referer',
+  `requestlogid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_requestlogid',
   `loglevelid` int DEFAULT NULL,
   `moduleid` int DEFAULT NULL,
   `processid` int DEFAULT NULL,
@@ -1687,12 +1692,7 @@ CREATE TABLE `error_log` (
   `systemcodeid` int DEFAULT NULL,
   `systemmessageid` int DEFAULT NULL,
   `logmessageid` int DEFAULT NULL,
-  `refererid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_referer',
-  `clientnameid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_clientname',
-  `clientportid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_clientport',
-  `servernameid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_servername',
-  `serverportid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_serverport',
-  `requestlogid` int DEFAULT NULL COMMENT 'Access & Error shared normalization table - log_requestlogid',
+  `importfileid` int NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `F_error_level` (`loglevelid`),
@@ -2197,12 +2197,12 @@ CREATE TABLE `import_client` (
   `deviceid` varchar(200) NOT NULL,
   `login` varchar(200) NOT NULL,
   `expandUser` varchar(200) NOT NULL,
-  `platformSystem` varchar(100) DEFAULT NULL,
-  `platformNode` varchar(100) DEFAULT NULL,
-  `platformRelease` varchar(100) DEFAULT NULL,
-  `platformVersion` varchar(150) DEFAULT NULL,
-  `platformMachine` varchar(100) DEFAULT NULL,
-  `platformProcessor` varchar(150) DEFAULT NULL,
+  `platformSystem` varchar(100) NOT NULL,
+  `platformNode` varchar(100) NOT NULL,
+  `platformRelease` varchar(100) NOT NULL,
+  `platformVersion` varchar(150) NOT NULL,
+  `platformMachine` varchar(100) NOT NULL,
+  `platformProcessor` varchar(150) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table keeps track of all application Windows, Linux and Mac clients loading logs to server application and long with logon and IP address information. It is important to know who is loading logs.';
@@ -2314,7 +2314,7 @@ CREATE TABLE `import_format` (
 
 LOCK TABLES `import_format` WRITE;
 /*!40000 ALTER TABLE `import_format` DISABLE KEYS */;
-INSERT INTO `import_format` VALUES (1,'common',NULL,'2024-12-20 16:31:09'),(2,'combined',NULL,'2024-12-20 16:31:09'),(3,'vhost',NULL,'2024-12-20 16:31:09'),(4,'csc2mysql',NULL,'2024-12-20 16:31:09'),(5,'error_default',NULL,'2024-12-20 16:31:09'),(6,'error_vhost',NULL,'2024-12-20 16:31:09');
+INSERT INTO `import_format` VALUES (1,'common',NULL,'2024-12-27 12:55:32'),(2,'combined',NULL,'2024-12-27 12:55:32'),(3,'vhost',NULL,'2024-12-27 12:55:32'),(4,'csc2mysql',NULL,'2024-12-27 12:55:32'),(5,'error_default',NULL,'2024-12-27 12:55:32'),(6,'error_vhost',NULL,'2024-12-27 12:55:32');
 /*!40000 ALTER TABLE `import_format` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2410,12 +2410,12 @@ DROP TABLE IF EXISTS `import_server`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `import_server` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `dbuser` varchar(255) DEFAULT NULL,
-  `dbhost` varchar(255) DEFAULT NULL,
-  `dbversion` varchar(255) DEFAULT NULL,
-  `dbsystem` varchar(255) DEFAULT NULL,
-  `dbmachine` varchar(255) DEFAULT NULL,
-  `serveruuid` varchar(255) DEFAULT NULL,
+  `dbuser` varchar(255) NOT NULL,
+  `dbhost` varchar(255) NOT NULL,
+  `dbversion` varchar(255) NOT NULL,
+  `dbsystem` varchar(255) NOT NULL,
+  `dbmachine` varchar(255) NOT NULL,
+  `serveruuid` varchar(255) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table for keeping track of log processing servers and login information.';
@@ -4381,8 +4381,8 @@ BEGIN
   IF CONVERT(in_importLoadID, UNSIGNED) = 0 AND in_importLoadID != 'ALL' THEN
     SIGNAL SQLSTATE '22003' SET MESSAGE_TEXT = 'Invalid parameter value for in_importLoadID. Must be convert to number or be ALL';
   END IF;
-  IF FIND_IN_SET(in_processName, "default,MySQL WorkBench,Python Processed") = 0 THEN
-    SIGNAL SQLSTATE '22003' SET MESSAGE_TEXT = 'Invalid parameter value for in_processName. Must be default,MySQL WorkBench OR Python Processed';
+  IF LENGTH(in_processName) < 8 THEN
+    SIGNAL SQLSTATE '22003' SET MESSAGE_TEXT = 'Invalid parameter value for in_processName. Must be minimum of 8 characters';
   END IF;
 	IF NOT CONVERT(in_importLoadID, UNSIGNED) = 0 THEN
 		SET importLoad_ID = CONVERT(in_importLoadID, UNSIGNED);

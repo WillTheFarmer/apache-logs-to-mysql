@@ -225,7 +225,7 @@ Run polling module from PM2:
 ```
 pm2 start watch4logs.py
 ```
-Run MySQL Stored Procedures from Command Line Client or Workbench:
+Run MySQL Stored Procedures from Command Line Client or GUI Database Tool:
 
 Passing 'ALL' as second parameter processes ALL files & records based process_status. 
 This can be multiple importloadid values. Passing an importloadid value as a STRING processes ONLY files & records related to that importloadid.
