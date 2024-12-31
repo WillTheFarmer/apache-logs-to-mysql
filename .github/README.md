@@ -233,9 +233,17 @@ This can be multiple importloadid values. Passing an importloadid value as a STR
 Based on .env variable settings Python `processLogs function` will execute the 5 Stored Procedures passing the importloadid value to process 
 ONLY files & records processed by current `processLogs function` execution. 
 
-The second parameter enables Python Client modules to run simultaneously on multiple servers uploading to a single MySQL Sever `apache_logs` schema. (`call_processes.sql` in repository)
-![call_processes.sql comments and commands in repository](./assets/call_processes.png)
+The second parameter enables Python Client modules to run simultaneously on multiple servers uploading to a single MySQL Sever `apache_logs` schema.
 
+### 7. Updating ServerName for multiple domains
+Log files imported from multiple domains require a ServerName value to properly filter and report data. These SQL SELECT and UPDATE statements are in bottom 
+comment of `call_processes.sql` file are included to help check, validate and update individual Domain data.
+![call_processes.sql comments and commands in repository](./assets/call_processes_part_2.png)
+(`call_processes.sql` in repository)
+
+### 8. Executing Stored Procedures
+The `call_processes.sql` file contains execution commands for each stored procedure and helpful functionality comments.
+![call_processes.sql comments and commands in repository](./assets/call_processes_part_1.png)
 ## Database Normalization
 Database normalization is the process of organizing data in a relational database to improve data integrity and reduce redundancy. 
 Normalization ensures that data is organized in a way that makes sense for the data model and attributes, and that the database functions efficiently.
