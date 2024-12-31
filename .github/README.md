@@ -225,25 +225,26 @@ Run polling module from PM2:
 ```
 pm2 start watch4logs.py
 ```
-Run MySQL Stored Procedures from Command Line Client or GUI Database Tool:
+## Execute Stored Procedures using Command Line
+If environment variables `ERROR_PROCESS`,`COMBINED_PROCESS`, `VHOST_PROCESS`, `CSV2MYSQL_PROCESS` and `USERAGENT_PROCESS` = 0 none of the 5 Stored Procedures 
+are executed by Python Client module. Only the LOAD DATA commands are executed inserting raw log data in LOAD TABLES. MySQL Stored Procedures
+can be run from Command Line Client or GUI Database Tool.
 
-Passing 'ALL' as second parameter processes ALL files & records based process_status. 
-This can be multiple importloadid values. Passing an importloadid value as a STRING processes ONLY files & records related to that importloadid.
+Passing 'ALL' as second parameter processes ALL files & records based process_status. This can be multiple importloadid values. 
+Passing an importloadid value as a STRING processes ONLY files & records related to that importloadid.
 
-Based on .env variable settings Python `processLogs function` will execute the 5 Stored Procedures passing the importloadid value to process 
+Setting environment variables = 2 Python Client module will execute the 5 Stored Procedures passing the importloadid value to process 
 ONLY files & records processed by current `processLogs function` execution. 
 
 The second parameter enables Python Client modules to run simultaneously on multiple servers uploading to a single MySQL Sever `apache_logs` schema.
 
-### 7. Updating ServerName for multiple domains
-Log files imported from multiple domains require a ServerName value to properly filter and report data. These SQL SELECT and UPDATE statements are in bottom 
-comment of `call_processes.sql` file are included to help check, validate and update individual Domain data.
-![call_processes.sql comments and commands in repository](./assets/call_processes_part_2.png)
-(`call_processes.sql` in repository)
-
-### 8. Executing Stored Procedures
-The `call_processes.sql` file contains execution commands for each stored procedure and helpful functionality comments.
+`call_processes.sql` contains execution commands for each stored procedure and helpful functionality comments.
 ![call_processes.sql comments and commands in repository](./assets/call_processes_part_1.png)
+(`call_processes.sql` in repository)
+## Verify ServerNames using Command Line
+Log files imported from multiple domains require a ServerName value to properly filter and report data. The SQL SELECT and UPDATE statements in bottom 
+comment of `call_processes.sql` are included to help check, validate and update individual Domain data.
+![call_processes.sql comments and commands in repository](./assets/call_processes_part_2.png)
 ## Database Normalization
 Database normalization is the process of organizing data in a relational database to improve data integrity and reduce redundancy. 
 Normalization ensures that data is organized in a way that makes sense for the data model and attributes, and that the database functions efficiently.
