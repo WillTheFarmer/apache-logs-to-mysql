@@ -50,7 +50,7 @@ If importing multiple domains to properly filter & report data ALL records MUST 
 Use environment variables in Python to SET server_name & server_port COLUMNS during LOAD DATA for Common, Combined and Error formats.  
 
 Process_error_parse and process_access_parse STORED PROCEDURES will UPDATE server_name & server_port COLUMNs for formats that contain %v Format String.
-Once both parse STORED PROCEDURES are executed and environment variables in Python were used SQL statements should return NO RECORDS.
+After process_error_parse and process_access_parse execute and Environment Variables in Python were used both SQL statements should return NO RECORDS.
      SELECT l.server_name AS load_server_name 
        FROM apache_logs.load_access_combined l 
       WHERE l.server_name IS NULL; 
@@ -61,12 +61,12 @@ Once both parse STORED PROCEDURES are executed and environment variables in Pyth
 
 If SQL statements above return records UPDATES on import_file TABLE can be used after process_error_parse and process_access_parse STORED PROCEDURES.
 
-UPDATES must be executed before process_error_import or process_access_import STORED PROCEDURES. Below are examples based on imported log file name.
+These UPDATES must be executed before process_error_import or process_access_import STORED PROCEDURES. Below are examples based on imported log file name.
     UPDATE apache_logs.import_file SET server_name='farmfreshsoftware.com', server_port=443 WHERE server_name IS NULL AND name LIKE '%farmfreshsoftware%';
     UPDATE apache_logs.import_file SET server_name='farmwork.app', server_port=443 WHERE server_name IS NULL AND name LIKE '%farmwork%';
     UPDATE apache_logs.import_file SET server_name='ip255-255-255-255.us-east.com', server_port=443 WHERE server_name IS NULL AND name LIKE '%error%';
 
-Before executing process_error_import or process_access_import STORED PROCEDURES that both SQL statements should return NO RECORDS.
+Before executing process_error_import or process_access_import STORED PROCEDURES both SQL statements should return NO RECORDS.
      SELECT l.server_name AS load_server_name,
             f.server_name AS file_server_name 
        FROM apache_logs.load_access_combined l 
@@ -83,7 +83,7 @@ Before executing process_error_import or process_access_import STORED PROCEDURES
       WHERE l.server_name IS NULL 
         AND f.server_name IS NULL; 
  
-After executing process_error_import and process_access_import STORED PROCEDURES these SELECT statements should return NO RECORDS. 
+After executing process_error_import and process_access_import STORED PROCEDURES both SELECT statements should return NO RECORDS. 
    SELECT * FROM apache_logs.access_log WHERE servernameid IS NULL;
    SELECT * FROM apache_logs.error_log WHERE servernameid IS NULL;
 */
