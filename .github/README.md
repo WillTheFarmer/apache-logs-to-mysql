@@ -1,11 +1,12 @@
 # Apache Log Parser and Data Normalization Application
-ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema to automate importing Apache Access & Error files and normalizing data into database designed for reports & data analysis.
+ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema to automate importing Access & Error files and normalizing data into database designed for reports & data analysis.
 
 Runs on Windows, Linux and MacOS & tested with MySQL versions 8.0.39, 8.4.3, 9.0.0 & 9.1.0.
 
-Imports Access Logs in Apache LogFormats - ***common***, ***combined*** and ***vhost_combined*** & additional ***csv2mysql*** LogFormat defined below. 
+Imports Access Logs in LogFormats - ***common***, ***combined*** and ***vhost_combined*** & additional ***csv2mysql*** LogFormat defined below. 
 
-Imports Error Logs in Apache ***default*** ErrorLogFormat & ***additional*** ErrorLogFormat defined below performing data harmonization on Apache Codes & Messages, System Codes & Messages, and Log Messages to create a unified, standardized dataset. Error Log view images below.
+Imports Error Logs in ***default*** ErrorLogFormat & ***additional*** ErrorLogFormat defined below performing data harmonization on Apache Codes & Messages,
+System Codes & Messages, and Log Messages to create a unified, standardized dataset. Error Log view images below.
 
 Three options to associate ServerName & ServerPort with Access and Error logs missing `%v - canonical ServerName` and `%p - canonical ServerPort` Format Strings described below.
 
@@ -16,28 +17,33 @@ Database system designed to accommodate unlimited domains. Easy MySQL database i
 ![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
 Diagram created with Open-source database diagrams editor [chartdb/chartdb](https://github.com/chartdb/chartdb)
 ## Application Description
-This is a fast, reliable processing application with detailed logging and two stages of data parsing. First stage is performed in `LOAD DATA LOCAL INFILE` statements. Second stage is performed in `process_access_parse` and `process_error_parse` Stored Procedures.
+This is a fast, reliable processing application with detailed logging and two stages of data parsing. First stage is performed in `LOAD DATA LOCAL INFILE` statements. 
+Second stage is performed in `process_access_parse` and `process_error_parse` Stored Procedures.
 
-If required, data parsing can be customize in `process_access_parse` and `process_error_parse` Stored Procedures by adding or modifying `SQL UPDATE` statements.
+Python handles polling of log file folders and executing MySQL Database LOAD DATA, Stored Procedures, Stored Functions and SQL Statements. 
+Python drives the application but MySQL does all Data Manipulation & Processing.
 
-Python handles polling of log file folders and executing MySQL Database LOAD DATA statements, Stored Procedures, Stored Functions and SQL Statements. Python drives the application but MySQL does all Data Manipulation & Processing.
+Log files can be left in folders imported from for later reference. Application determines what files have been processed using `apache_logs.import_file` TABLE. 
+Each imported file has record with name, path, size, created, modified attributes inserted during `processLogs`. Application runs with no need for user interaction. 
 
-There is no need to move log files. Log files can be left in the folder they were imported from for later referencing. Application records what files have been processed in `apache_logs.import_file` TABLE. Application runs with no need for user interaction.
+Log-level variables can be set to display info messages in console or inserted into PM2 logs for every process step. 
+All import errors in Python `processLogs` (client) and MySQL Stored Procedures (server) are inserted into `apache_logs.import_error` TABLE.
+This is the only schema table that uses ENGINE=MYISAM to avoid TRANSACTION ROLLBACKS.
 
-Log-level variables can be set to display info messages in console or insert into PM2 logs for every process step. All import errors in Python processLogs (client) and MySQL Stored Procedures (server) are inserted into `apache_logs.import_error` TABLE. This is the only schema table that uses ENGINE=MYISAM to avoid TRANSACTION ROLLBACKS.
-
-Logging functionality, database design and table relationship contraints produce both physical integrity and logical integrity. This enables a complete audit trail providing ability to determine when, where and what file each record originated from.
+Logging functionality, database design and table relationship contraints produce both physical and logical integrity. 
+This enables a complete audit trail providing ability to determine when, where and what file each record originated from.
 
 All folder paths, filename patterns, logging, processing, MySQL connection setting variables are in .env file for easy installation and maintenance.
 
-Two Python modules can run in PM2 daemon process manager for 24/7 online processing. Client modules can be run on multiple computers feeding a single Server module simultaneous.
+Two Python modules can run in PM2 daemon process manager for 24/7 online processing. Client modules can run on multiple computers feeding a single Server module simultaneous.
 
 Application is developed with Python 3.12, MySQL and 4 Python modules. Modules are listed with Python Package Index link, install command for each platform & GitHub Repository link.
 ## MySQL Access Log View by Browser - 1 of 66 schema views
 MySQL View - apache_logs.access_ua_browser_family_list - data from LogFormat: combined & csv2mysql
 ![view-access_ua_browser_family_list.png](./assets/access_ua_browser_list.png)
 ## Four Supported Access Log Formats
-Apache uses same Standard Access LogFormats (***common***, ***combined***, ***vhost_combined***) on all 3 platforms. Each LogFormat adds 2 Format Strings to the prior. Format String descriptions are listed below each LogFormat. Information from: https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#logformat 
+Apache uses same Standard Access LogFormats (***common***, ***combined***, ***vhost_combined***) on all 3 platforms. Each LogFormat adds 2 Format Strings to the prior. 
+Format String descriptions are listed below each LogFormat. Information from: https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#logformat 
 ```
 LogFormat "%h %l %u %t \"%r\" %>s %O" common
 ```
@@ -95,7 +101,8 @@ LogFormat "%v,%p,%h,%l,%u,%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\"
 |%{VARNAME}C|ADDED - The contents of cookie VARNAME in request sent to server. Only version 0 cookies are fully supported. Format String is optional.|
 |%L|ADDED - The request log ID from the error log (or '-' if nothing has been logged to the error log for this request). Look for the matching error log line to see what request| caused what error.
 ## Two supported Error Log Formats
-Application processes Error Logs with ***default format*** for threaded MPMs (Multi-Processing Modules). If you're running Apache 2.4 on any platform and ErrorLogFormat is not defined in config files this is the Error Log format. Information from: https://httpd.apache.org/docs/2.4/mod/core.html#errorlogformat
+Application processes Error Logs with ***default format*** for threaded MPMs (Multi-Processing Modules). If running Apache 2.4 on any platform and ErrorLogFormat is not defined in config files this is the Error Log format.
+Information from: https://httpd.apache.org/docs/2.4/mod/core.html#errorlogformat
 ```
 ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i"
 ```
@@ -114,7 +121,8 @@ ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ re
 
 Application also processes Error Logs with ***additional format*** which adds:
  1) `%v - The canonical ServerName` - This is easiest way to identify error logs for each domain is add `%v` to ErrorLogFormat. 
- 2) `%L - Log ID of the request` - This is easiest way to associate Access record that created an Error record. Apache mod_unique_id.generate_log_id() only called when error occurs and will not cause performance degradation under error-free operations. 
+ 2) `%L - Log ID of the request` - This is easiest way to associate Access record that created an Error record. 
+ Apache mod_unique_id.generate_log_id() only called when error occurs and will not cause performance degradation under error-free operations. 
 
 ***Important:*** `Space` required on left-side of `Commas` as defined below:
 ```
@@ -133,13 +141,17 @@ In order to consolidate logs from multiple domains `%v - canonical ServerName` i
 
 Listed are different methods to associate ServerName and ServerPort to all Access and Error logs.
 
-1) Set `ERRORLOG_SERVERNAME`, `ERRORLOG_SERVERPORT`, `COMBINED_SERVERNAME`, `COMBINED_SERVERPORT` variables in .env file and uncomment `os.getenv` lines at top of `apacheLogs2MySQL.py`. By default, variables are defined and set to an empty string. Below is screenshot of `apacheLogs2MySQL.py` with commented `os.getenv` code. `server_name` and `server_port` COLUMNS of `load_error_default` and `load_access_combined` TABLES will be SET during Python `LOAD DATA LOCAL INFILE` execution.
+1) Set `ERRORLOG_SERVERNAME`, `ERRORLOG_SERVERPORT`, `COMBINED_SERVERNAME`, `COMBINED_SERVERPORT` variables in .env file and uncomment `os.getenv` lines at top of `apacheLogs2MySQL.py`. 
+By default, variables are defined and set to an empty string. 
+Below is screenshot of `apacheLogs2MySQL.py` with commented `os.getenv` code. `server_name` and `server_port` COLUMNS of `load_error_default` and `load_access_combined` TABLES will be SET during Python `LOAD DATA LOCAL INFILE` execution.
 
 ![load_settings_variables.png](./assets/load_settings_variables.png)
 
-2) Manually ***UPDATE*** `server_name` and `server_port` COLUMNS of `load_error_default` and `load_access_combined` TABLES after Python LOAD DATA and before STORED PROCEDURES `process_access_import` and `process_error_import`. Data Normalization is performed in import processes. 
+2) Manually ***UPDATE*** `server_name` and `server_port` COLUMNS of `load_error_default` and `load_access_combined` TABLES after Python LOAD DATA and before STORED PROCEDURES `process_access_import` and `process_error_import`. 
+Data Normalization is performed in import processes. 
 
-3) Populate `server_name` and `server_port` COLUMNS in `import_file` TABLE before import processes. This will populate all records associated with file. This option only updates records with NULL values in ***load_tables*** `server_name` and `server_port` COLUMNS while executing STORED PROCEDURES `process_access_import` and `process_error_import`. 
+3) Populate `server_name` and `server_port` COLUMNS in `import_file` TABLE before import processes. This will populate all records associated with file.
+This option only updates records with NULL values in ***load_tables*** `server_name` and `server_port` COLUMNS while executing STORED PROCEDURES `process_access_import` and `process_error_import`. 
 
 UPDATE commands to populate both Access and Error Logs if ***"Log File Names"*** are related to VirtualHost similar to:
 ```
