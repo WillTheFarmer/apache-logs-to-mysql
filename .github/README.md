@@ -14,7 +14,7 @@ Three options to associate ServerName & ServerPort with Access and Error logs mi
 
 Database system designed to accommodate unlimited domains. Easy installation steps below. 
 
-Complete Web management interface with Log Visualization [apache/echarts](https://github.com/apache/echarts) integration in development.
+A complete Web management interface with Log Visualization [apache/echarts](https://github.com/apache/echarts) integration in development. It will be released as a new repository.
 ## Entity Relationship Diagram of apache_logs schema tables
 ![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
 Diagram created with Open-source database diagrams editor [chartdb/chartdb](https://github.com/chartdb/chartdb)
@@ -37,7 +37,7 @@ This enables a complete audit trail providing ability to determine when, where a
 
 All folder paths, filename patterns, logging, processing, MySQL connection setting variables are in .env file for easy installation and maintenance.
 
-Two Python modules can run in PM2 daemon process manager for 24/7 online processing on multiple computers feeding a single Server module simultaneous.
+Two Python Client modules can run in PM2 daemon process manager for 24/7 online processing on multiple web servers feeding a single Server module simultaneous.
 
 Application is developed with Python 3.12, MySQL and 4 Python modules. Modules are listed with Python Package Index link, install command for each platform & GitHub Repository link.
 ## MySQL Access Log View by Browser - 1 of 66 schema views
