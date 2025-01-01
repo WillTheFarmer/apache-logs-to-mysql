@@ -252,7 +252,7 @@ ONLY files & records processed by current `processLogs function` execution.
 
 The second parameter enables Python Client modules to run simultaneously on multiple servers uploading to a single MySQL Sever `apache_logs` schema.
 
-`call_processes.sql` contains execution commands for each stored procedure. Comment areas have helpful SQL statements and functionality explanations.
+`call_processes.sql` contains execution commands for each stored procedure. Comment areas have helpful functionality explanations and SQL statements.
 ![call_processes.sql comments and commands in repository](./assets/call_processes_part_1.png)
 (`call_processes.sql` in repository)
 ## Verify ServerNames using Command Line
