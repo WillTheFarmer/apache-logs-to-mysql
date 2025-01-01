@@ -6,9 +6,9 @@ process_access_import - PARSED DATA normalization into 9 access attribute tables
 normalize_useragent - normalized Python parsed access_log_userAgent TABLE into 11 userAgent attribute tables.
 
 Each Stored Procudure has 2 parameters. 
-- IN in_processName VARCHAR(100) - indicates the LogFormat to process. 
+- IN in_processName VARCHAR(100) - LogFormat to process. 
 NOTE: For normalize_useragent parameter can be any string >= 8 characters. It is for reference use only
-- IN in_importLoadID VARCHAR(20) - indicates to importloadid to process. Valid values 'ALL' or a value converted to INTEGER=importloadid   
+- IN in_importLoadID VARCHAR(20) - importloadid to process. Valid values 'ALL' or a value converted to INTEGER=importloadid   
 NOTE: if in_importLoadID='ALL' ONLY importloadID records with import_load TABLE "completed" COLUMN NOT NULL will be processed.
 This avoids interfering with Python client modules uploading files at same time as server STORED PROCEDURES executing.
  
