@@ -176,7 +176,7 @@ Python module links & install command lines for each platform. Single quotes aro
 |[python-dotenv](https://pypi.org/project/python-dotenv/)|pip install python-dotenv|sudo apt-get install python3-dotenv|python3 -m pip install python-dotenv|[theskumar/python-dotenv](https://github.com/theskumar/python-dotenv)|
 
 ## Installation Instructions
-Steps are ordered to make installation smooth and straightforward. Application will be ready to import Apache logs in short order.
+Steps make installation quick and straightforward. Application will be ready to import Apache logs on completion.
 
 ### 1. MySQL Steps
 Before running `apachLogs2MySQL.sql` if User Account `root`@`localhost` does not exist on installation server open file and perform a ***Find and Replace*** using a User Account with DBA Role on installation server. Copy below:
