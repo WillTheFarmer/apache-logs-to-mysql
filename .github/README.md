@@ -147,8 +147,8 @@ Below is screenshot of `apacheLogs2MySQL.py` with commented `os.getenv` code. `s
 
 ![load_settings_variables.png](./assets/load_settings_variables.png)
 
-2) Manually ***UPDATE*** `server_name` and `server_port` COLUMNS of `load_error_default` and `load_access_combined` TABLES after Python LOAD DATA and before STORED PROCEDURES `process_access_import` and `process_error_import`. 
-Data Normalization is performed in import processes. 
+2) Manually ***UPDATE*** `server_name` and `server_port` COLUMNS of `load_error_default` and `load_access_combined` TABLES after STORED PROCEDURES `process_access_parse` and `process_error_parse` and before `process_access_import` and `process_error_import`. 
+ If `%v` or `%p` Format Strings exist parsing into `server_name` and `server_port` COLUMNS is performed in parse processes. Data Normalization is performed in import processes. 
 
 3) Populate `server_name` and `server_port` COLUMNS in `import_file` TABLE before import processes. This will populate all records associated with file.
 This option only updates records with NULL values in ***load_tables*** `server_name` and `server_port` COLUMNS while executing STORED PROCEDURES `process_access_import` and `process_error_import`. 
@@ -174,10 +174,10 @@ Python module links & install command lines for each platform. Single quotes aro
 |[python-dotenv](https://pypi.org/project/python-dotenv/)|pip install python-dotenv|sudo apt-get install python3-dotenv|python3 -m pip install python-dotenv|[theskumar/python-dotenv](https://github.com/theskumar/python-dotenv)|
 
 ## Installation Instructions
-Steps are ordered to make installation quick and straightforward. Application will be ready to import Apache logs in minutes.
+Steps are ordered to make installation smooth and straightforward. Application will be ready to import Apache logs in short order.
 
 ### 1. MySQL Steps
-Before running `apachLogs2MySQL.sql` if `root`@`localhost` does not exist open file and do a ***Find and Replace*** of User Account with a User Account with DBA Role on installation server. Copy below:
+Before running `apachLogs2MySQL.sql` if User Account `root`@`localhost` does not exist on installation server open file and perform a ***Find and Replace*** using a User Account with DBA Role on installation server. Copy below:
 ```
 root`@`localhost`
 ```
