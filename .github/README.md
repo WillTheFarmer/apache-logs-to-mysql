@@ -37,7 +37,7 @@ This enables a complete audit trail providing ability to determine when, where a
 
 All folder paths, filename patterns, logging, processing, MySQL connection setting variables are in .env file for easy installation and maintenance.
 
-Two Python modules can run in PM2 daemon process manager for 24/7 online processing. Client modules can run on multiple computers feeding a single Server module simultaneous.
+Two Python modules can run in PM2 daemon process manager for 24/7 online processing on multiple computers feeding a single Server module simultaneous.
 
 Application is developed with Python 3.12, MySQL and 4 Python modules. Modules are listed with Python Package Index link, install command for each platform & GitHub Repository link.
 ## MySQL Access Log View by Browser - 1 of 66 schema views
