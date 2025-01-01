@@ -12,7 +12,9 @@ Three options to associate ServerName & ServerPort with Access and Error logs mi
 
 4 LogFormats & 2 ErrorLogFormats can be loaded and 5 MySQL Stored Procedures can be processed in a single Python `ProcessLogs function` execution.
 
-Database system designed to accommodate unlimited domains. Easy installation steps below.
+Database system designed to accommodate unlimited domains. Easy installation steps below. 
+
+Complete Web management interface with Log Visualization [apache/echarts](https://github.com/apache/echarts) integration in development.
 ## Entity Relationship Diagram of apache_logs schema tables
 ![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
 Diagram created with Open-source database diagrams editor [chartdb/chartdb](https://github.com/chartdb/chartdb)

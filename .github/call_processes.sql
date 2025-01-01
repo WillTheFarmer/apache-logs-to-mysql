@@ -12,22 +12,22 @@ NOTE: For normalize_useragent parameter can be any string >= 8 characters. It is
 NOTE: if in_importLoadID='ALL' ONLY importloadID records with import_load TABLE "completed" COLUMN NOT NULL will be processed.
 This avoids interfering with Python client modules uploading files at same time as server STORED PROCEDURES executing.
  
-import_file TABLE - record of each access & error log file processed by Python processFiles. Each LOAD table reecord has importfileid COLUMN.
-import_load TABLE  - record for every execution of Python process. Each record contains information on LogFormat log files processed. 
-import_load TABLE "completed" COLUMN - is NULL an error occured. Refer to the import_error TABLE for error details.
-import_process TABLE - Each execution of each inserts a record into import_process TABLE with paremeters and process details.
-import_process TABLE "completed" COLUMN - is NULL an error occured. Refer to the import_error TABLE for error details.
-import_error TABLE - only table using ENGINE=MYISAM due to disregarding TRANSACTION ROLLBACK. Any errors in Python or MySQL is recorded in table. 
-
-Based on settings.env values of ERROR_PROCESS,COMBINED_PROCESS,VHOST_PROCESS,CSV2MYSQL_PROCESS and USERAGENT_PROCESS variables all 5 can be executed
-by Python apacheLogs2MySQL.py processLogs function Or only LOAD DATA can be executed by processLogs function and Stored Procedures executed at Server.
-
 LOAD DATA stage tables - load_access_combined, load_access_csv2mysql, load_access_vhost, load_error_default have a process_status COLUMN.
 process_status=0 - LOAD DATA tables loaded with raw log data
 process_status=1 - process_error_parse or process_access_parse executed on record
 process_status=2 - process_error_import or process_access_import executed on record
- 
-Commands below execute each Stored Procudure and process ALL importloadid based on process_status. Each VPS creates importloadid each time executed.
+
+import_file TABLE - record for every Access & Error file processed by Python processFiles. LOAD DATA tables have FOREIGN KEY (importfileid).
+import_load TABLE - record for every execution of Python process. Each record contains information on LogFormat log files processed. 
+import_load TABLE "completed" COLUMN - is NULL an error occured. Refer to the import_error TABLE for error details.
+import_process TABLE - record for every STORED PROCEDURE execution. Each record contains parameters and process details.
+import_process TABLE "completed" COLUMN - is NULL an error occured. Refer to the import_error TABLE for error details.
+import_error TABLE - only table using ENGINE=MYISAM due to disregarding TRANSACTION ROLLBACK. Any errors in Python or MySQL recorded in table. 
+
+Based on settings.env values of ERROR_PROCESS,COMBINED_PROCESS,VHOST_PROCESS,CSV2MYSQL_PROCESS and USERAGENT_PROCESS all 5 can be executed
+by Python apacheLogs2MySQL.py processLogs function OR only LOAD DATA can be executed by processLogs function & Stored Procedures executed separate.
+
+Commands execute each Stored Procedure & process ALL importloadid based on process_status. Each processLogs function executed creates importloadid.
 */
 USE apache_logs;
 
