@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# version 2.1.3 - 12/27/2024 - process improvements - see changelog
+# version 2.1.4 - 01/02/2025 - add import_device table - see changelog
 #
 # Copyright 2024 Will Raymond <farmfreshsoftware@gmail.com>
 #
@@ -114,16 +114,28 @@ def processLogs():
     start_time = time.time()
     print("ProcessLogs start: " + str(datetime.datetime.now()))
     conn = pymysql.connect(**db_params)
+    getImportDeviceID = ("SELECT apache_logs.importDeviceID('" + deviceid + 
+                         "', '"  + platformSystem + 
+                         "', '"  + platformMachine + 
+                         "', '"  + platformProcessor + "');")
+    importDeviceCursor = conn.cursor()
+    try:
+        importDeviceCursor.execute( getImportDeviceID )
+    except:
+        processError += 1
+        print(bcolors.ERROR + "ERROR - Function apache_logs.importDeviceID() failed" + bcolors.ENDC)
+        showWarnings = conn.show_warnings()
+        print(showWarnings)
+        importDeviceCursor.callproc("errorLoad",["Function apache_logs.importDeviceID()",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
+    importDeviceTupleID = importDeviceCursor.fetchall()
+    importDeviceID = importDeviceTupleID[0][0]
     getImportClientID = ("SELECT apache_logs.importClientID('" + ipaddress + 
-                         "', '" + deviceid + 
                          "', '"  + login + 
                          "', '"  + expandUser + 
-                         "', '"  + platformSystem + 
                          "', '"  + platformNode + 
                          "', '"  + platformRelease + 
                          "', '"  + platformVersion + 
-                         "', '"  + platformMachine + 
-                         "', '"  + platformProcessor + "');")
+                         "', '"  + str(importDeviceID) + "');")
     importClientCursor = conn.cursor()
     try:
         importClientCursor.execute( getImportClientID )
@@ -177,7 +189,7 @@ def processLogs():
         for errorFile in glob.glob(errorlog_path, recursive=errorlog_recursive):
             errorFileCount += 1
             errorLoadFile = errorFile.replace(os.sep, os.sep+os.sep)
-            errorExistsSQL = "SELECT apache_logs.importFileExists('" + errorLoadFile + "');"
+            errorExistsSQL = "SELECT apache_logs.importFileExists('" + errorLoadFile + "', '"  + str(importDeviceID) + "');"
             try:
                 errorExistsCursor.execute( errorExistsSQL )
             except:
@@ -201,7 +213,9 @@ def processLogs():
                                   "', '" + errorLoadSize + 
                                   "', '"  + errorLoadCreated + 
                                   "', '"  + errorLoadModified + 
-                                  "', '"  + str(importLoadID) + "', '5' );")
+                                  "', '"  + str(importDeviceID) + 
+                                  "', '"  + str(importLoadID) + 
+                                  "', '5' );")
                 try:
                     errorInsertCursor.execute( errorInsertSQL )
                 except:
@@ -273,7 +287,7 @@ def processLogs():
         for combinedFile in glob.glob(combined_path, recursive=combined_recursive):
             combinedFileCount += 1
             combinedLoadFile = combinedFile.replace(os.sep, os.sep+os.sep)
-            combinedExistsSQL = "SELECT apache_logs.importFileExists('" + combinedLoadFile + "');"
+            combinedExistsSQL = "SELECT apache_logs.importFileExists('" + combinedLoadFile + "', '"  + str(importDeviceID) + "');"
             try:
                 combinedExistsCursor.execute( combinedExistsSQL )
             except:
@@ -297,7 +311,9 @@ def processLogs():
                                   "', '" + combinedLoadSize + 
                                   "', '"  + combinedLoadCreated + 
                                   "', '"  + combinedLoadModified + 
-                                  "', '"  + str(importLoadID) + "', '2' );")
+                                  "', '"  + str(importDeviceID) + 
+                                  "', '"  + str(importLoadID) + 
+                                  "', '2' );")
                 try:
                     combinedInsertCursor.execute( combinedInsertSQL )
                 except:
@@ -369,7 +385,7 @@ def processLogs():
         for vhostFile in glob.glob(vhost_path, recursive=vhost_recursive):
             vhostFileCount += 1
             vhostLoadFile = vhostFile.replace(os.sep, os.sep+os.sep)
-            vhostExistsSQL = "SELECT apache_logs.importFileExists('" + vhostLoadFile +"');"
+            vhostExistsSQL = "SELECT apache_logs.importFileExists('" + vhostLoadFile + "', '"  + str(importDeviceID) + "');"
             try:
                 vhostExistsCursor.execute( vhostExistsSQL )
             except:
@@ -393,7 +409,9 @@ def processLogs():
                                   "', '" + vhostLoadSize + 
                                   "', '"  + vhostLoadCreated + 
                                   "', '"  + vhostLoadModified + 
-                                  "', '"  + str(importLoadID) + "', '3' );")
+                                  "', '"  + str(importDeviceID) + 
+                                  "', '"  + str(importLoadID) + 
+                                  "', '3' );")
                 try:
                     vhostInsertCursor.execute( vhostInsertSQL )
                 except:
@@ -460,7 +478,7 @@ def processLogs():
         for csv2mysqlFile in glob.glob(csv2mysql_path, recursive=csv2mysql_recursive):
             csv2mysqlFileCount += 1
             csv2mysqlLoadFile = csv2mysqlFile.replace(os.sep, os.sep+os.sep)
-            csv2mysqlExistsSQL = "SELECT apache_logs.importFileExists('" + csv2mysqlLoadFile + "');"
+            csv2mysqlExistsSQL = "SELECT apache_logs.importFileExists('" + csv2mysqlLoadFile + "', '"  + str(importDeviceID) + "');"
             try:
                 csv2mysqlExistsCursor.execute( csv2mysqlExistsSQL )
             except:
@@ -484,7 +502,9 @@ def processLogs():
                                   "', '" + csv2mysqlLoadSize + 
                                   "', '"  + csv2mysqlLoadCreated + 
                                   "', '"  + csv2mysqlLoadModified + 
-                                  "', '"  + str(importLoadID) + "', '4' );")
+                                  "', '"  + str(importDeviceID) + 
+                                  "', '"  + str(importLoadID) + 
+                                  "', '4' );")
                 try:
                     csv2mysqlInsertCursor.execute( csv2mysqlInsertSQL )
                 except:

@@ -10,7 +10,7 @@
 -- # See the License for the specific language governing permissions and
 -- # limitations under the License.
 -- #
--- # version 2.1.3 - 12/27/2024 - process improvements - see changelog
+-- # version 2.1.4 - 01/02/2025 - add import_device table - see changelog
 -- #
 -- # Copyright 2024 Will Raymond <farmfreshsoftware@gmail.com>
 -- #
@@ -2193,19 +2193,18 @@ DROP TABLE IF EXISTS `import_client`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `import_client` (
   `id` int NOT NULL AUTO_INCREMENT,
+  `importdeviceid` int NOT NULL,
   `ipaddress` varchar(50) NOT NULL,
-  `deviceid` varchar(200) NOT NULL,
-  `login` varchar(200) NOT NULL,
-  `expandUser` varchar(200) NOT NULL,
-  `platformSystem` varchar(100) NOT NULL,
+  `login` varchar(150) NOT NULL,
+  `expandUser` varchar(175) NOT NULL,
   `platformNode` varchar(100) NOT NULL,
   `platformRelease` varchar(100) NOT NULL,
-  `platformVersion` varchar(150) NOT NULL,
-  `platformMachine` varchar(100) NOT NULL,
-  `platformProcessor` varchar(150) NOT NULL,
+  `platformVersion` varchar(175) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table keeps track of all application Windows, Linux and Mac clients loading logs to server application and long with logon and IP address information. It is important to know who is loading logs.';
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `U_import_client` (`importdeviceid`,`ipaddress`,`login`,`expandUser`,`platformNode`,`platformRelease`,`platformVersion`),
+  CONSTRAINT `F_importclient_importdevice` FOREIGN KEY (`importdeviceid`) REFERENCES `import_device` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table tracks network, OS release, logon and IP address information. It is important to know who is loading logs.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2215,6 +2214,34 @@ CREATE TABLE `import_client` (
 LOCK TABLES `import_client` WRITE;
 /*!40000 ALTER TABLE `import_client` DISABLE KEYS */;
 /*!40000 ALTER TABLE `import_client` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `import_device`
+--
+
+DROP TABLE IF EXISTS `import_device`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `import_device` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `deviceid` varchar(200) NOT NULL,
+  `platformSystem` varchar(100) NOT NULL,
+  `platformMachine` varchar(100) NOT NULL,
+  `platformProcessor` varchar(150) NOT NULL,
+  `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `U_import_device` (`deviceid`,`platformSystem`,`platformMachine`,`platformProcessor`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table tracks unique Windows, Linux and Mac devices loading logs to server application.';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `import_device`
+--
+
+LOCK TABLES `import_device` WRITE;
+/*!40000 ALTER TABLE `import_device` DISABLE KEYS */;
+/*!40000 ALTER TABLE `import_device` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -2259,7 +2286,8 @@ DROP TABLE IF EXISTS `import_file`;
 CREATE TABLE `import_file` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(300) NOT NULL,
-  `importloadid` int DEFAULT NULL,
+  `importdeviceid` int NOT NULL,
+  `importloadid` int NOT NULL,
   `parseprocessid` int DEFAULT NULL,
   `importprocessid` int DEFAULT NULL,
   `filesize` bigint NOT NULL,
@@ -2272,9 +2300,11 @@ CREATE TABLE `import_file` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `U_import_file_name` (`name`),
   KEY `F_importfile_importformat` (`importformatid`),
+  KEY `F_importfile_importdevice` (`importdeviceid`),
   KEY `F_importfile_importload` (`importloadid`),
   KEY `F_importfile_parseprocess` (`parseprocessid`),
   KEY `F_importfile_importprocess` (`importprocessid`),
+  CONSTRAINT `F_importfile_importdevice` FOREIGN KEY (`importdeviceid`) REFERENCES `import_device` (`id`),
   CONSTRAINT `F_importfile_importformat` FOREIGN KEY (`importformatid`) REFERENCES `import_format` (`id`),
   CONSTRAINT `F_importfile_importload` FOREIGN KEY (`importloadid`) REFERENCES `import_load` (`id`),
   CONSTRAINT `F_importfile_importprocess` FOREIGN KEY (`importprocessid`) REFERENCES `import_process` (`id`),
@@ -2314,7 +2344,7 @@ CREATE TABLE `import_format` (
 
 LOCK TABLES `import_format` WRITE;
 /*!40000 ALTER TABLE `import_format` DISABLE KEYS */;
-INSERT INTO `import_format` VALUES (1,'common',NULL,'2024-12-27 12:55:32'),(2,'combined',NULL,'2024-12-27 12:55:32'),(3,'vhost',NULL,'2024-12-27 12:55:32'),(4,'csc2mysql',NULL,'2024-12-27 12:55:32'),(5,'error_default',NULL,'2024-12-27 12:55:32'),(6,'error_vhost',NULL,'2024-12-27 12:55:32');
+INSERT INTO `import_format` VALUES (1,'common',NULL,'2025-01-02 04:21:42'),(2,'combined',NULL,'2025-01-02 04:21:42'),(3,'vhost',NULL,'2025-01-02 04:21:42'),(4,'csc2mysql',NULL,'2025-01-02 04:21:42'),(5,'error_default',NULL,'2025-01-02 04:21:42'),(6,'error_vhost',NULL,'2025-01-02 04:21:42');
 /*!40000 ALTER TABLE `import_format` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2327,7 +2357,7 @@ DROP TABLE IF EXISTS `import_load`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `import_load` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `importclientid` int DEFAULT NULL,
+  `importclientid` int NOT NULL,
   `errorLogCount` int DEFAULT NULL,
   `errorLogLoaded` int DEFAULT NULL,
   `errorLogParsed` int DEFAULT NULL,
@@ -2412,12 +2442,13 @@ CREATE TABLE `import_server` (
   `id` int NOT NULL AUTO_INCREMENT,
   `dbuser` varchar(255) NOT NULL,
   `dbhost` varchar(255) NOT NULL,
-  `dbversion` varchar(255) NOT NULL,
-  `dbsystem` varchar(255) NOT NULL,
-  `dbmachine` varchar(255) NOT NULL,
-  `serveruuid` varchar(255) NOT NULL,
+  `dbversion` varchar(55) NOT NULL,
+  `dbsystem` varchar(55) NOT NULL,
+  `dbmachine` varchar(55) NOT NULL,
+  `serveruuid` varchar(75) NOT NULL,
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `U_import_server` (`dbuser`,`dbhost`,`dbversion`,`dbsystem`,`dbmachine`,`serveruuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Table for keeping track of log processing servers and login information.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -2783,7 +2814,7 @@ UNLOCK TABLES;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `access_cookieID`(tcCookie varchar(400)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `access_cookieID`(in_Cookie varchar(400)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE cookie_ID INTEGER DEFAULT null;
@@ -2791,9 +2822,9 @@ BEGIN
     SELECT id 
     INTO cookie_ID
     FROM apache_logs.access_log_cookie
-    WHERE name = tcCookie;
+    WHERE name = in_Cookie;
     IF cookie_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_cookie (name) VALUES (tcCookie);
+        INSERT INTO apache_logs.access_log_cookie (name) VALUES (in_Cookie);
         SET cookie_ID = LAST_INSERT_ID();
     END IF;
     RETURN cookie_ID;
@@ -2813,7 +2844,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `access_remoteLogNameID`(tcRemoteLogName varchar(150)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `access_remoteLogNameID`(in_RemoteLogName varchar(150)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE remoteLogName_ID INTEGER DEFAULT null;
@@ -2821,9 +2852,9 @@ BEGIN
     SELECT id 
     INTO remoteLogName_ID
     FROM apache_logs.access_log_remotelogname
-    WHERE name = tcRemoteLogName;
+    WHERE name = in_RemoteLogName;
     IF remoteLogName_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_remotelogname (name) VALUES (tcRemoteLogName);
+        INSERT INTO apache_logs.access_log_remotelogname (name) VALUES (in_RemoteLogName);
         SET remoteLogName_ID = LAST_INSERT_ID();
     END IF;
     RETURN remoteLogName_ID;
@@ -2843,7 +2874,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `access_remoteUserID`(tcRemoteUser varchar(150)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `access_remoteUserID`(in_RemoteUser varchar(150)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE remoteUser_ID INTEGER DEFAULT null;
@@ -2851,9 +2882,9 @@ BEGIN
     SELECT id 
     INTO remoteUser_ID
     FROM apache_logs.access_log_remoteuser
-    WHERE name = tcRemoteUser;
+    WHERE name = in_RemoteUser;
     IF remoteUser_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_remoteuser (name) VALUES (tcRemoteUser);
+        INSERT INTO apache_logs.access_log_remoteuser (name) VALUES (in_RemoteUser);
         SET remoteUser_ID = LAST_INSERT_ID();
     END IF;
     RETURN remoteUser_ID;
@@ -2873,7 +2904,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `access_reqMethodID`(tcReqMethod varchar(40)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `access_reqMethodID`(in_ReqMethod varchar(40)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE reqMethod_ID INTEGER DEFAULT null;
@@ -2881,9 +2912,9 @@ BEGIN
     SELECT id 
     INTO reqMethod_ID
     FROM apache_logs.access_log_reqmethod
-    WHERE name = tcReqMethod;
+    WHERE name = in_ReqMethod;
     IF reqMethod_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_reqmethod (name) VALUES (tcReqMethod);
+        INSERT INTO apache_logs.access_log_reqmethod (name) VALUES (in_ReqMethod);
         SET reqMethod_ID = LAST_INSERT_ID();
     END IF;
     RETURN reqMethod_ID;
@@ -2903,7 +2934,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `access_reqProtocolID`(tcReqProtocol varchar(20)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `access_reqProtocolID`(in_ReqProtocol varchar(20)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE reqProtocol_ID INTEGER DEFAULT null;
@@ -2911,10 +2942,10 @@ BEGIN
     SELECT id 
     INTO reqProtocol_ID
     FROM apache_logs.access_log_reqprotocol
-    WHERE name = tcReqProtocol;
+    WHERE name = in_ReqProtocol;
     IF reqProtocol_ID IS NULL THEN
         INSERT INTO apache_logs.access_log_reqprotocol (name)
-            VALUES (tcReqProtocol);
+            VALUES (in_ReqProtocol);
         SET reqProtocol_ID = LAST_INSERT_ID();
     END IF;
     RETURN reqProtocol_ID;
@@ -2934,7 +2965,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `access_reqQueryID`(tcReqQuery varchar(2000)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `access_reqQueryID`(in_ReqQuery varchar(2000)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE reqQuery_ID INTEGER DEFAULT null;
@@ -2942,9 +2973,9 @@ BEGIN
     SELECT id 
     INTO reqQuery_ID
     FROM apache_logs.access_log_reqquery
-    WHERE name = tcReqQuery;
+    WHERE name = in_ReqQuery;
     IF reqQuery_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_reqquery (name) VALUES (tcReqQuery);
+        INSERT INTO apache_logs.access_log_reqquery (name) VALUES (in_ReqQuery);
         SET reqQuery_ID = LAST_INSERT_ID();
     END IF;
     RETURN reqQuery_ID;
@@ -2964,7 +2995,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `access_reqStatusID`(tnReqStatus INTEGER) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `access_reqStatusID`(tnReqStatus INTEGER) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE reqStatus_ID INTEGER DEFAULT null;
@@ -2994,7 +3025,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `access_reqUriID`(tcReqUri varchar(2000)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `access_reqUriID`(in_ReqUri varchar(2000)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE reqUri_ID INTEGER DEFAULT null;
@@ -3002,9 +3033,9 @@ BEGIN
     SELECT id 
     INTO reqUri_ID
     FROM apache_logs.access_log_requri
-    WHERE name = tcReqUri;
+    WHERE name = in_ReqUri;
     IF reqUri_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_requri (name) VALUES (tcReqUri);
+        INSERT INTO apache_logs.access_log_requri (name) VALUES (in_ReqUri);
         SET reqUri_ID = LAST_INSERT_ID();
     END IF;
     RETURN reqUri_ID;
@@ -3024,7 +3055,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `access_uaBrowserFamilyID`(tcUa_browser_family varchar(300)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `access_uaBrowserFamilyID`(in_Ua_browser_family varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_browser_family_ID INTEGER DEFAULT null;
@@ -3032,9 +3063,9 @@ BEGIN
     SELECT id 
     INTO ua_browser_family_ID
     FROM apache_logs.access_log_ua_browser_family
-    WHERE name = tcUa_browser_family;
+    WHERE name = in_Ua_browser_family;
     IF ua_browser_family_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_ua_browser_family (name) VALUES (tcUa_browser_family);
+        INSERT INTO apache_logs.access_log_ua_browser_family (name) VALUES (in_Ua_browser_family);
         SET ua_browser_family_ID = LAST_INSERT_ID();
     END IF;
     RETURN ua_browser_family_ID;
@@ -3054,7 +3085,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `access_uaBrowserID`(tcUa_browser varchar(300)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `access_uaBrowserID`(in_Ua_browser varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_browser_ID INTEGER DEFAULT null;
@@ -3062,9 +3093,9 @@ BEGIN
     SELECT id 
     INTO ua_browser_ID
     FROM apache_logs.access_log_ua_browser
-    WHERE name = tcUa_browser;
+    WHERE name = in_Ua_browser;
     IF ua_browser_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_ua_browser (name) VALUES (tcUa_browser);
+        INSERT INTO apache_logs.access_log_ua_browser (name) VALUES (in_Ua_browser);
         SET ua_browser_ID = LAST_INSERT_ID();
     END IF;
     RETURN ua_browser_ID;
@@ -3084,7 +3115,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `access_uaBrowserVersionID`(tcUa_browser_version varchar(300)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `access_uaBrowserVersionID`(in_Ua_browser_version varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_browser_version_ID INTEGER DEFAULT null;
@@ -3092,9 +3123,9 @@ BEGIN
     SELECT id 
     INTO ua_browser_version_ID
     FROM apache_logs.access_log_ua_browser_version
-    WHERE name = tcUa_browser_version;
+    WHERE name = in_Ua_browser_version;
     IF ua_browser_version_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_ua_browser_version (name) VALUES (tcUa_browser_version);
+        INSERT INTO apache_logs.access_log_ua_browser_version (name) VALUES (in_Ua_browser_version);
         SET ua_browser_version_ID = LAST_INSERT_ID();
     END IF;
     RETURN ua_browser_version_ID;
@@ -3114,7 +3145,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `access_uaDeviceBrandID`(tcUa_device_brand varchar(300)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `access_uaDeviceBrandID`(in_Ua_device_brand varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_device_brand_ID INTEGER DEFAULT null;
@@ -3122,9 +3153,9 @@ BEGIN
     SELECT id 
     INTO ua_device_brand_ID
     FROM apache_logs.access_log_ua_device_brand
-    WHERE name = tcUa_device_brand;
+    WHERE name = in_Ua_device_brand;
     IF ua_device_brand_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_ua_device_brand (name) VALUES (tcUa_device_brand);
+        INSERT INTO apache_logs.access_log_ua_device_brand (name) VALUES (in_Ua_device_brand);
         SET ua_device_brand_ID = LAST_INSERT_ID();
     END IF;
     RETURN ua_device_brand_ID;
@@ -3144,7 +3175,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `access_uaDeviceFamilyID`(tcUa_device_family varchar(300)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `access_uaDeviceFamilyID`(in_Ua_device_family varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_device_family_ID INTEGER DEFAULT null;
@@ -3152,9 +3183,9 @@ BEGIN
     SELECT id 
     INTO ua_device_family_ID
     FROM apache_logs.access_log_ua_device_family
-    WHERE name = tcUa_device_family;
+    WHERE name = in_Ua_device_family;
     IF ua_device_family_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_ua_device_family (name) VALUES (tcUa_device_family);
+        INSERT INTO apache_logs.access_log_ua_device_family (name) VALUES (in_Ua_device_family);
         SET ua_device_family_ID = LAST_INSERT_ID();
     END IF;
     RETURN ua_device_family_ID;
@@ -3174,7 +3205,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `access_uaDeviceID`(tcUa_device varchar(300)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `access_uaDeviceID`(in_Ua_device varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_device_ID INTEGER DEFAULT null;
@@ -3182,9 +3213,9 @@ BEGIN
     SELECT id 
     INTO ua_device_ID
     FROM apache_logs.access_log_ua_device
-    WHERE name = tcUa_device;
+    WHERE name = in_Ua_device;
     IF ua_device_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_ua_device (name) VALUES (tcUa_device);
+        INSERT INTO apache_logs.access_log_ua_device (name) VALUES (in_Ua_device);
         SET ua_device_ID = LAST_INSERT_ID();
     END IF;
     RETURN ua_device_ID;
@@ -3204,7 +3235,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `access_uaDeviceModelID`(tcUa_device_model varchar(300)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `access_uaDeviceModelID`(in_Ua_device_model varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_device_model_ID INTEGER DEFAULT null;
@@ -3212,9 +3243,9 @@ BEGIN
     SELECT id 
     INTO ua_device_model_ID
     FROM apache_logs.access_log_ua_device_model
-    WHERE name = tcUa_device_model;
+    WHERE name = in_Ua_device_model;
     IF ua_device_model_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_ua_device_model (name) VALUES (tcUa_device_model);
+        INSERT INTO apache_logs.access_log_ua_device_model (name) VALUES (in_Ua_device_model);
         SET ua_device_model_ID = LAST_INSERT_ID();
     END IF;
     RETURN ua_device_model_ID;
@@ -3234,7 +3265,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `access_uaID`(tcUa varchar(300)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `access_uaID`(in_Ua varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_ID INTEGER DEFAULT null;
@@ -3242,9 +3273,9 @@ BEGIN
     SELECT id 
     INTO ua_ID
     FROM apache_logs.access_log_ua
-    WHERE name = tcUa;
+    WHERE name = in_Ua;
     IF ua_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_ua (name) VALUES (tcUa);
+        INSERT INTO apache_logs.access_log_ua (name) VALUES (in_Ua);
         SET ua_ID = LAST_INSERT_ID();
     END IF;
     RETURN ua_ID;
@@ -3264,7 +3295,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `access_uaOsFamilyID`(tcUa_os_family varchar(300)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `access_uaOsFamilyID`(in_Ua_os_family varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_os_family_ID INTEGER DEFAULT null;
@@ -3272,9 +3303,9 @@ BEGIN
     SELECT id 
     INTO ua_os_family_ID
     FROM apache_logs.access_log_ua_os_family
-    WHERE name = tcUa_os_family;
+    WHERE name = in_Ua_os_family;
     IF ua_os_family_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_ua_os_family (name) VALUES (tcUa_os_family);
+        INSERT INTO apache_logs.access_log_ua_os_family (name) VALUES (in_Ua_os_family);
         SET ua_os_family_ID = LAST_INSERT_ID();
     END IF;
     RETURN ua_os_family_ID;
@@ -3294,7 +3325,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `access_uaOsID`(tcUa_os varchar(300)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `access_uaOsID`(in_Ua_os varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_os_ID INTEGER DEFAULT null;
@@ -3302,9 +3333,9 @@ BEGIN
     SELECT id 
     INTO ua_os_ID
     FROM apache_logs.access_log_ua_os
-    WHERE name = tcUa_os;
+    WHERE name = in_Ua_os;
     IF ua_os_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_ua_os (name) VALUES (tcUa_os);
+        INSERT INTO apache_logs.access_log_ua_os (name) VALUES (in_Ua_os);
         SET ua_os_ID = LAST_INSERT_ID();
     END IF;
     RETURN ua_os_ID;
@@ -3324,7 +3355,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `access_uaOsVersionID`(tcUa_os_version varchar(300)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `access_uaOsVersionID`(in_Ua_os_version varchar(300)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE ua_os_version_ID INTEGER DEFAULT null;
@@ -3332,9 +3363,9 @@ BEGIN
     SELECT id 
     INTO ua_os_version_ID
     FROM apache_logs.access_log_ua_os_version
-    WHERE name = tcUa_os_version;
+    WHERE name = in_Ua_os_version;
     IF ua_os_version_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_ua_os_version (name) VALUES (tcUa_os_version);
+        INSERT INTO apache_logs.access_log_ua_os_version (name) VALUES (in_Ua_os_version);
         SET ua_os_version_ID = LAST_INSERT_ID();
     END IF;
     RETURN ua_os_version_ID;
@@ -3354,7 +3385,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `access_userAgentID`(tcUserAgent varchar(2000)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `access_userAgentID`(in_UserAgent varchar(2000)) RETURNS int
     READS SQL DATA
 BEGIN
     DECLARE userAgent_ID INTEGER DEFAULT null;
@@ -3362,9 +3393,9 @@ BEGIN
     SELECT id 
     INTO userAgent_ID
     FROM apache_logs.access_log_useragent
-    WHERE name = tcUserAgent;
+    WHERE name = in_UserAgent;
     IF userAgent_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_useragent (name) VALUES (tcUserAgent);
+        INSERT INTO apache_logs.access_log_useragent (name) VALUES (in_UserAgent);
         SET userAgent_ID = LAST_INSERT_ID();
     END IF;
     RETURN userAgent_ID;
@@ -3384,7 +3415,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `error_apacheCodeID`(logapacheCode varchar(400)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `error_apacheCodeID`(logapacheCode varchar(400)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE logapacheCodeID INTEGER DEFAULT null;
@@ -3414,7 +3445,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `error_apacheMessageID`(logapacheMessage varchar(400)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `error_apacheMessageID`(logapacheMessage varchar(400)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE logapacheMessageID INTEGER DEFAULT null;
@@ -3444,7 +3475,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `error_logLevelID`(loglevel varchar(100)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `error_logLevelID`(loglevel varchar(100)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE logLevelID INTEGER DEFAULT null;
@@ -3474,7 +3505,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `error_logMessageID`(logmessage varchar(500)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `error_logMessageID`(logmessage varchar(500)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE logmessageID INTEGER DEFAULT null;
@@ -3504,7 +3535,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `error_moduleID`(logmodule varchar(100)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `error_moduleID`(logmodule varchar(100)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE logmoduleID INTEGER DEFAULT null;
@@ -3534,7 +3565,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `error_processID`(logprocessid varchar(100)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `error_processID`(logprocessid varchar(100)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE logprocess_ID INTEGER DEFAULT null;
@@ -3564,7 +3595,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `error_systemCodeID`(logsystemCode varchar(400)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `error_systemCodeID`(logsystemCode varchar(400)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE logsystemCodeID INTEGER DEFAULT null;
@@ -3594,7 +3625,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `error_systemMessageID`(logsystemMessage varchar(400)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `error_systemMessageID`(logsystemMessage varchar(400)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE logsystemMessageID INTEGER DEFAULT null;
@@ -3624,7 +3655,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `error_threadID`(logthreadid varchar(100)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `error_threadID`(logthreadid varchar(100)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE logthread_ID INTEGER DEFAULT null;
@@ -3654,66 +3685,110 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `importClientID`(
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `importClientID`(
   in_ipaddress VARCHAR(50),
-  in_deviceid VARCHAR(200),
-  in_login VARCHAR(200),
-  in_expandUser VARCHAR(200),
-  in_platformSystem VARCHAR(100),
+  in_login VARCHAR(150),
+  in_expandUser VARCHAR(175),
   in_platformNode VARCHAR(100),
   in_platformRelease VARCHAR(100),
-  in_platformVersion VARCHAR(150),
+  in_platformVersion VARCHAR(175),
+  in_importdevice_id varchar(30)) RETURNS int
+    READS SQL DATA
+BEGIN
+  DECLARE e1 INT UNSIGNED;
+  DECLARE e2, e3 VARCHAR(128);
+  DECLARE importClient_ID INTEGER DEFAULT null;
+  DECLARE importDevice_ID INTEGER DEFAULT null;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+	BEGIN
+    GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
+		CALL apache_logs.errorProcess('importclientID', e1, e2, e3, 'apache_logs', 'apachelogs2mysql.py', null, null);
+	END;
+  IF NOT CONVERT(in_importdevice_id, UNSIGNED) = 0 THEN
+	  SET importDevice_ID = CONVERT(in_importdevice_id, UNSIGNED);
+  END IF;
+  SELECT id
+    INTO importClient_ID
+    FROM apache_logs.import_client
+   WHERE ipaddress = in_ipaddress
+     AND login = in_login
+     AND expandUser = in_expandUser
+     AND platformNode = in_platformNode
+     AND platformRelease = in_platformRelease
+     AND platformVersion = in_platformVersion
+     AND importdeviceid = importDevice_ID;
+  IF importClient_ID IS NULL THEN
+  	INSERT INTO apache_logs.import_client 
+      (ipaddress,
+      login,
+      expandUser,
+      platformNode,
+      platformRelease,
+      platformVersion,
+      importdeviceid)
+    VALUES
+      (in_ipaddress,
+      in_login,
+      in_expandUser,
+      in_platformNode,
+      in_platformRelease,
+      in_platformVersion,
+      importDevice_ID);
+	  SET importClient_ID = LAST_INSERT_ID();
+  END IF;
+  RETURN importClient_ID;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP FUNCTION IF EXISTS `importDeviceID` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = cp850 */ ;
+/*!50003 SET character_set_results = cp850 */ ;
+/*!50003 SET collation_connection  = cp850_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `importDeviceID`(
+  in_deviceid VARCHAR(200),
+  in_platformSystem VARCHAR(100),
   in_platformMachine VARCHAR(100),
   in_platformProcessor VARCHAR(150)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE e1 INT UNSIGNED;
   DECLARE e2, e3 VARCHAR(128);
-  DECLARE importClient_ID INTEGER DEFAULT null;
+  DECLARE importDevice_ID INTEGER DEFAULT null;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION 
 	BEGIN
     GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
-		CALL apache_logs.errorProcess('importclientID', e1, e2, e3, 'apache_logs', 'apachelogs2mysql.py', null, null);
+		CALL apache_logs.errorProcess('importdeviceID', e1, e2, e3, 'apache_logs', 'apachelogs2mysql.py', null, null);
 	END;
   SELECT id
-    INTO importClient_ID
-    FROM apache_logs.import_client
-   WHERE ipaddress = in_ipaddress
-     AND deviceid = in_deviceid
-     AND login = in_login
-     AND expandUser = in_expandUser
+    INTO importDevice_ID
+    FROM apache_logs.import_device
+   WHERE deviceid = in_deviceid
      AND platformSystem = in_platformSystem
-     AND platformNode = in_platformNode
-     AND platformRelease = in_platformRelease
-     AND platformVersion = in_platformVersion
      AND platformMachine = in_platformMachine
      AND platformProcessor = in_platformProcessor;
-  IF importClient_ID IS NULL THEN
-  	INSERT INTO apache_logs.import_client 
-      (ipaddress,
-      deviceid,
-      login,
-      expandUser,
+  IF importDevice_ID IS NULL THEN
+  	INSERT INTO apache_logs.import_device 
+      (deviceid,
       platformSystem,
-      platformNode,
-      platformRelease,
-      platformVersion,
       platformMachine,
       platformProcessor)
     VALUES
-      (in_ipaddress,
-      in_deviceid,
-      in_login,
-      in_expandUser,
+      (in_deviceid,
       in_platformSystem,
-      in_platformNode,
-      in_platformRelease,
-      in_platformVersion,
       in_platformMachine,
       in_platformProcessor);
-	  SET importClient_ID = LAST_INSERT_ID();
+	  SET importDevice_ID = LAST_INSERT_ID();
   END IF;
-  RETURN importClient_ID;
+  RETURN importDevice_ID;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -3730,7 +3805,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `importFileCheck`(importfileid INTEGER,
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `importFileCheck`(importfileid INTEGER,
   processid INTEGER,
   processType VARCHAR(10)) RETURNS int
     READS SQL DATA
@@ -3805,21 +3880,27 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `importFileExists`(importFile varchar(300)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `importFileExists`(in_importFile varchar(300),
+   in_importdevice_id varchar(30)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE e1 INT UNSIGNED;
   DECLARE e2, e3 VARCHAR(128);
   DECLARE importFileID INTEGER DEFAULT null;
+  DECLARE importDevice_ID INTEGER DEFAULT null;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION 
 	BEGIN
     GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
     CALL apache_logs.errorProcess('importFileExists', e1, e2, e3, 'apache_logs', 'apachelogs2mysql.py', null, null );
 	END;
+  IF NOT CONVERT(in_importdevice_id, UNSIGNED) = 0 THEN
+	  SET importDevice_ID = CONVERT(in_importdevice_id, UNSIGNED);
+  END IF;
   SELECT id
     INTO importFileID
     FROM apache_logs.import_file
-    WHERE name = importFile;
+    WHERE name = in_importFile
+      AND importdeviceid = importDevice_ID;
   RETURN NOT ISNULL(importFileID);
 END ;;
 DELIMITER ;
@@ -3837,49 +3918,57 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `importFileID`(importFile varchar(300),
-  file_Size varchar(30),
-  file_Created varchar(30),
-  file_Modified varchar(30),
-  import_load_id varchar(10),
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `importFileID`(importFile varchar(300),
+  file_size varchar(30),
+  file_created varchar(30),
+  file_modified varchar(30),
+  in_importdevice_id varchar(10),
+  in_importload_id varchar(10),
   fileformat varchar(10)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE e1 INT UNSIGNED;
   DECLARE e2, e3 VARCHAR(128);
   DECLARE importFile_ID INTEGER DEFAULT null;
-  DECLARE importload_id INTEGER DEFAULT null;
-  DECLARE formatfile_id INTEGER DEFAULT 0;
+  DECLARE importLoad_ID INTEGER DEFAULT null;
+  DECLARE importDevice_ID INTEGER DEFAULT null;
+  DECLARE formatfile_ID INTEGER DEFAULT 0;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION 
 	BEGIN
     GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
     CALL apache_logs.errorProcess('importFileID', e1, e2, e3, 'apache_logs', 'apachelogs2mysql.py', importload_id, null );
 	END;
+  IF NOT CONVERT(in_importdevice_id, UNSIGNED) = 0 THEN
+	  SET importDevice_ID = CONVERT(in_importdevice_id, UNSIGNED);
+  END IF;
   SELECT id
     INTO importFile_ID
     FROM apache_logs.import_file
-    WHERE name = importFile;
+    WHERE name = importFile
+      AND importdeviceid = importDevice_ID;
   IF importFile_ID IS NULL THEN
-    IF NOT CONVERT(import_load_id, UNSIGNED) = 0 THEN
-  	  SET importload_id = CONVERT(import_load_id, UNSIGNED);
+    IF NOT CONVERT(in_importload_id, UNSIGNED) = 0 THEN
+  	  SET importLoad_ID = CONVERT(in_importload_id, UNSIGNED);
     END IF;
     IF NOT CONVERT(fileformat, UNSIGNED) = 0 THEN
-  	  SET formatfile_id = CONVERT(fileformat, UNSIGNED);
+  	  SET formatFile_ID = CONVERT(fileformat, UNSIGNED);
     END IF;
     INSERT INTO apache_logs.import_file 
 			(name,
 			filesize,
 			filecreated,
 			filemodified,
+      importdeviceid,
       importloadid,
       importformatid)
     VALUES 
       (importFile, 
-      CONVERT(file_Size, UNSIGNED),
-      STR_TO_DATE(file_Created,'%a %b %e %H:%i:%s %Y'),
-      STR_TO_DATE(file_Modified,'%a %b %e %H:%i:%s %Y'),
-      importload_id,
-      formatfile_id);
+      CONVERT(file_size, UNSIGNED),
+      STR_TO_DATE(file_created,'%a %b %e %H:%i:%s %Y'),
+      STR_TO_DATE(file_modified,'%a %b %e %H:%i:%s %Y'),
+      importDevice_ID,
+      importLoad_ID,
+      formatFile_ID);
     SET importFile_ID = LAST_INSERT_ID();
   END IF;
   RETURN importFile_ID;
@@ -3899,7 +3988,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `importLoadID`(import_client_id varchar(30)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `importLoadID`(in_importclient_id varchar(30)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE e1 INT UNSIGNED;
@@ -3911,8 +4000,8 @@ BEGIN
     GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
     CALL apache_logs.errorProcess('importLoadID', e1, e2, e3, 'apache_logs', 'apachelogs2mysql.py', importLoad_ID, null );
 	END;
-  IF NOT CONVERT(import_client_id, UNSIGNED) = 0 THEN
-	  SET importclient_ID = CONVERT(import_client_id, UNSIGNED);
+  IF NOT CONVERT(in_importclient_id, UNSIGNED) = 0 THEN
+	  SET importclient_ID = CONVERT(in_importclient_id, UNSIGNED);
   END IF;
   INSERT INTO apache_logs.import_load (importclientid) VALUES (importclient_ID);
   SET importLoad_ID = LAST_INSERT_ID();
@@ -3933,7 +4022,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `importProcessID`(processType varchar(100),
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `importProcessID`(processType varchar(100),
   processName varchar(100)) RETURNS int
     READS SQL DATA
 BEGIN
@@ -3990,12 +4079,12 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `importServerID`(in_user VARCHAR(250),
-	in_host VARCHAR(250),
-  in_version VARCHAR(50),
-  in_system VARCHAR(50),
-  in_machine VARCHAR(50),
-	in_server VARCHAR(250)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `importServerID`(in_user VARCHAR(255),
+	in_host VARCHAR(255),
+  in_version VARCHAR(55),
+  in_system VARCHAR(55),
+  in_machine VARCHAR(55),
+	in_server VARCHAR(75)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE importServer_ID INTEGER DEFAULT null;
@@ -4047,7 +4136,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `log_clientNameID`(tcClientName varchar(253)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `log_clientNameID`(in_ClientName varchar(253)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE clientName_ID INTEGER DEFAULT null;
@@ -4055,9 +4144,9 @@ BEGIN
   SELECT id 
   INTO clientName_ID
   FROM apache_logs.log_clientname
-  WHERE name = tcClientName;
+  WHERE name = in_ClientName;
   IF clientName_ID IS NULL THEN
-    INSERT INTO apache_logs.log_clientname (name) VALUES (tcClientName);
+    INSERT INTO apache_logs.log_clientname (name) VALUES (in_ClientName);
     SET clientName_ID = LAST_INSERT_ID();
   END IF;
   RETURN clientName_ID;
@@ -4077,7 +4166,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `log_clientPortID`(tcClientPort varchar(253)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `log_clientPortID`(in_ClientPort varchar(253)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE clientPort_ID INTEGER DEFAULT null;
@@ -4085,9 +4174,9 @@ BEGIN
   SELECT id 
   INTO clientPort_ID
   FROM apache_logs.log_clientport
-  WHERE name = tcClientPort;
+  WHERE name = in_ClientPort;
   IF clientPort_ID IS NULL THEN
-    INSERT INTO apache_logs.log_clientport (name) VALUES (tcClientPort);
+    INSERT INTO apache_logs.log_clientport (name) VALUES (in_ClientPort);
     SET clientPort_ID = LAST_INSERT_ID();
   END IF;
   RETURN clientPort_ID;
@@ -4107,7 +4196,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `log_refererID`(tcReferer varchar(1000)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `log_refererID`(in_Referer varchar(1000)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE referer_ID INTEGER DEFAULT null;
@@ -4115,9 +4204,9 @@ BEGIN
   SELECT id 
   INTO referer_ID
   FROM apache_logs.log_referer
-  WHERE name = tcReferer;
+  WHERE name = in_Referer;
   IF referer_ID IS NULL THEN
-    INSERT INTO apache_logs.log_referer (name) VALUES (tcReferer);
+    INSERT INTO apache_logs.log_referer (name) VALUES (in_Referer);
     SET referer_ID = LAST_INSERT_ID();
   END IF;
   RETURN referer_ID;
@@ -4137,7 +4226,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `log_requestLogID`(tcRequestLog varchar(50)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `log_requestLogID`(in_RequestLog varchar(50)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE requestLog_ID INTEGER DEFAULT null;
@@ -4145,9 +4234,9 @@ BEGIN
   SELECT id 
   INTO requestLog_ID
   FROM apache_logs.log_requestlogid
-  WHERE name = tcRequestLog;
+  WHERE name = in_RequestLog;
   IF requestLog_ID IS NULL THEN
-    INSERT INTO apache_logs.log_requestlogid (name) VALUES (tcRequestLog);
+    INSERT INTO apache_logs.log_requestlogid (name) VALUES (in_RequestLog);
     SET requestLog_ID = LAST_INSERT_ID();
   END IF;
   RETURN requestLog_ID;
@@ -4167,7 +4256,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `log_serverNameID`(tcServerName varchar(253)) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `log_serverNameID`(in_ServerName varchar(253)) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE serverName_ID INTEGER DEFAULT null;
@@ -4175,9 +4264,9 @@ BEGIN
   SELECT id 
   INTO serverName_ID
   FROM apache_logs.log_servername
-  WHERE name = tcServerName;
+  WHERE name = in_ServerName;
   IF serverName_ID IS NULL THEN
-    INSERT INTO apache_logs.log_servername (name) VALUES (tcServerName);
+    INSERT INTO apache_logs.log_servername (name) VALUES (in_ServerName);
     SET serverName_ID = LAST_INSERT_ID();
   END IF;
   RETURN serverName_ID;
@@ -4197,7 +4286,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `log_serverPortID`(tnServerPort INTEGER) RETURNS int
+CREATE DEFINER=`dbadmin`@`%` FUNCTION `log_serverPortID`(in_ServerPort INTEGER) RETURNS int
     READS SQL DATA
 BEGIN
   DECLARE serverPort_ID INTEGER DEFAULT null;
@@ -4205,9 +4294,9 @@ BEGIN
   SELECT id 
   INTO serverPort_ID
   FROM apache_logs.log_serverport
-  WHERE name = tnServerPort;
+  WHERE name = in_ServerPort;
   IF serverPort_ID IS NULL THEN
-    INSERT INTO apache_logs.log_serverport (name) VALUES (tnServerPort);
+    INSERT INTO apache_logs.log_serverport (name) VALUES (in_ServerPort);
     SET serverPort_ID = LAST_INSERT_ID();
   END IF;
   RETURN serverPort_ID;
@@ -4227,7 +4316,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `errorLoad`(IN in_module VARCHAR(300),
+CREATE DEFINER=`dbadmin`@`%` PROCEDURE `errorLoad`(IN in_module VARCHAR(300),
      IN in_mysqlerrno VARCHAR(10),
      IN in_messagetext VARCHAR(1000), 
      IN in_loadID VARCHAR(10))
@@ -4268,7 +4357,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `errorProcess`(IN in_module VARCHAR(300),
+CREATE DEFINER=`dbadmin`@`%` PROCEDURE `errorProcess`(IN in_module VARCHAR(300),
 	 IN in_mysqlerrno INTEGER, 
    IN in_messagetext VARCHAR(1000), 
    IN in_returnedsqlstate VARCHAR(250), 
@@ -4311,7 +4400,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `normalize_useragent`(
+CREATE DEFINER=`dbadmin`@`%` PROCEDURE `normalize_useragent`(
   IN in_processName VARCHAR(100),
   IN in_importLoadID VARCHAR(20)
 )
@@ -4497,7 +4586,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `process_access_import`(
+CREATE DEFINER=`dbadmin`@`%` PROCEDURE `process_access_import`(
   IN in_processName VARCHAR(100),
   IN in_importLoadID VARCHAR(20)
 )
@@ -5152,7 +5241,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `process_access_parse`(
+CREATE DEFINER=`dbadmin`@`%` PROCEDURE `process_access_parse`(
     IN in_processName VARCHAR(100),
     IN in_importLoadID VARCHAR(20)
 )
@@ -5553,7 +5642,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `process_error_import`(
+CREATE DEFINER=`dbadmin`@`%` PROCEDURE `process_error_import`(
   IN in_processName VARCHAR(100),
   IN in_importLoadID VARCHAR(20)
 )
@@ -5911,7 +6000,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `process_error_parse`(
+CREATE DEFINER=`dbadmin`@`%` PROCEDURE `process_error_parse`(
   IN in_processName VARCHAR(100),
   IN in_importLoadID VARCHAR(20)
 )
@@ -6255,7 +6344,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_clientname_list` AS select `ln`.`name` AS `Access Log Client Name`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`log_clientname` `ln` join `access_log` `l` on((`l`.`clientnameid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6273,7 +6362,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_cookie_list` AS select `ln`.`name` AS `Access Log Cookie`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_cookie` `ln` join `access_log` `l` on((`l`.`cookieid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6291,7 +6380,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_importfile_list` AS select `ln`.`name` AS `Access Log Import File`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`import_file` `ln` join `access_log` `l` on((`l`.`importfileid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6309,7 +6398,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_period_day_list` AS select year(`l`.`logged`) AS `Year`,month(`l`.`logged`) AS `Month`,dayofmonth(`l`.`logged`) AS `Day`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from `access_log` `l` group by year(`l`.`logged`),month(`l`.`logged`),dayofmonth(`l`.`logged`) order by 'Year','Month','Day' */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6327,7 +6416,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_period_hour_list` AS select year(`l`.`logged`) AS `Year`,month(`l`.`logged`) AS `Month`,dayofmonth(`l`.`logged`) AS `Day`,hour(`l`.`logged`) AS `Hour`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from `access_log` `l` group by year(`l`.`logged`),month(`l`.`logged`),dayofmonth(`l`.`logged`),hour(`l`.`logged`) order by 'Year','Month','Day','Hour' */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6345,7 +6434,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_period_month_list` AS select year(`l`.`logged`) AS `Year`,month(`l`.`logged`) AS `Month`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from `access_log` `l` group by year(`l`.`logged`),month(`l`.`logged`) order by 'Year','Month' */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6363,7 +6452,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_period_week_list` AS select year(`l`.`logged`) AS `Year`,month(`l`.`logged`) AS `Month`,week(`l`.`logged`,0) AS `Week`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from `access_log` `l` group by year(`l`.`logged`),month(`l`.`logged`),week(`l`.`logged`,0) order by 'Year','Month','Week' */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6381,7 +6470,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_period_year_list` AS select year(`l`.`logged`) AS `Year`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from `access_log` `l` group by year(`l`.`logged`) order by 'Year' */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6399,7 +6488,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_referer_list` AS select `ln`.`name` AS `Access Log Referer`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`log_referer` `ln` join `access_log` `l` on((`l`.`refererid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6417,7 +6506,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_remotelogname_list` AS select `ln`.`name` AS `Access Log Remote Log Name`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_remotelogname` `ln` join `access_log` `l` on((`l`.`remotelognameid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6435,7 +6524,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_remoteuser_list` AS select `ln`.`name` AS `Access Log Remote User`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_remoteuser` `ln` join `access_log` `l` on((`l`.`remoteuserid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6453,7 +6542,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_reqmethod_list` AS select `ln`.`name` AS `Access Log Method`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_reqmethod` `ln` join `access_log` `l` on((`l`.`reqmethodid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6471,7 +6560,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_reqprotocol_list` AS select `ln`.`name` AS `Access Log Protocol`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_reqprotocol` `ln` join `access_log` `l` on((`l`.`reqstatusid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6489,7 +6578,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_reqquery_list` AS select `ln`.`name` AS `Access Log Query String`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_reqquery` `ln` join `access_log` `l` on((`l`.`reqqueryid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6507,7 +6596,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_reqstatus_list` AS select `ln`.`name` AS `Access Log Status`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_reqstatus` `ln` join `access_log` `l` on((`l`.`reqstatusid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6525,7 +6614,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_requri_list` AS select `ln`.`name` AS `Access Log URI`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_requri` `ln` join `access_log` `l` on((`l`.`requriid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6543,7 +6632,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_servername_list` AS select `ln`.`name` AS `Access Log Server Name`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`log_servername` `ln` join `access_log` `l` on((`l`.`servernameid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6561,7 +6650,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_servername_serverport_list` AS select `sn`.`name` AS `Access Log Server Name`,`sp`.`name` AS `Server Port`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from ((`access_log` `l` join `log_servername` `sn` on((`sn`.`id` = `l`.`servernameid`))) join `log_serverport` `sp` on((`sp`.`id` = `l`.`serverportid`))) group by `l`.`servernameid`,`l`.`serverportid` order by `sn`.`name`,`sp`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6579,7 +6668,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_serverport_list` AS select `ln`.`name` AS `Access Log Server Port`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`log_serverport` `ln` join `access_log` `l` on((`l`.`serverportid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6597,7 +6686,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_ua_browser_family_list` AS select `ln`.`name` AS `Browser Family`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from ((`access_log_ua_browser_family` `ln` join `access_log_useragent` `lua` on((`lua`.`uabrowserfamilyid` = `ln`.`id`))) join `access_log` `l` on((`l`.`useragentid` = `lua`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6615,7 +6704,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_ua_browser_list` AS select `ln`.`name` AS `Browser`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from ((`access_log_ua_browser` `ln` join `access_log_useragent` `lua` on((`lua`.`uabrowserid` = `ln`.`id`))) join `access_log` `l` on((`l`.`useragentid` = `lua`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6633,7 +6722,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_ua_browser_version_list` AS select `ln`.`name` AS `Browser Version`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from ((`access_log_ua_browser_version` `ln` join `access_log_useragent` `lua` on((`lua`.`uabrowserversionid` = `ln`.`id`))) join `access_log` `l` on((`l`.`useragentid` = `lua`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6651,7 +6740,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_ua_device_brand_list` AS select `ln`.`name` AS `Device Brand`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from ((`access_log_ua_device_brand` `ln` join `access_log_useragent` `lua` on((`lua`.`uadevicebrandid` = `ln`.`id`))) join `access_log` `l` on((`l`.`useragentid` = `lua`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6669,7 +6758,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_ua_device_family_list` AS select `ln`.`name` AS `Device Family`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from ((`access_log_ua_device_family` `ln` join `access_log_useragent` `lua` on((`lua`.`uadevicefamilyid` = `ln`.`id`))) join `access_log` `l` on((`l`.`useragentid` = `lua`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6687,7 +6776,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_ua_device_list` AS select `ln`.`name` AS `Device`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from ((`access_log_ua_device` `ln` join `access_log_useragent` `lua` on((`lua`.`uadeviceid` = `ln`.`id`))) join `access_log` `l` on((`l`.`useragentid` = `lua`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6705,7 +6794,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_ua_device_model_list` AS select `ln`.`name` AS `Device Model`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from ((`access_log_ua_device_model` `ln` join `access_log_useragent` `lua` on((`lua`.`uadevicefamilyid` = `ln`.`id`))) join `access_log` `l` on((`l`.`useragentid` = `lua`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6723,7 +6812,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_ua_list` AS select `ln`.`name` AS `Access Log User Agent`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from ((`access_log_ua` `ln` join `access_log_useragent` `lua` on((`lua`.`uaid` = `ln`.`id`))) join `access_log` `l` on((`l`.`useragentid` = `lua`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6741,7 +6830,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_ua_os_family_list` AS select `ln`.`name` AS `Operating System Family`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from ((`access_log_ua_os_family` `ln` join `access_log_useragent` `lua` on((`lua`.`uaosfamilyid` = `ln`.`id`))) join `access_log` `l` on((`l`.`useragentid` = `lua`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6759,7 +6848,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_ua_os_list` AS select `ln`.`name` AS `Operating System`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from ((`access_log_ua_os` `ln` join `access_log_useragent` `lua` on((`lua`.`uaosid` = `ln`.`id`))) join `access_log` `l` on((`l`.`useragentid` = `lua`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6777,7 +6866,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_ua_os_version_list` AS select `ln`.`name` AS `Operating System Version`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from ((`access_log_ua_os_version` `ln` join `access_log_useragent` `lua` on((`lua`.`uaosversionid` = `ln`.`id`))) join `access_log` `l` on((`l`.`useragentid` = `lua`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6795,7 +6884,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_useragent_browser_family_list` AS select `ln`.`ua_browser_family` AS `Browser Family`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_useragent` `ln` join `access_log` `l` on((`l`.`useragentid` = `ln`.`id`))) group by `ln`.`ua_browser_family` order by `ln`.`ua_browser_family` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6813,7 +6902,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_useragent_browser_list` AS select `ln`.`ua_browser` AS `Browser`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_useragent` `ln` join `access_log` `l` on((`l`.`useragentid` = `ln`.`id`))) group by `ln`.`ua_browser` order by `ln`.`ua_browser` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6831,7 +6920,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_useragent_browser_version_list` AS select `ln`.`ua_browser_version` AS `Browser Version`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_useragent` `ln` join `access_log` `l` on((`l`.`useragentid` = `ln`.`id`))) group by `ln`.`ua_browser_version` order by `ln`.`ua_browser_version` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6849,7 +6938,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_useragent_device_brand_list` AS select `ln`.`ua_device_brand` AS `Device Brand`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_useragent` `ln` join `access_log` `l` on((`l`.`useragentid` = `ln`.`id`))) group by `ln`.`ua_device_brand` order by `ln`.`ua_device_brand` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6867,7 +6956,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_useragent_device_family_list` AS select `ln`.`ua_device_family` AS `Device Family`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_useragent` `ln` join `access_log` `l` on((`l`.`useragentid` = `ln`.`id`))) group by `ln`.`ua_device_family` order by `ln`.`ua_device_family` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6885,7 +6974,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_useragent_device_list` AS select `ln`.`ua_device` AS `Device`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_useragent` `ln` join `access_log` `l` on((`l`.`useragentid` = `ln`.`id`))) group by `ln`.`ua_device` order by `ln`.`ua_device` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6903,7 +6992,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_useragent_device_model_list` AS select `ln`.`ua_device_model` AS `Device Model`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_useragent` `ln` join `access_log` `l` on((`l`.`useragentid` = `ln`.`id`))) group by `ln`.`ua_device_model` order by `ln`.`ua_device_model` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6921,7 +7010,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_useragent_list` AS select `ln`.`name` AS `Access Log UserAgent`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_useragent` `ln` join `access_log` `l` on((`l`.`useragentid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6939,7 +7028,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_useragent_os_browser_device_list` AS select `ln`.`ua_os_family` AS `Operating System`,`ln`.`ua_browser_family` AS `Browser`,`ln`.`ua_device_family` AS `Device`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_useragent` `ln` join `access_log` `l` on((`l`.`useragentid` = `ln`.`id`))) group by `ln`.`ua_os_family`,`ln`.`ua_browser_family`,`ln`.`ua_device_family` order by `ln`.`ua_os_family`,`ln`.`ua_browser_family`,`ln`.`ua_device_family` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6957,7 +7046,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_useragent_os_family_list` AS select `ln`.`ua_os_family` AS `Operating System Family`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_useragent` `ln` join `access_log` `l` on((`l`.`useragentid` = `ln`.`id`))) group by `ln`.`ua_os_family` order by `ln`.`ua_os_family` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6975,7 +7064,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_useragent_os_list` AS select `ln`.`ua_os` AS `Operating System`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_useragent` `ln` join `access_log` `l` on((`l`.`useragentid` = `ln`.`id`))) group by `ln`.`ua_os` order by `ln`.`ua_os` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -6993,7 +7082,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_useragent_os_version_list` AS select `ln`.`ua_os_version` AS `Operating System Version`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_useragent` `ln` join `access_log` `l` on((`l`.`useragentid` = `ln`.`id`))) group by `ln`.`ua_os_version` order by `ln`.`ua_os_version` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -7011,7 +7100,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `access_useragent_pretty_list` AS select `ln`.`ua` AS `Access Log Pretty User Agent`,count(`l`.`id`) AS `Log Count`,format(sum(`l`.`reqbytes`),0) AS `HTTP Bytes`,format(sum(`l`.`bytes_sent`),0) AS `Bytes Sent`,format(sum(`l`.`bytes_received`),0) AS `Bytes Received`,format(sum(`l`.`bytes_transferred`),0) AS `Bytes Transferred`,format(max(`l`.`reqtime_milli`),0) AS `Max Request Time`,format(min(`l`.`reqtime_milli`),0) AS `Min Request Time`,format(max(`l`.`reqdelay_milli`),0) AS `Max Delay Time`,format(min(`l`.`reqdelay_milli`),0) AS `Min Delay Time` from (`access_log_useragent` `ln` join `access_log` `l` on((`l`.`useragentid` = `ln`.`id`))) group by `ln`.`ua` order by `ln`.`ua` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -7029,7 +7118,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_apachecode_list` AS select `ln`.`name` AS `Error Log Apache Code`,count(`l`.`id`) AS `Log Count` from (`error_log_apachecode` `ln` join `error_log` `l` on((`l`.`apachecodeid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -7047,7 +7136,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_apachemessage_list` AS select `ln`.`name` AS `Error Log Apache Message`,count(`l`.`id`) AS `Log Count` from (`error_log_apachemessage` `ln` join `error_log` `l` on((`l`.`apachemessageid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -7065,7 +7154,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_client_list` AS select `ln`.`name` AS `Error Log Client Name`,count(`l`.`id`) AS `Log Count` from (`log_clientname` `ln` join `error_log` `l` on((`l`.`clientnameid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -7083,7 +7172,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_client_port_list` AS select `ln`.`name` AS `Error Log Client Port`,count(`l`.`id`) AS `Log Count` from (`log_clientport` `ln` join `error_log` `l` on((`l`.`clientportid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -7101,7 +7190,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_clientname_clientport_list` AS select `cn`.`name` AS `Error Log Server Name`,`cp`.`name` AS `Server Port`,count(`l`.`id`) AS `Log Count` from ((`error_log` `l` join `log_clientname` `cn` on((`cn`.`id` = `l`.`clientnameid`))) join `log_clientport` `cp` on((`cp`.`id` = `l`.`clientportid`))) group by `l`.`clientnameid`,`l`.`clientportid` order by `cn`.`name`,`cp`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -7119,7 +7208,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_importfile_list` AS select `ln`.`name` AS `Error Log Import File`,count(`l`.`id`) AS `Log Count` from (`import_file` `ln` join `error_log` `l` on((`l`.`importfileid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -7137,7 +7226,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_level_list` AS select `ln`.`name` AS `Error Log Level`,count(`l`.`id`) AS `Log Count` from (`error_log_level` `ln` join `error_log` `l` on((`l`.`loglevelid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -7155,7 +7244,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_message_list` AS select `ln`.`name` AS `Error Log Message`,count(`l`.`id`) AS `Log Count` from (`error_log_message` `ln` join `error_log` `l` on((`l`.`logmessageid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -7173,7 +7262,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_module_list` AS select `ln`.`name` AS `Error Log Module`,count(`l`.`id`) AS `Log Count` from (`error_log_module` `ln` join `error_log` `l` on((`l`.`moduleid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -7191,7 +7280,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_period_day_list` AS select year(`l`.`logged`) AS `Year`,month(`l`.`logged`) AS `Month`,dayofmonth(`l`.`logged`) AS `Day`,count(`l`.`id`) AS `Log Count` from `error_log` `l` group by year(`l`.`logged`),month(`l`.`logged`),dayofmonth(`l`.`logged`) order by 'Year','Month','Day' */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -7209,7 +7298,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_period_hour_list` AS select year(`l`.`logged`) AS `Year`,month(`l`.`logged`) AS `Month`,dayofmonth(`l`.`logged`) AS `Day`,hour(`l`.`logged`) AS `Hour`,count(`l`.`id`) AS `Log Count` from `error_log` `l` group by year(`l`.`logged`),month(`l`.`logged`),dayofmonth(`l`.`logged`),hour(`l`.`logged`) order by 'Year','Month','Day','Hour' */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -7227,7 +7316,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_period_month_list` AS select year(`l`.`logged`) AS `Year`,month(`l`.`logged`) AS `Month`,count(`l`.`id`) AS `Log Count` from `error_log` `l` group by year(`l`.`logged`),month(`l`.`logged`) order by 'Year','Month' */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -7245,7 +7334,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_period_week_list` AS select year(`l`.`logged`) AS `Year`,month(`l`.`logged`) AS `Month`,week(`l`.`logged`,0) AS `Week`,count(`l`.`id`) AS `Log Count` from `error_log` `l` group by year(`l`.`logged`),month(`l`.`logged`),week(`l`.`logged`,0) order by 'Year','Month','Week' */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -7263,7 +7352,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_period_year_list` AS select year(`l`.`logged`) AS `Year`,count(`l`.`id`) AS `Log Count` from `error_log` `l` group by year(`l`.`logged`) order by 'Year' */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -7281,7 +7370,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_processid_list` AS select `ln`.`name` AS `Error Log ProcessID`,count(`l`.`id`) AS `Log Count` from (`error_log_processid` `ln` join `error_log` `l` on((`l`.`processid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -7299,7 +7388,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_processid_threadid_list` AS select `pid`.`name` AS `ProcessID`,`tid`.`name` AS `ThreadID`,count(`l`.`id`) AS `Log Count` from ((`error_log` `l` join `error_log_processid` `pid` on((`l`.`processid` = `pid`.`id`))) join `error_log_threadid` `tid` on((`l`.`threadid` = `tid`.`id`))) group by `pid`.`id`,`tid`.`id` order by `pid`.`name`,`tid`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -7317,7 +7406,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_referer_list` AS select `ln`.`name` AS `Error Log Referer`,count(`l`.`id`) AS `Log Count` from (`log_referer` `ln` join `error_log` `l` on((`l`.`refererid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -7335,7 +7424,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_servername_list` AS select `ln`.`name` AS `Error Log Server Name`,count(`l`.`id`) AS `Log Count` from (`log_servername` `ln` join `error_log` `l` on((`l`.`servernameid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -7353,7 +7442,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_servername_serverport_list` AS select `sn`.`name` AS `Error Log Server Name`,`sp`.`name` AS `Server Port`,count(`l`.`id`) AS `Log Count` from ((`error_log` `l` join `log_servername` `sn` on((`sn`.`id` = `l`.`servernameid`))) join `log_serverport` `sp` on((`sp`.`id` = `l`.`serverportid`))) group by `l`.`servernameid`,`l`.`serverportid` order by `sn`.`name`,`sp`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -7371,7 +7460,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_serverport_list` AS select `ln`.`name` AS `Error Log Server Port`,count(`l`.`id`) AS `Log Count` from (`log_serverport` `ln` join `error_log` `l` on((`l`.`serverportid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -7389,7 +7478,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_systemcode_list` AS select `ln`.`name` AS `Error Log System Code`,count(`l`.`id`) AS `Log Count` from (`error_log_systemcode` `ln` join `error_log` `l` on((`l`.`systemcodeid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -7407,7 +7496,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_systemmessage_list` AS select `ln`.`name` AS `Error Log System Message`,count(`l`.`id`) AS `Log Count` from (`error_log_systemmessage` `ln` join `error_log` `l` on((`l`.`systemmessageid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -7425,7 +7514,7 @@ DELIMITER ;
 /*!50001 SET character_set_results     = cp850 */;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`dbadmin`@`%` SQL SECURITY DEFINER */
 /*!50001 VIEW `error_threadid_list` AS select `ln`.`name` AS `Error Log ThreadID`,count(`l`.`id`) AS `Log Count` from (`error_log_threadid` `ln` join `error_log` `l` on((`l`.`threadid` = `ln`.`id`))) group by `ln`.`id` order by `ln`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -7440,4 +7529,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed
+-- Dump completed on 2025-01-02  4:23:17

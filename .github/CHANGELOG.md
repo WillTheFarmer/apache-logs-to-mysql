@@ -75,3 +75,7 @@
 - [2.1.3] modify `normalize_useragent` to removed first parameter restriction. Any string 8 characters are more can be passed.
 - [2.1.3] modify `apacheLogs2MySQL.py` add `completed` COLUMN to UPDATE statement to fix processing `process_access_import` and `process_error_import` with `ALL` parameter.
 - [2.1.3] modify `call_processes.sql` adding more comments to better describe options and parameters and overall processing.
+- [2.1.4] add `import_device` TABLE to separate `import_client` TABLE columns to resolve software login, IP address and software version change information creating new record.
+- [2.1.4] add `importdeviceid` COLUMN to `import_file` TABLE to resolve Client Modules with identical FILE NAMES and PATHS. Application detected file already imported.
+- [2.1.4] modify `import_client` and `import_device` COLUMN widths and created UNIQUE INDEX for combined columns for each table.
+- [2.1.4] modify `importfileexists` and `importfileID` FUNCTIONS with new parameter for `importdeviceid`.
