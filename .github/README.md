@@ -14,7 +14,7 @@ Three options to associate ServerName & ServerPort with Access and Error logs mi
 
 Database system designed to accommodate unlimited domains. Easy installation steps below. 
 
-A complete Web management interface with [apache/echarts](https://github.com/apache/echarts) Log Visualization integration in development. It will be released as a new repository.
+Web interface with Drill Down Capability and [apache/echarts](https://github.com/apache/echarts) Log Visualization integration in development. It will be released in separate repository.
 ## Entity Relationship Diagram of apache_logs schema tables
 ![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
 Diagram created with Open-source database diagrams editor [chartdb/chartdb](https://github.com/chartdb/chartdb)
