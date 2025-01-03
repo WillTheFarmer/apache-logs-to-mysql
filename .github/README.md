@@ -237,10 +237,13 @@ Run polling module from PM2:
 pm2 start watch4logs.py
 ```
 ## Execute Stored Procedures using Command Line
-Setting environment variables `ERROR_PROCESS`,`COMBINED_PROCESS`, `VHOST_PROCESS`, `CSV2MYSQL_PROCESS` and `USERAGENT_PROCESS` = 0 and no Stored Procedures 
-are executed by Python Client module. Only LOAD DATA statements are executed inserting raw log data into LOAD TABLES.
+Set environment variables `ERROR_PROCESS`,`COMBINED_PROCESS`, `VHOST_PROCESS`, `CSV2MYSQL_PROCESS` and `USERAGENT_PROCESS`= 0:
 
-Setting environment variables = 2 and 5 Stored Procedures are executed by Python Client module passing the `importloadid` value to process 
+no Stored Procedures are executed by Python Client module. Only LOAD DATA statements are executed inserting raw log data into LOAD TABLES.
+
+Set environment variables `ERROR_PROCESS`,`COMBINED_PROCESS`, `VHOST_PROCESS`, `CSV2MYSQL_PROCESS` and `USERAGENT_PROCESS`= 2: 
+
+5 Stored Procedures are executed by Python Client module passing the `importloadid` value to process 
 ONLY files & records processed by current `processLogs function` execution. 
 
 MySQL Stored Procedures can be run from Command Line Client or GUI Database Tool separately.
