@@ -194,7 +194,7 @@ MySQL server must be configured in `my.ini`, `mysqld.cnf` or `my.cnf` depending 
 [mysqld]
 local-infile=1
 ```
-After these 3 steps MySQL server should be good to go.
+After these 3 steps MySQL server is ready to go.
 
 ### 2. Python Steps
 Install all modules (`requirements.txt` in repository):
@@ -206,24 +206,24 @@ macOS platform may require installation of pip.
 xcode-select --install
 python3 -m ensurepip --upgrade 
 ```
-If any issues with ***pip install*** occur use individual install commands included above.
+If issues with ***pip install*** occur use individual install commands included above.
 
 ### 3. Create MySQL USER and GRANTS
 To minimize data exposure and breach risks create a MySQL USER for Python module with GRANTS to only schema objects and privileges required to execute import processes. (`mysql_user_and_grants.sql` in repository)
 ![mysql_user_and_grants.sql in repository](./assets/mysql_user_and_grants.png)
 ### 4. Settings.env Variables
-settings.env with default settings to run on Windows 11 Pro workstation. Make sure the correct logFormats are in correct logFormat folders. Application does not currently
-detect logFormats. Data will not be imported properly if folder settings are not correct. (`settings.env` in repository)
+settings.env with default settings for Windows. Make sure correct logFormats are in correct logFormat folders. Application does not
+detect logFormats. Data will not import properly if folder settings are not correct. (`settings.env` in repository)
 ![settings.env in repository](./assets/settings.png)
 ### 5. Rename settings.env file to .env
-By default the load_dotenv() looks for standard setting file name `.env`. The file is loaded in both `apacheLogs2MySQL.py` and `watch4files.py` with following line:
+By default, load_dotenv() looks for standard setting file name `.env`. The file is loaded in both `apacheLogs2MySQL.py` and `watch4files.py` with following line:
 ```
 load_dotenv() # Loads variables from .env into the environment
 ```
 ### 6. Run Application
-If MySQL steps are completed, Python modules are installed, MySQL server connection and log folder variables are updated and file `settings.env` is renamed to `.env` it is time to run application.
+If MySQL steps are complete, Python modules are installed, MySQL server connection and log folder variables are updated, and file `settings.env` is renamed to `.env` application is ready to go.
 
-If log files exist in folders run `apacheLogs2MySQL.py` directly. It will process all logs in all folders. Run `watch4logs.py` drop a file or files into folders and `apacheLogs2MySQL.py` will be executed. 
+If log files exist in folders run `apacheLogs2MySQL.py` and all files in all folders will be processed. Run `watch4logs.py` and drop a file or files into folder and `apacheLogs2MySQL.py` will be executed. 
 If folders are empty or contain files when a file is drop into folder any unprocessed files in folders will be processed.
 
 Run import process directly:
@@ -234,43 +234,49 @@ Run polling module:
 ```
 python watch4logs.py
 ```
-Once all logs processed & a better understanding of application is acquired use PM2 to run application 24/7 waiting to process files on arrival.
+Once existing logs are processed & a better understanding of application is acquired use PM2 to run application 24/7 watching for files to process.
 Run polling module from PM2:
 ```
 pm2 start watch4logs.py
 ```
 ## Execute Stored Procedures using Command Line
-Setting environment variables `ERROR_PROCESS`,`COMBINED_PROCESS`, `VHOST_PROCESS`, `CSV2MYSQL_PROCESS` and `USERAGENT_PROCESS` = 0 none of the 5 Stored Procedures 
-are executed by Python Client module. Only the LOAD DATA statements are executed inserting raw log data in LOAD TABLES. MySQL Stored Procedures
-can be run from Command Line Client or GUI Database Tool.
+Setting environment variables `ERROR_PROCESS`,`COMBINED_PROCESS`, `VHOST_PROCESS`, `CSV2MYSQL_PROCESS` and `USERAGENT_PROCESS` = 0 and no Stored Procedures 
+are executed by Python Client module. Only LOAD DATA statements are executed inserting raw log data into LOAD TABLES.
 
-Passing 'ALL' as second parameter processes ALL files & records based process_status. This can be multiple importloadid values. 
-Passing an importloadid value as a STRING processes ONLY files & records related to that importloadid.
-
-Setting environment variables = 2 Python Client module will execute the 5 Stored Procedures passing the importloadid value to process 
+Setting environment variables = 2 and 5 Stored Procedures are executed by Python Client module passing the `importloadid` value to process 
 ONLY files & records processed by current `processLogs function` execution. 
 
-The second parameter enables Python Client modules to run simultaneously on multiple servers uploading to a single MySQL Sever `apache_logs` schema.
+MySQL Stored Procedures can be run from Command Line Client or GUI Database Tool separately.
+Execute Stored Procedures with second parameter 'ALL' processes files & records based on `process_status` value. Files & records can contain multiple `importloadid` values.
+```
+COLUMN process_status in LOAD DATA tables - load_access_combined, load_access_csv2mysql, load_access_vhost, load_error_default
+process_status=0 - LOAD DATA tables loaded with raw log data
+process_status=1 - process_error_parse or process_access_parse executed on record
+process_status=2 - process_error_import or process_access_import executed on record
+```
+Execute Stored Procedures with second parameter `importloadid` value as a STRING processes ONLY files & records related to that `importloadid`.
 
-`call_processes.sql` contains execution commands for each stored procedure. Comment areas have helpful functionality explanations and SQL statements.
+Second parameter enables Python Client modules to run on multiple servers simultaneously uploading to a single MySQL Server `apache_logs` schema.
+
+`call_processes.sql` contains execution commands for each stored procedure. Comment areas have helpful functionality explanations.
 ![call_processes.sql comments and commands in repository](./assets/call_processes_part_1.png)
 (`call_processes.sql` in repository)
 ## Verify ServerNames using Command Line
-Log files imported from multiple domains require a ServerName value to properly filter and report data. The SQL SELECT and UPDATE statements in bottom 
-comment of `call_processes.sql` are included to help check, validate and update individual Domain data.
+SQL SELECT and UPDATE statements in bottom comment of `call_processes.sql` are included to help check, validate and update individual Domain data.
+Log files imported from multiple domains require a ServerName value to properly filter and report data.
 ![call_processes.sql comments and commands in repository](./assets/call_processes_part_2.png)
 ## Database Normalization
 Database normalization is the process of organizing data in a relational database to improve data integrity and reduce redundancy. 
 Normalization ensures that data is organized in a way that makes sense for the data model and attributes, and that the database functions efficiently.
 
-MySQL `apache_logs` Schema currently has 49 Tables, 853 Columns, 168 Indexes, 66 Views, 7 Stored Procedures and 43 Functions to process Apache Access log in 4 formats 
+MySQL `apache_logs` schema currently has 49 Tables, 853 Columns, 168 Indexes, 66 Views, 7 Stored Procedures and 43 Functions to process Apache Access log in 4 formats 
 & Apache Error log in 2 formats. Database normalization at work!
 ## MySQL Access Log View by URI
 MySQL View - apache_logs.access_requri_list - data from LogFormat: combined & csv2mysql
 ![view-access_requri_list](./assets/access_requri_list.png)
 ## MySQL Error Log Views
 Application imports and normalizes error log data. Some of the Error Log schema views below. Error log attribute is name of first column or first and second column.
-Each attribute has an associated table in ***apache_logs*** Schema. Using these views it is quick and easy to identify the origin of errors.
+Each attribute has an associated table in ***apache_logs*** schema. Using these views it is quick and easy to identify the origin of errors.
 ![error_log_apache_message_list](./assets/error_log_apache_message_list.png)
 ![error_log_system_message](./assets/error_log_system_message.png)
 ![error_log_message_list](./assets/error_log_message_list.png)
