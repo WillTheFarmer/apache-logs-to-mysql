@@ -5,7 +5,7 @@ process_access_parse - Parsing LOAD DATA into proper columns. Access formats use
 process_access_import - PARSED DATA normalization into 9 access attribute tables & 6 common log attribute tables shared with error logs.
 normalize_useragent - normalized Python parsed access_log_userAgent TABLE into 11 userAgent attribute tables.
 
-Each Stored Procudure has 2 parameters. 
+Each Stored Procedure has 2 parameters. 
 - IN in_processName VARCHAR(100) - LogFormat to process. 
 NOTE: For normalize_useragent parameter can be any string >= 8 characters. It is for reference use only
 - IN in_importLoadID VARCHAR(20) - importloadid to process. Valid values 'ALL' or a value converted to INTEGER=importloadid   
@@ -44,46 +44,3 @@ CALL process_access_parse('csv2mysql','ALL');
 CALL process_access_import('csv2mysql','ALL'); 
 
 CALL normalize_useragent('Any Process Name','ALL');
-
-/* Important SQL UPDATE information to properly import, filter and report on Apache log data imported from multiple domains.  
-If importing multiple domains to properly filter & report data ALL records MUST BE associated with ServerName regardless of LogFormat or ErrorLogFormat. 
-Use environment variables in Python to SET server_name & server_port COLUMNS during LOAD DATA for Common, Combined and Error formats.  
-
-Process_error_parse and process_access_parse STORED PROCEDURES will UPDATE server_name & server_port COLUMNs for formats that contain %v Format String.
-After process_error_parse and process_access_parse execute and Environment Variables in Python were used both SQL statements should return NO RECORDS.
-     SELECT l.server_name AS load_server_name 
-       FROM apache_logs.load_access_combined l 
-      WHERE l.server_name IS NULL; 
-
-     SELECT l.server_name AS load_server_name
-       FROM apache_logs.load_error_default l 
-      WHERE l.server_name IS NULL; 
-
-If SQL statements above return records UPDATES on import_file TABLE can be used after process_error_parse and process_access_parse STORED PROCEDURES.
-
-These UPDATES must be executed before process_error_import or process_access_import STORED PROCEDURES. Below are examples based on imported log file name.
-    UPDATE apache_logs.import_file SET server_name='farmfreshsoftware.com', server_port=443 WHERE server_name IS NULL AND name LIKE '%farmfreshsoftware%';
-    UPDATE apache_logs.import_file SET server_name='farmwork.app', server_port=443 WHERE server_name IS NULL AND name LIKE '%farmwork%';
-    UPDATE apache_logs.import_file SET server_name='ip255-255-255-255.us-east.com', server_port=443 WHERE server_name IS NULL AND name LIKE '%error%';
-
-Before executing process_error_import or process_access_import STORED PROCEDURES both SQL statements should return NO RECORDS.
-     SELECT l.server_name AS load_server_name,
-            f.server_name AS file_server_name 
-       FROM apache_logs.load_access_combined l 
- INNER JOIN apache_logs.import_file f 
-         ON l.importfileid=f.id 
-      WHERE l.server_name IS NULL 
-        AND f.server_name IS NULL; 
-
-     SELECT l.server_name AS load_server_name,
-            f.server_name AS file_server_name 
-       FROM apache_logs.load_error_default l 
- INNER JOIN apache_logs.import_file f 
-         ON l.importfileid=f.id 
-      WHERE l.server_name IS NULL 
-        AND f.server_name IS NULL; 
- 
-After executing process_error_import and process_access_import STORED PROCEDURES both SELECT statements should return NO RECORDS. 
-   SELECT * FROM apache_logs.access_log WHERE servernameid IS NULL;
-   SELECT * FROM apache_logs.error_log WHERE servernameid IS NULL;
-*/

@@ -256,12 +256,13 @@ Execute Stored Procedures with second parameter `importloadid` value as a STRING
 Second parameter enables Python Client modules to run on multiple servers simultaneously uploading to a single MySQL Server `apache_logs` schema.
 
 `call_processes.sql` contains execution commands for each stored procedure. Comment areas have helpful functionality explanations.
-![call_processes.sql comments and commands in repository](./assets/call_processes_part_1.png)
+![call_processes.sql in repository](./assets/call_processes.png)
 (`call_processes.sql` in repository)
 ## Verify ServerNames using Command Line
-SQL SELECT and UPDATE statements in bottom comment of `call_processes.sql` are included to help check, validate and update individual Domain data.
+`check_domain_columns.sql` contains SQL SELECT and UPDATE statements top check, validate and update Domain data.
 Log files imported from multiple domains require a ServerName value to properly filter and report data.
-![call_processes.sql comments and commands in repository](./assets/call_processes_part_2.png)
+![check_domain_columns.sql in repository](./assets/check_domain_columns.png)
+(`check_domain_columns.sql` in repository)
 ## Database Normalization
 Database normalization is the process of organizing data in a relational database to improve data integrity and reduce redundancy. 
 Normalization ensures that data is organized in a way that makes sense for the data model and attributes, and that the database functions efficiently.
