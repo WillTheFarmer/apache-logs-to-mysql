@@ -255,11 +255,11 @@ Execute Stored Procedures with second parameter `importloadid` value as a STRING
 
 Second parameter enables Python Client modules to run on multiple servers simultaneously uploading to a single MySQL Server `apache_logs` schema.
 
-`call_processes.sql` contains execution commands for each stored procedure. Comment areas have helpful functionality explanations.
+`call_processes.sql` contains execution commands for each stored procedure. Comment area has helpful functionality explanation.
 ![call_processes.sql in repository](./assets/call_processes.png)
 (`call_processes.sql` in repository)
 ## Verify ServerNames using Command Line
-`check_domain_columns.sql` contains SQL SELECT and UPDATE statements top check, validate and update Domain data.
+`check_domain_columns.sql` contains SQL SELECT and UPDATE statements to check, validate and update Domain data.
 Log files imported from multiple domains require a ServerName value to properly filter and report data.
 ![check_domain_columns.sql in repository](./assets/check_domain_columns.png)
 (`check_domain_columns.sql` in repository)
@@ -270,6 +270,8 @@ Normalization ensures that data is organized in a way that makes sense for the d
 MySQL `apache_logs` schema currently has 49 Tables, 853 Columns, 168 Indexes, 66 Views, 7 Stored Procedures and 43 Functions to process Apache Access log in 4 formats 
 & Apache Error log in 2 formats. Database normalization at work!
 ## MySQL Access Log View by Browser - 1 of 66 schema views
+Current schema views are Access and Error Attribute Primary tables created in normalization process with simple aggregate values. These are primitive data presentations of the log data warehouse. ApacheLogs2MySQL is the 'EL' of the 'ELK' Stack. The Web interface with Drill Down Capability and [apache/echarts](https://github.com/apache/echarts) Log Visualization integration in development is the 'K' of the 'ELK' Stack.
+
 MySQL View - apache_logs.access_ua_browser_family_list - data from LogFormat: combined & csv2mysql
 ![view-access_ua_browser_family_list.png](./assets/access_ua_browser_list.png)
 ## MySQL Access Log View by URI
