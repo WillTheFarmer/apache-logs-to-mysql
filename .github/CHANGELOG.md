@@ -79,3 +79,5 @@
 - [2.1.4] add `importdeviceid` COLUMN to `import_file` TABLE to resolve Client Modules with identical FILE NAMES and PATHS. Application detected file already imported.
 - [2.1.4] modify `import_client` and `import_device` COLUMN widths and created UNIQUE INDEX for combined columns for each table.
 - [2.1.4] modify `importfileexists` and `importfileID` FUNCTIONS with new parameter for `importdeviceid`.
+- [2.1.5] move `platformNode` COLUMN from `import_client` TABLE to `import_device` TABLE. This attribute should not change once set. `import_client` are attributes which may change.
+- [2.1.5] modify `U_import_file_name` INDEX on `import_file` TABLE from UNIQUE (name) to UNIQUE (importdeviceid, name). This was missed in last release and main reason for release.

@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# version 2.1.4 - 01/02/2025 - add import_device table - see changelog
+# version 2.1.5 - 01/03/2025 - move platformNode column from import_client to import_device - see changelog
 #
 # Copyright 2024 Will Raymond <farmfreshsoftware@gmail.com>
 #
