@@ -40,9 +40,6 @@ All folder paths, filename patterns, logging, processing, MySQL connection setti
 Two Python Client modules can run in PM2 daemon process manager for 24/7 online processing on multiple web servers feeding a single Server module simultaneous.
 
 Application is developed with Python 3.12, MySQL and 4 Python modules. Modules are listed with Python Package Index link, install command for each platform & GitHub Repository link.
-## MySQL Access Log View by Browser - 1 of 66 schema views
-MySQL View - apache_logs.access_ua_browser_family_list - data from LogFormat: combined & csv2mysql
-![view-access_ua_browser_family_list.png](./assets/access_ua_browser_list.png)
 ## Four Supported Access Log Formats
 Apache uses same Standard Access LogFormats (***common***, ***combined***, ***vhost_combined***) on all 3 platforms. Each LogFormat adds 2 Format Strings to the prior. 
 Format String descriptions are listed below each LogFormat. Information from: https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#logformat 
@@ -271,6 +268,9 @@ Normalization ensures that data is organized in a way that makes sense for the d
 
 MySQL `apache_logs` schema currently has 49 Tables, 853 Columns, 168 Indexes, 66 Views, 7 Stored Procedures and 43 Functions to process Apache Access log in 4 formats 
 & Apache Error log in 2 formats. Database normalization at work!
+## MySQL Access Log View by Browser - 1 of 66 schema views
+MySQL View - apache_logs.access_ua_browser_family_list - data from LogFormat: combined & csv2mysql
+![view-access_ua_browser_family_list.png](./assets/access_ua_browser_list.png)
 ## MySQL Access Log View by URI
 MySQL View - apache_logs.access_requri_list - data from LogFormat: combined & csv2mysql
 ![view-access_requri_list](./assets/access_requri_list.png)
