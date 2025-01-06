@@ -1,4 +1,5 @@
 # Apache Log Parser and Data Normalization Application
+### Python handles File Processing & MySQL handles Data Processing
 ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema to automate importing Access & Error files and normalizing data into database designed for reports & data analysis.
 
 Runs on Windows, Linux and MacOS & tested with MySQL versions 8.0.39, 8.4.3, 9.0.0 & 9.1.0.
