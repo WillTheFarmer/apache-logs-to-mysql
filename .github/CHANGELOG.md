@@ -6,6 +6,8 @@
 - version 2.1.1 - 12/11/2024 - rename column timeStamp to logged - add 4 indexes and 10 views
 - version 2.1.2 - 12/20/2024 - several improvements
 - version 2.1.3 - 12/27/2024 - process improvements
+- version 2.1.4 - 01/02/2025 - add import_device TABLE to separate import_client TABLE
+- version 2.1.5 - 01/03/2025 - move platformNode column from import_client to import_device
 - [1.0.1] apache_logs.error_systemCodeID corrected line - INTO logsystemCode to INTO logsystemCodeID
 - [1.0.1] remove debugging - SELECT statement from apache_logs.process_access_import, process_error_import & normalize_useragent.
 - [1.0.1] remove whitespace and commented out old code on all stored programs
