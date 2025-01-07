@@ -4,16 +4,16 @@ ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema to automate i
 
 Runs on Windows, Linux and MacOS & tested with MySQL versions 8.0.39, 8.4.3, 9.0.0 & 9.1.0.
 
-Imports Access Logs in LogFormats - ***common***, ***combined*** and ***vhost_combined*** & additional ***csv2mysql*** LogFormat defined below. 
+Imports Access Logs in LogFormats - ***common***, ***combined*** and ***vhost_combined*** & additional ***csv2mysql*** LogFormat defined :point_down: 
 
 Imports Error Logs in ***default*** ErrorLogFormat & ***additional*** ErrorLogFormat defined below performing data harmonization on Apache Codes & Messages,
-System Codes & Messages, and Log Messages to create a unified, standardized dataset. Error Log view images below.
+System Codes & Messages, and Log Messages to create a unified, standardized dataset. Error Log view images :point_down:
 
-Three options to associate ServerName & ServerPort with Access and Error logs missing `%v - canonical ServerName` and `%p - canonical ServerPort` Format Strings described below.
+Three options to associate ServerName & ServerPort with Access and Error logs missing `%v - canonical ServerName` and `%p - canonical ServerPort` Format Strings described :point_down:
 
 4 LogFormats & 2 ErrorLogFormats can be loaded and 5 MySQL Stored Procedures can be processed in a single Python `ProcessLogs function` execution.
 
-Database system designed to accommodate unlimited domains. Step-by-step guide for easy installation below. 
+Database system designed to accommodate unlimited domains. Step-by-step guide for easy installation :point_down:
 
 Web interface with Drill Down Capability and [apache/echarts](https://github.com/apache/echarts) Log Visualization integration in development. It will be released in separate repository.
 ## Entity Relationship Diagram of apache_logs schema tables
