@@ -4,9 +4,9 @@ To contribute ideas or comments email farmfreshsoftware@gmail.com with subject <
 
 Any organizations, people or person with multiple Apache servers that find application to be a godsend in log collection financial contributions are greatly appreciated.
 
-### The Repository's ***- Sponsor this project -*** lists three methods to make financial contributions.
+### The Repository's ***- Sponsor this project -*** lists methods to make financial contributions.
 
-There's not alot of code in the final version but I have 850 plus hours of research, design, iteration & development into application. During October I worked long hours around the clock on this. It is way more time then I intended to invest into this project and another project did get put on the back burner but it did produce my first open-source software.
+There's not alot of code in the final version but I have 950 plus hours of research, design, iteration & development into application. During October I worked long hours around the clock on this. It is way more time then I intended to invest into this project and another project did get put on the back burner but it did produce my first open-source software.
 
 I volunteer for a nonprofit organization that needed a simple solution to import Apache logs into MySQL. The Executive Director loves MySQL. First I installed the Apache log_sql_mysql modules which did create a single MySQL mostly empty table of the access log with no control or customization and many other issues. Next I researched available Apache logging solutions including GoAccess, Logstach, Apache Viewer, DataDog and others as well as CrowdStrike and Soloarwinds Loggly. I also reviewed several simple log file parsers but none normalized the parsed log data into a MySQL database. After all my investigating I decided to write a simple solution which snowballed into this complete solution.
 
