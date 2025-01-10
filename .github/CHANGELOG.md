@@ -84,6 +84,7 @@
 - [2.1.4] modify `importfileexists` and `importfileID` FUNCTIONS with new parameter for `importdeviceid`.
 - [2.1.5] move `platformNode` COLUMN from `import_client` TABLE to `import_device` TABLE. This attribute should not change once set. `import_client` are attributes which may change.
 - [2.1.5] modify `U_import_file_name` INDEX on `import_file` TABLE from UNIQUE (name) to UNIQUE (importdeviceid, name). This was missed in last release and main reason for release.
+- [2.1.6] repository name change - ApacheLogs2MySQL to apache-logs-to-mysql
 - [2.1.6] rename files - apachelogs2MySQL.py to logs2mysql.py, apachelogs2MySQL.sql to apache_logs_schema.sql
 - [2.1.6] modify `logs2mysql.py` line `if useragent_process == 1:` to `if useragent_process >= 1:`
 - [2.1.6] modify all files with refers to repository name. Changed `ApacheLogs2MySQL` to `apache-logs-to-mysql`
