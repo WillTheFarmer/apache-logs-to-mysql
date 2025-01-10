@@ -8,6 +8,7 @@
 - version 2.1.3 - 12/27/2024 - process improvements
 - version 2.1.4 - 01/02/2025 - add import_device TABLE to separate import_client TABLE
 - version 2.1.5 - 01/03/2025 - move platformNode column from import_client to import_device
+- version 2.1.6 - 01/09/2025 - repository name change - ApacheLogs2MySQL to apache-logs-to-mysql
 - [1.0.1] apache_logs.error_systemCodeID corrected line - INTO logsystemCode to INTO logsystemCodeID
 - [1.0.1] remove debugging - SELECT statement from apache_logs.process_access_import, process_error_import & normalize_useragent.
 - [1.0.1] remove whitespace and commented out old code on all stored programs
@@ -53,7 +54,7 @@
 - [2.1.0] modify process_access_import - cookie,remoteuser,remoteLogName,referer,requestLogID values of '-' set to NULL. No normalized table value is created.
 - [2.1.0] modify process_access_import - add servernameid to requestlogid before normalization to avoid duplicate requestlogid on consolidation of multiple domain logs.
 - [2.1.0] modify process_error_import - add servernameid to requestlogid before normalization to avoid duplicate requestlogid on consolidation of multiple domain logs.
-- [2.1.0] modify apacheLogs2MySQL.py - add .replace('"', ' in.') to all useragent attributes before UPDATE statement execute. The " in attribute value breaks UPDATE String.
+- [2.1.0] modify logs2mysql.py - add .replace('"', ' in.') to all useragent attributes before UPDATE statement execute. The " in attribute value breaks UPDATE String.
 - [2.1.0] update README.md to describe and explain additional request_log_id functionality
 - [2.1.1] rename COLUMN `timeStamp` to `logged` in TABLES `access_log` and `error_log`.
 - [2.1.1] add access_log INDEXES `I_access_log_logged` and `I_access_log_servernameid_logged`.
@@ -70,12 +71,12 @@
 - [2.1.2] modify `apacheLog2MySQL.py` to pass `importFileID` parameters 2=`common` and `combined` OR 5=`error_default` and `error_vhost`. Does not determine format difference here. 
 - [2.1.2] modify `process_access_parse` and `process_error_parse` - to SET 'Import File Format - `1=common`,2=combined,3=vhost,4=csv2mysql,5=error_default,`6=error_vhost`'
 - [2.1.2] modify `process_access_parse` and `process_error_parse` - WHERE CLAUSE for parameter `ALL` to select ONLY completed LOAD processes.  
-- [2.1.2] reformatted SQL statements in all 66 schema views for code standardization in SQL files used to create `apacheLogs2MySQL.sql`
+- [2.1.2] reformatted SQL statements in all 66 schema views for code standardization in SQL files used to create `apache_logs_schema.sql`
 - [2.1.2] modify all 11 `access_ua_` views SQL statements `FROM apache_logs.access_log_ua ln INNER JOIN apache_logs.access_log_useragent lua INNER JOIN apache_logs.access_log`
 - [2.1.2] created new `entity_relationship_diagram.png` to reflect database changes.
 - [2.1.3] modify `access_log` and `error_log` TABLES reordering COLUMNS to improve database design readability.
 - [2.1.3] modify `normalize_useragent` to removed first parameter restriction. Any string 8 characters are more can be passed.
-- [2.1.3] modify `apacheLogs2MySQL.py` add `completed` COLUMN to UPDATE statement to fix processing `process_access_import` and `process_error_import` with `ALL` parameter.
+- [2.1.3] modify `logs2mysql.py` add `completed` COLUMN to UPDATE statement to fix processing `process_access_import` and `process_error_import` with `ALL` parameter.
 - [2.1.3] modify `call_processes.sql` adding more comments to better describe options and parameters and overall processing.
 - [2.1.4] add `import_device` TABLE to separate `import_client` TABLE columns to resolve software login, IP address and software version change information creating new record.
 - [2.1.4] add `importdeviceid` COLUMN to `import_file` TABLE to resolve Client Modules with identical FILE NAMES and PATHS. Application detected file already imported.
@@ -83,3 +84,7 @@
 - [2.1.4] modify `importfileexists` and `importfileID` FUNCTIONS with new parameter for `importdeviceid`.
 - [2.1.5] move `platformNode` COLUMN from `import_client` TABLE to `import_device` TABLE. This attribute should not change once set. `import_client` are attributes which may change.
 - [2.1.5] modify `U_import_file_name` INDEX on `import_file` TABLE from UNIQUE (name) to UNIQUE (importdeviceid, name). This was missed in last release and main reason for release.
+- [2.1.6] rename files - apachelogs2MySQL.py to logs2mysql.py, apachelogs2MySQL.sql to apache_logs_schema.sql
+- [2.1.6] modify `logs2mysql.py` line `if useragent_process == 1:` to `if useragent_process >= 1:`
+- [2.1.6] modify all files with refers to repository name. Changed `ApacheLogs2MySQL` to `apache-logs-to-mysql`
+- [2.1.6] "application name" is still referred to as `ApacheLogs2MySQL` in `README.md`, `CITATION.md`,  `logs2mysql.py`, `watch4logs.py`, `apache_logs_schema.sql`, `INSTALL.md` and `settings.env`

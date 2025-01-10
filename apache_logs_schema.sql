@@ -10,14 +10,14 @@
 -- # See the License for the specific language governing permissions and
 -- # limitations under the License.
 -- #
--- # version 2.1.5 - 01/03/2025 - move platformNode column from import_client to import_device - see changelog
+-- # version 2.1.6 - 01/09/2025 - repository name change - ApacheLogs2MySQL to apache-logs-to-mysql - see changelog
 -- #
 -- # Copyright 2024 Will Raymond <farmfreshsoftware@gmail.com>
 -- #
--- # CHANGELOG.md in repository - https://github.com/WillTheFarmer/ApacheLogs2MySQL
+-- # CHANGELOG.md in repository - https://github.com/WillTheFarmer/apache-logs-to-mysql
 -- #
--- file: apacheLogs2MySQL.sql 
--- synopsis: Data definition language (DDL) for creating MySQL scehma - apache_logs for apachelogs2MySQL application
+-- file: apache_logs_schema.sql 
+-- synopsis: Data definition language (DDL) for creating MySQL schema apache_logs for ApacheLogs2MySQL application
 -- author: Will Raymond <farmfreshsoftware@gmail.com>
 
 CREATE DATABASE  IF NOT EXISTS `apache_logs` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
@@ -2343,7 +2343,7 @@ CREATE TABLE `import_format` (
 
 LOCK TABLES `import_format` WRITE;
 /*!40000 ALTER TABLE `import_format` DISABLE KEYS */;
-INSERT INTO `import_format` VALUES (1,'common',NULL,'2025-01-02 20:17:11'),(2,'combined',NULL,'2025-01-02 20:17:11'),(3,'vhost',NULL,'2025-01-02 20:17:11'),(4,'csc2mysql',NULL,'2025-01-02 20:17:11'),(5,'error_default',NULL,'2025-01-02 20:17:11'),(6,'error_vhost',NULL,'2025-01-02 20:17:11');
+INSERT INTO `import_format` VALUES (1,'common',NULL,'2025-01-09 20:09:01'),(2,'combined',NULL,'2025-01-09 20:09:01'),(3,'vhost',NULL,'2025-01-09 20:09:01'),(4,'csc2mysql',NULL,'2025-01-09 20:09:01'),(5,'error_default',NULL,'2025-01-09 20:09:01'),(6,'error_vhost',NULL,'2025-01-09 20:09:01');
 /*!40000 ALTER TABLE `import_format` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -3700,7 +3700,7 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION 
 	BEGIN
     GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
-		CALL apache_logs.errorProcess('importclientID', e1, e2, e3, 'apache_logs', 'apachelogs2mysql.py', null, null);
+		CALL apache_logs.errorProcess('importclientID', e1, e2, e3, 'apache_logs', 'logs2mysql.py', null, null);
 	END;
   IF NOT CONVERT(in_importdevice_id, UNSIGNED) = 0 THEN
 	  SET importDevice_ID = CONVERT(in_importdevice_id, UNSIGNED);
@@ -3762,7 +3762,7 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION 
 	BEGIN
     GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
-		CALL apache_logs.errorProcess('importdeviceID', e1, e2, e3, 'apache_logs', 'apachelogs2mysql.py', null, null);
+		CALL apache_logs.errorProcess('importdeviceID', e1, e2, e3, 'apache_logs', 'logs2mysql.py', null, null);
 	END;
   SELECT id
     INTO importDevice_ID
@@ -3890,7 +3890,7 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION 
 	BEGIN
     GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
-    CALL apache_logs.errorProcess('importFileExists', e1, e2, e3, 'apache_logs', 'apachelogs2mysql.py', null, null );
+    CALL apache_logs.errorProcess('importFileExists', e1, e2, e3, 'apache_logs', 'logs2mysql.py', null, null );
 	END;
   IF NOT CONVERT(in_importdevice_id, UNSIGNED) = 0 THEN
 	  SET importDevice_ID = CONVERT(in_importdevice_id, UNSIGNED);
@@ -3935,7 +3935,7 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION 
 	BEGIN
     GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
-    CALL apache_logs.errorProcess('importFileID', e1, e2, e3, 'apache_logs', 'apachelogs2mysql.py', importload_id, null );
+    CALL apache_logs.errorProcess('importFileID', e1, e2, e3, 'apache_logs', 'logs2mysql.py', importload_id, null );
 	END;
   IF NOT CONVERT(in_importdevice_id, UNSIGNED) = 0 THEN
 	  SET importDevice_ID = CONVERT(in_importdevice_id, UNSIGNED);
@@ -3997,7 +3997,7 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION 
 	BEGIN
     GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
-    CALL apache_logs.errorProcess('importLoadID', e1, e2, e3, 'apache_logs', 'apachelogs2mysql.py', importLoad_ID, null );
+    CALL apache_logs.errorProcess('importLoadID', e1, e2, e3, 'apache_logs', 'logs2mysql.py', importLoad_ID, null );
 	END;
   IF NOT CONVERT(in_importclient_id, UNSIGNED) = 0 THEN
 	  SET importclient_ID = CONVERT(in_importclient_id, UNSIGNED);
@@ -4339,7 +4339,7 @@ BEGIN
 			mysqlerrno,
 			in_messagetext,
       loadID,
-      'apachelogs2mysql.py');
+      'logs2mysql.py');
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;

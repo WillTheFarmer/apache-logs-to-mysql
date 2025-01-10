@@ -141,9 +141,9 @@ In order to consolidate logs from multiple domains `%v - canonical ServerName` i
 
 Listed are different methods to associate ServerName and ServerPort to all Access and Error logs.
 
-1) Set `ERRORLOG_SERVERNAME`, `ERRORLOG_SERVERPORT`, `COMBINED_SERVERNAME`, `COMBINED_SERVERPORT` variables in .env file and uncomment `os.getenv` lines at top of `apacheLogs2MySQL.py`. 
+1) Set `ERRORLOG_SERVERNAME`, `ERRORLOG_SERVERPORT`, `COMBINED_SERVERNAME`, `COMBINED_SERVERPORT` variables in .env file and uncomment `os.getenv` lines at top of `logs2mysql.py`. 
 By default, variables are defined and set to an empty string. 
-Below is screenshot of `apacheLogs2MySQL.py` with commented `os.getenv` code. `server_name` and `server_port` COLUMNS of `load_error_default` and `load_access_combined` TABLES will be SET during Python `LOAD DATA LOCAL INFILE` execution.
+Below is screenshot of `logs2mysql.py` with commented `os.getenv` code. `server_name` and `server_port` COLUMNS of `load_error_default` and `load_access_combined` TABLES will be SET during Python `LOAD DATA LOCAL INFILE` execution.
 
 ![load_settings_variables.png](./assets/load_settings_variables.png)
 
@@ -177,7 +177,7 @@ Python module links & install command lines for each platform. Single quotes aro
 Steps make installation quick and straightforward. Application will be ready to import Apache logs on completion.
 
 ### 1. MySQL Steps
-Before running `apachLogs2MySQL.sql` if User Account `root`@`localhost` does not exist on installation server open file and perform a ***Find and Replace*** using a User Account with DBA Role on installation server. Copy below:
+Before running `apache_logs_schema.sql` if User Account `root`@`localhost` does not exist on installation server open file and perform a ***Find and Replace*** using a User Account with DBA Role on installation server. Copy below:
 ```
 root`@`localhost`
 ```
@@ -185,7 +185,7 @@ Rename above <sup>user</sup> to a <sup>user</sup> on your server. For example - 
 
 The easiest way to install is use MySQL Command Line Client. Login as User with DBA Role and execute the following:
 ```
-source yourpath/apacheLogs2MySQL.sql
+source yourpath/apache_logs_schema.sql
 ```
 MySQL server must be configured in `my.ini`, `mysqld.cnf` or `my.cnf` depending on platform with following: 
 ```
@@ -214,19 +214,19 @@ settings.env with default settings for Windows. Make sure correct logFormats are
 detect logFormats. Data will not import properly if folder settings are not correct. (`settings.env` in repository)
 ![settings.env in repository](./assets/settings.png)
 ### 5. Rename settings.env file to .env
-By default, load_dotenv() looks for standard setting file name `.env`. The file is loaded in both `apacheLogs2MySQL.py` and `watch4files.py` with following line:
+By default, load_dotenv() looks for standard setting file name `.env`. The file is loaded in both `logs2mysql.py` and `watch4files.py` with following line:
 ```
 load_dotenv() # Loads variables from .env into the environment
 ```
 ### 6. Run Application
 If MySQL steps are complete, Python modules are installed, MySQL server connection and log folder variables are updated, and file `settings.env` is renamed to `.env` application is ready to go.
 
-If log files exist in folders run `apacheLogs2MySQL.py` and all files in all folders will be processed. Run `watch4logs.py` and drop a file or files into folder and `apacheLogs2MySQL.py` will be executed. 
+If log files exist in folders run `logs2mysql.py` and all files in all folders will be processed. Run `watch4logs.py` and drop a file or files into folder and `logs2mysql.py` will be executed. 
 If folders are empty or contain files when a file is drop into folder any unprocessed files in folders will be processed.
 
 Run import process directly:
 ```
-python apacheLogs2MySQL.py
+python logs2mysql.py
 ```
 Run polling module:
 ```

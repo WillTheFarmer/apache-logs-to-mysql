@@ -10,15 +10,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# version 2.1.5 - 01/03/2025 - move platformNode column from import_client to import_device - see changelog
+# version 2.1.6 - 01/09/2025 - repository name change - ApacheLogs2MySQL to apache-logs-to-mysql - see changelog
 #
 # Copyright 2024 Will Raymond <farmfreshsoftware@gmail.com>
 #
-# CHANGELOG.md in repository - https://github.com/WillTheFarmer/ApacheLogs2MySQL
+# CHANGELOG.md in repository - https://github.com/WillTheFarmer/apache-logs-to-mysql
 """
-:module: apacheLogs2MySQL
+:module: logs2mysql
 :function: processLogs()
-:synopsis: processes apache access and error logs into MySQL for apachelogs2MySQL application.
+:synopsis: processes apache access and error logs into MySQL for ApacheLogs2MySQL application.
 :author: Will Raymond <farmfreshsoftware@gmail.com>
 """
 import os
@@ -637,7 +637,7 @@ def processLogs():
         updateUserAgentCursor.close()        
         if useragent_log >= 1:
             print('Useragent data parsing complete - %s seconds' % (time.time() - start_time))
-        if useragent_process == 1:
+        if useragent_process >= 1:
             if useragent_log >= 1:
                 print('Normalizing UserAgent data to seperate tables - %s seconds' % (time.time() - start_time))
             normalizeCursor = conn.cursor()
@@ -688,6 +688,6 @@ def processLogs():
     conn.close()
     print('ProcessLogs complete: ' + str(datetime.datetime.now()) + ' - %s seconds' % (time.time() - start_time))
 if __name__ == "__main__":
-    # This will run if apacheLogs2MySQL.py is executed directly
-    print("apacheLogs2MySQL.py is being run directly")
+    # This will run if logs2mysql.py is executed directly
+    print("logs2mysql.py is being run directly")
     processLogs()

@@ -25,7 +25,7 @@ import_process TABLE "completed" COLUMN - is NULL an error occured. Refer to the
 import_error TABLE - only table using ENGINE=MYISAM due to disregarding TRANSACTION ROLLBACK. Any errors in Python or MySQL recorded in table. 
 
 Based on settings.env values of ERROR_PROCESS,COMBINED_PROCESS,VHOST_PROCESS,CSV2MYSQL_PROCESS and USERAGENT_PROCESS all 5 can be executed
-by Python apacheLogs2MySQL.py processLogs function OR only LOAD DATA can be executed by processLogs function & Stored Procedures executed separate.
+by Python logs2mysql.py processLogs function OR only LOAD DATA can be executed by processLogs function & Stored Procedures executed separate.
 
 Commands execute each Stored Procedure & process ALL importloadid based on process_status. Each processLogs function executed creates importloadid.
 */

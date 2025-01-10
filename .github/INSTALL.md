@@ -2,7 +2,7 @@
 The steps are important to make installation painless.
 
 ### 1. MySQL Steps
-Before running `apachLogs2MySQL.sql` if `root`@`localhost` does not exist open file and do a ***Find and Replace*** of User Account with a User Account with DBA Role on installation server. Copy below:
+Before running `apache_logs_schema.sql` if `root`@`localhost` does not exist open file and do a ***Find and Replace*** of User Account with a User Account with DBA Role on installation server. Copy below:
 ```
 `root`@`localhost`
 ```
@@ -10,7 +10,7 @@ Rename above <sup>user</sup> to a <sup>user</sup> on your server. For example - 
 
 The easiest way to install is MySQL Command Line Client. Login as User with DBA Role and execute the following:
 ```
-source yourpath/apacheLogs2MySQL.sql
+source yourpath/apache_logs_schema.sql
 ```
 MySQL server must be configured in `my.ini`, `mysqld.cnf` or `my.cnf` depending on platform with following: 
 ```
@@ -43,7 +43,7 @@ Python module links & install command lines for each platform. Single quotes aro
 ### 4. Settings.env steps
 First rename the settings.env file to .env
 
-By default the load_dotenv() is looking for a file name .env which is standard name for setting files. The file is loaded in both the apacheLogs2MySQL.py and watch4files.py with the following line of code:
+By default the load_dotenv() is looking for a file name .env which is standard name for setting files. The file is loaded in both the logs2mysql.py and watch4files.py with the following line of code:
 ```
 load_dotenv() # Loads variables from .env into the environment
 ```
@@ -90,11 +90,11 @@ USERAGENT_PROCESS=1
 ### 6. Run Application
 If MySQL steps completed successfully, successfully installed Python modules, renamed file `settings.env` to `.env`, and updated MySQL server connection and log folder variables it is time to run application.
 
-If you have log files in the folders already run the apacheLogs2MySQL.py directly. It will process all the logs in all the folders. If you have empty folders and want to drop files into folders run the watch4logs.py.
+If you have log files in the folders already run the logs2mysql.py directly. It will process all the logs in all the folders. If you have empty folders and want to drop files into folders run the watch4logs.py.
 
 Run import process directly:
 ```
-python apacheLogs2MySQL.py
+python logs2mysql.py
 ```
 Run polling module:
 ```

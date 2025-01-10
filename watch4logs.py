@@ -10,16 +10,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# version 2.1.5 - 01/03/2025 - move platformNode column from import_client to import_device - see changelog
+# version 2.1.6 - 01/09/2025 - repository name change - ApacheLogs2MySQL to apache-logs-to-mysql - see changelog
 #
 # Copyright 2024 Will Raymond <farmfreshsoftware@gmail.com>
 #
-# CHANGELOG.md in repository - https://github.com/WillTheFarmer/ApacheLogs2MySQL
+# CHANGELOG.md in repository - https://github.com/WillTheFarmer/apache-logs-to-mysql
 """
 :module: watch4logs
 :class:: importLogs
 :function: processLogs()
-:synopsis: Polling for apache logs and calls apacheLogs2MySQL.processLogs().
+:synopsis: Polling for apache logs and calls logs2mysql.processLogs() for ApacheLogs2MySQL application.
 :author: Will Raymond <farmfreshsoftware@gmail.com>
 """
 import time
@@ -27,7 +27,7 @@ import os
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from dotenv import load_dotenv
-from apacheLogs2MySQL import processLogs
+from logs2mysql import processLogs
 load_dotenv()  # Loads variables from .env into the environment
 watch_path = os.getenv('WATCH_PATH')
 watch_recursive = bool(int(os.getenv('WATCH_RECURSIVE')))

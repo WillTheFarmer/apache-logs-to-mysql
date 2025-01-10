@@ -14,19 +14,19 @@ authors:
     affiliation: Farm Fresh Software
 identifiers:
   - type: url
-    value: 'https://github.com/WillTheFarmer/ApacheLogs2MySQL'
-repository-code: 'https://github.com/WillTheFarmer/ApacheLogs2MySQL'
-url: 'https://farmfreshsoftware.com/ApacheLogs2MySQL.html'
+    value: 'https://github.com/WillTheFarmer/apache-logs-to-mysql'
+repository-code: 'https://github.com/WillTheFarmer/apache-logs-to-mysql'
+url: 'https://willthefarmer.github.io'
 abstract: >-
   ApacheLogs2MySQL includes two Python files, one SQL file
-  and one ENV file. Python module 'apacheLogs2MySQL.py' handles
+  and one ENV file. Python module 'logs2mysql.py' handles
   file processing and execution of MySQL LOAD DATA
   statements, stored procedures and SQL statements. Python module
-  'watch4logs.py' imports module 'apacheLogs2MySQL.py' and
+  'watch4logs.py' imports module 'logs2mysql.py' and
   watches Apache log folders for new files. When new files
   are created in folders module calls
-  apacheLogs2MySQL.processLogs() function. SQL file
-  'apacheLogs2MySQL.sql' contains Data Definition Language (DDL)
+  logs2mysql.processLogs() function. SQL file
+  'apache_logs_schema.sql' contains Data Definition Language (DDL)
   that creates a MySQL Schema named 'apache_logs' with tables,
   views, stored functions and procedures designed to automate 
   importing Apache Access & Error Log files into a normalized 
