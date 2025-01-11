@@ -1,8 +1,8 @@
-To contribute Apache Access or Log formats commonly used that application is not setup for please create a `New issue` under repository `Issues`.
+To contribute Apache Access or Log formats commonly used that application is not setup for please create a `New issue` under repository `Issues` tab.
 
 To contribute ideas or comments please create a `New discussion` under repository `Discussions` tab.
 
-Any organizations, people or person with multiple Apache servers that find application to be a godsend in log collection financial contributions are appreciated. Repository has my ***Buy Me a Coffee*** & ***Venmo*** links.
+Any organizations, people or person with multiple Apache servers that find application a godsend in log collection financial contributions are appreciated. Repository has my ***Buy Me a Coffee*** & ***Venmo*** links.
 
 I volunteer for a nonprofit organization that wanted to import their Apache website logs into MySQL tables to query data. The Executive Director loves MySQL so I decided to investigate existing solutions that used MySQL. At that point, I thought it would be day or two of my time. 
 
