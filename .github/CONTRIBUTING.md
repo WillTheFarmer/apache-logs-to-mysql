@@ -2,7 +2,7 @@ To contribute Apache Access or Log formats commonly used that application is not
 
 To contribute ideas or comments please create a `New discussion` under repository `Discussions` tab.
 
-Any organizations, people or person with multiple Apache servers that find application a godsend in log collection financial contributions are appreciated. Repository has my ***Buy Me a Coffee*** & ***Venmo*** links.
+Any organizations, people or person with multiple Apache servers that find application a godsend in log collection monetary contributions are appreciated. Repository has my ***Buy Me a Coffee*** & ***Venmo*** links.
 
 I volunteer for a nonprofit organization that wanted to import their Apache website logs into MySQL tables to query data. The Executive Director loves MySQL so I decided to research existing solutions that used MySQL. I thought it would be two or three days of my time. 
 
@@ -16,6 +16,6 @@ That's how volunteering, lack of a viable MySQL solution and a flexible schedule
 
 ### “Timing, degree and conviction are the three wise men in this life.” — Robert I. Fitzhenry
 
-The final version is less Python and more SQL and much faster processing millions of records. At this point, I have over 950 hours of research, design, iteration & development into application. It is way more time then I intended to invest into this project but it did produce my first open-source software.
+The final version is less Python and more SQL and much faster processing millions of records. At this point, I have over 950 hours of research, design, iteration & development into application. It is much more time then I intended to invest into this project but it did produce my first open-source software.
 
-Any contributions made will be reflected in additional repository development projects, feeding cows :cow: and fixing :wrench: farm equipment :tractor:.
+Any monetary contributions made will be reflected in additional repository development projects, feeding cows :cow: and fixing :wrench: farm equipment :tractor:.
