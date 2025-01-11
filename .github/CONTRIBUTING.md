@@ -20,4 +20,4 @@ That's how volunteering, lack of a viable MySQL solution and a flexible schedule
 
 The final version is less Python and more SQL and much faster processing millions of records. At this point, I have over 950 hours of research, design, iteration & development into application. It is much more time then I intended to invest into this project but it did produce my first open-source software.
 
-Monetary contributions made will be reflected in development of web interface with Drill Down Capability and [apache/echarts](https://github.com/apache/echarts) Log Visualization integration for this MySQL `apache_logs` schema. Web interface will be released in separate repository.
+Monetary contributions made will be reflected in development of Web Interface with Drill Down Capability and [apache/echarts](https://github.com/apache/echarts) Log Visualization integration for this MySQL `apache_logs` schema. Web Interface will be released in separate repository.
