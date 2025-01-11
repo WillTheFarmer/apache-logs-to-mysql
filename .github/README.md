@@ -13,7 +13,7 @@ Three options to associate ServerName & ServerPort with Access and Error logs mi
 
 4 LogFormats & 2 ErrorLogFormats can be loaded and 5 MySQL Stored Procedures can be processed in a single Python `ProcessLogs function` execution.
 
-Database system designed to accommodate unlimited domains. Step-by-step guide for easy installation :point_down:
+Database system designed to accommodate unlimited servers & domains. Step-by-step guide for easy installation :point_down:
 
 Web interface with Drill Down Capability and [apache/echarts](https://github.com/apache/echarts) Log Visualization integration in development. It will be released in separate repository.
 ## Entity Relationship Diagram of apache_logs schema tables
@@ -74,7 +74,7 @@ LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" v
 Application is designed to use the ***csv2mysql*** LogFormat. LogFormat has comma-separated values and adds 8 Format Strings. A complete list of Format Strings
 with descriptions indicating added Format Strings below.
 ```
-LogFormat "%v,%p,%h,%l,%u,%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\",\"%q\",\"%{Referer}i\",\"%{User-Agent}i\",\"%{farmwork.app}C\",%L" csv2mysql
+LogFormat "%v,%p,%h,%l,%u,%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\",\"%q\",\"%{Referer}i\",\"%{User-Agent}i\",\"%{VARNAME}C\",%L" csv2mysql
 ```
 |Format String|Description|
 |-------------|-----------|
