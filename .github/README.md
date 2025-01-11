@@ -15,10 +15,10 @@ Three options to associate ServerName & ServerPort with Access and Error logs mi
 
 Database system designed to accommodate unlimited servers & domains. Step-by-step guide for easy installation :point_down:
 
-Web interface with Drill Down Capability and [apache/echarts](https://github.com/apache/echarts) Log Visualization integration in development. It will be released in separate repository.
+Web interface with Drill Down Capability and [apache/echarts](https://github.com/apache/echarts) Log Visualization integration in development. Web interface will be released in separate repository.
 ## Entity Relationship Diagram of apache_logs schema tables
 ![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
-Diagram created with Open-source database diagrams editor [chartdb/chartdb](https://github.com/chartdb/chartdb)
+Diagram created with open-source database diagrams editor [chartdb/chartdb](https://github.com/chartdb/chartdb)
 ## Application Description
 This is a fast, reliable processing application with detailed logging and two stages of data parsing. First stage is performed in `LOAD DATA LOCAL INFILE` statements. 
 Second stage is performed in `process_access_parse` and `process_error_parse` Stored Procedures.
