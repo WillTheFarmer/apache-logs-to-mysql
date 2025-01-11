@@ -33,7 +33,7 @@ Log-level variables can be set to display info messages in console or inserted i
 All import errors in Python `processLogs` (client) and MySQL Stored Procedures (server) are inserted into `apache_logs.import_error` TABLE.
 This is the only schema table that uses ENGINE=MYISAM to avoid TRANSACTION ROLLBACKS.
 
-Logging functionality, database design and table relationship contraints produce both physical and logical integrity. 
+Logging functionality, database design and table relationship constraints produce both physical and logical integrity. 
 This enables a complete audit trail providing ability to determine when, where and what file each record originated from.
 
 All folder paths, filename patterns, logging, processing, MySQL connection setting variables are in .env file for easy installation and maintenance.
