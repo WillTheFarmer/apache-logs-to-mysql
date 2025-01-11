@@ -1,6 +1,8 @@
-To contribute Apache Access or Log formats commonly used that application is not setup for please create a `New issue` under repository `Issues` tab.
+To contribute any Issues or Errors found using application please create a `New issue` under repository `Issues` tab.
 
-To contribute ideas or comments please create a `New discussion` under repository `Discussions` tab.
+To contribute Ideas or Comments please create a `New discussion` under repository `Discussions` tab.
+
+To contribute Apache Access or Error Log Formats commonly used that application should process please start `New discussion` about that.
 
 Any organizations, people or person with multiple Apache servers that find application a godsend in log collection monetary contributions are appreciated. Repository has my ***Buy Me a Coffee*** & ***Venmo*** links.
 
@@ -18,4 +20,4 @@ That's how volunteering, lack of a viable MySQL solution and a flexible schedule
 
 The final version is less Python and more SQL and much faster processing millions of records. At this point, I have over 950 hours of research, design, iteration & development into application. It is much more time then I intended to invest into this project but it did produce my first open-source software.
 
-Any monetary contributions made will be reflected in additional repository development projects, feeding cows :cow: and fixing :wrench: farm equipment :tractor:.
+Monetary contributions made will be reflected in additional repository development projects, feeding cows :cow: and fixing :wrench: farm equipment :tractor:.
