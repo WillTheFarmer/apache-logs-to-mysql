@@ -1,5 +1,5 @@
 # Byte-compiled / optimized / DLL files
-__pycache__/
+__pycache__
 *.py[cod]
 *$py.class
 
@@ -9,21 +9,18 @@ build/
 dist/
 var/
 
+# Visual Studio Code
+.vscode
+snippets
+
 # Installer logs
 pip-log.txt
+.log
 
 # Unit test / coverage reports
 .cache
 coverage.xml
 *.cover
-.pytest_cache/
-cover/
 
 # Environments
 .env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
