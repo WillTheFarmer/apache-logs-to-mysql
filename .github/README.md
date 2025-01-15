@@ -16,7 +16,7 @@ Three options to associate ServerName & ServerPort with Access and Error logs mi
 Database Schema ***apache_logs*** designed to accommodate unlimited servers & domains. Step-by-step guide for easy installation :point_down:
 
 The accompanying visualization tool for the MySQL Schema ***apache_logs*** is [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) created is a separate repository.
-The Web interface consists of Express.js web application frameworks with Drill Down Capability & Apache ECharts framework for Data Visualization of charts and reports.
+The Web interface consists of Express.js web application frameworks with Drill Down Capability & Apache ECharts framework for Data Visualization.
 ## Entity Relationship Diagram of apache_logs schema tables
 ![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
 Diagram created with open-source database diagrams editor [chartdb/chartdb](https://github.com/chartdb/chartdb)
