@@ -1,27 +1,33 @@
 # Apache Log Parser and Data Normalization Application
 ### Python handles File Processing & MySQL handles Data Processing
-ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema ***apache_logs*** to automate importing Access & Error files and normalizing data into database designed for reports & data analysis.
+ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema ***apache_logs*** to automate importing Access & Error files 
+and normalizing data into database designed for reports & data analysis.
 
 Runs on Windows, Linux and MacOS & tested with MySQL versions 8.0.39, 8.4.3, 9.0.0 & 9.1.0.
 
-Imports Access Logs in LogFormats - ***common***, ***combined*** and ***vhost_combined*** & additional ***csv2mysql*** LogFormat defined :point_down: 
+Imports Access Logs in LogFormats - ***common***, ***combined*** and ***vhost_combined*** & additional ***csv2mysql*** 
+LogFormat defined :point_down: 
 
-Imports Error Logs in ***default*** ErrorLogFormat & ***additional*** ErrorLogFormat defined below performing data harmonization on Apache Codes & Messages,
-System Codes & Messages, and Log Messages to create a unified, standardized dataset. Error Log view images :point_down:
+Imports Error Logs in ***default*** ErrorLogFormat & ***additional*** ErrorLogFormat defined below performing data harmonization 
+on Apache Codes & Messages, System Codes & Messages, and Log Messages to create a unified, standardized dataset. 
+Error Log view images :point_down:
 
-Three options to associate ServerName & ServerPort with Access and Error logs missing `%v - canonical ServerName` and `%p - canonical ServerPort` Format Strings described :point_down:
+Three options to associate ServerName & ServerPort with Access and Error logs missing `%v - canonical ServerName` 
+and `%p - canonical ServerPort` Format Strings described :point_down:
 
 4 LogFormats & 2 ErrorLogFormats can be loaded and 5 MySQL Stored Procedures can be processed in a single Python `ProcessLogs function` execution.
 
 Database Schema ***apache_logs*** designed to accommodate unlimited servers & domains. Step-by-step guide for easy installation :point_down:
 
-The accompanying visualization tool for the MySQL Schema ***apache_logs*** is [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) created is a separate repository.
+The accompanying visualization tool for the MySQL Schema ***apache_logs*** is [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts)
+created is a separate repository.
 The Web interface consists of Express.js web application frameworks with Drill Down Capability & Apache ECharts framework for Data Visualization.
 ## Entity Relationship Diagram of apache_logs schema tables
 ![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
 Diagram created with open-source database diagrams editor [chartdb/chartdb](https://github.com/chartdb/chartdb)
 ## Application Description
-This is a fast, reliable processing application with detailed logging and two stages of data parsing. First stage is performed in `LOAD DATA LOCAL INFILE` statements. 
+This is a fast, reliable processing application with detailed logging and two stages of data parsing. 
+First stage is performed in `LOAD DATA LOCAL INFILE` statements. 
 Second stage is performed in `process_access_parse` and `process_error_parse` Stored Procedures.
 
 Python handles polling of log file folders and executing MySQL Database LOAD DATA, Stored Procedures, Stored Functions and SQL Statements. 
@@ -41,7 +47,8 @@ All folder paths, filename patterns, logging, processing, MySQL connection setti
 
 Two Python Client modules can run in PM2 daemon process manager for 24/7 online processing on multiple web servers feeding a single Server module simultaneous.
 
-Application is developed with Python 3.12, MySQL and 4 Python modules. Modules are listed with Python Package Index link, install command for each platform & GitHub Repository link.
+Application is developed with Python 3.12, MySQL and 4 Python modules. Modules are listed with Python Package Index link, 
+install command for each platform & GitHub Repository link.
 ## Four Supported Access Log Formats
 Apache uses same Standard Access LogFormats (***common***, ***combined***, ***vhost_combined***) on all 3 platforms. Each LogFormat adds 2 Format Strings to the prior. 
 Format String descriptions are listed below each LogFormat. Information from: https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#logformat 
@@ -142,17 +149,21 @@ In order to consolidate logs from multiple domains `%v - canonical ServerName` i
 
 Listed are different methods to associate ServerName and ServerPort to all Access and Error logs.
 
-1) Set `ERRORLOG_SERVERNAME`, `ERRORLOG_SERVERPORT`, `COMBINED_SERVERNAME`, `COMBINED_SERVERPORT` variables in .env file and uncomment `os.getenv` lines at top of `logs2mysql.py`. 
-By default, variables are defined and set to an empty string. 
-Below is screenshot of `logs2mysql.py` with commented `os.getenv` code. `server_name` and `server_port` COLUMNS of `load_error_default` and `load_access_combined` TABLES will be SET during Python `LOAD DATA LOCAL INFILE` execution.
+1) Set `ERRORLOG_SERVERNAME`, `ERRORLOG_SERVERPORT`, `COMBINED_SERVERNAME`, `COMBINED_SERVERPORT` variables in .env file and uncomment `os.getenv` 
+lines at top of `logs2mysql.py`. By default, variables are defined and set to an empty string. 
+Below is screenshot of `logs2mysql.py` with commented `os.getenv` code. `server_name` and `server_port` COLUMNS of `load_error_default` and `load_access_combined` 
+TABLES will be SET during Python `LOAD DATA LOCAL INFILE` execution.
 
 ![load_settings_variables.png](./assets/load_settings_variables.png)
 
-2) Manually ***UPDATE*** `server_name` and `server_port` COLUMNS of `load_error_default` and `load_access_combined` TABLES after STORED PROCEDURES `process_access_parse` and `process_error_parse` and before `process_access_import` and `process_error_import`. 
- If `%v` or `%p` Format Strings exist parsing into `server_name` and `server_port` COLUMNS is performed in parse processes. Data Normalization is performed in import processes. 
+2) Manually ***UPDATE*** `server_name` and `server_port` COLUMNS of `load_error_default` and `load_access_combined` TABLES after STORED PROCEDURES `process_access_parse` 
+and `process_error_parse` and before `process_access_import` and `process_error_import`. 
+If `%v` or `%p` Format Strings exist parsing into `server_name` and `server_port` COLUMNS is performed in parse processes. 
+Data Normalization is performed in import processes. 
 
 3) Populate `server_name` and `server_port` COLUMNS in `import_file` TABLE before import processes. This will populate all records associated with file.
-This option only updates records with NULL values in ***load_tables*** `server_name` and `server_port` COLUMNS while executing STORED PROCEDURES `process_access_import` and `process_error_import`. 
+This option only updates records with NULL values in ***load_tables*** `server_name` and `server_port` COLUMNS while executing 
+STORED PROCEDURES `process_access_import` and `process_error_import`. 
 
 UPDATE commands to populate both Access and Error Logs if ***"Log File Names"*** are related to VirtualHost similar to:
 ```
@@ -166,7 +177,8 @@ UPDATE apache_logs.import_file SET server_name='farmwork.app', server_port=443 W
 UPDATE apache_logs.import_file SET server_name='ip255-255-255-255.us-east.com', server_port=443 WHERE server_name IS NULL AND name LIKE '%error%';
 ```
 ## Required Python Modules
-Python module links & install command lines for each platform. Single quotes around module name are required on macOS. The simplest installation option is run the command line under '2. Python Steps' below. If that works you are all set.
+Python module links & install command lines for each platform. Single quotes around module name are required on macOS. The simplest installation option is run the 
+command line under '2. Python Steps' below. If that works you are all set.
 |Python Package|Windows 10 & 11|Ubuntu 24.04|macOS 15.0.1 Darwin 24.0.0|GitHub Repository|
 |--------------|---------------|------------|--------------------------|-----------------|
 |[PyMySQL](https://pypi.org/project/PyMySQL/)|python -m pip install PyMySQL[rsa]|sudo apt-get install python3-pymysql|python3 -m pip install 'PyMySQL[rsa]'|[PyMySQL/PyMySQL](https://github.com/PyMySQL/PyMySQL)|
@@ -178,7 +190,8 @@ Python module links & install command lines for each platform. Single quotes aro
 Steps make installation quick and straightforward. Application will be ready to import Apache logs on completion.
 
 ### 1. MySQL Steps
-Before running `apache_logs_schema.sql` if User Account `root`@`localhost` does not exist on installation server open file and perform a ***Find and Replace*** using a User Account with DBA Role on installation server. Copy below:
+Before running `apache_logs_schema.sql` if User Account `root`@`localhost` does not exist on installation server open 
+file and perform a ***Find and Replace*** using a User Account with DBA Role on installation server. Copy below:
 ```
 root`@`localhost`
 ```
@@ -208,7 +221,8 @@ python3 -m ensurepip --upgrade
 If issues with ***pip install*** occur use individual install commands included above.
 
 ### 3. Create MySQL USER and GRANTS
-To minimize data exposure and breach risks create a MySQL USER for Python module with GRANTS to only schema objects and privileges required to execute import processes. (`mysql_user_and_grants.sql` in repository)
+To minimize data exposure and breach risks create a MySQL USER for Python module with GRANTS to only schema objects and privileges 
+required to execute import processes. (`mysql_user_and_grants.sql` in repository)
 ![mysql_user_and_grants.sql in repository](./assets/mysql_user_and_grants.png)
 ### 4. Settings.env Variables
 settings.env with default settings for Windows. Make sure correct logFormats are in correct logFormat folders. Application does not
@@ -220,9 +234,11 @@ By default, load_dotenv() looks for standard setting file name `.env`. The file 
 load_dotenv() # Loads variables from .env into the environment
 ```
 ### 6. Run Application
-If MySQL steps are complete, Python modules are installed, MySQL server connection and log folder variables are updated, and file `settings.env` is renamed to `.env` application is ready to go.
+If MySQL steps are complete, Python modules are installed, MySQL server connection and log folder variables are updated, 
+and file `settings.env` is renamed to `.env` application is ready to go.
 
-If log files exist in folders run `logs2mysql.py` and all files in all folders will be processed. Run `watch4logs.py` and drop a file or files into folder and `logs2mysql.py` will be executed. 
+If log files exist in folders run `logs2mysql.py` and all files in all folders will be processed. Run `watch4logs.py` and 
+drop a file or files into folder and `logs2mysql.py` will be executed. 
 If folders are empty or contain files when a file is drop into folder any unprocessed files in folders will be processed.
 
 Run import process directly:
@@ -249,7 +265,8 @@ Set environment variables `ERROR_PROCESS`,`COMBINED_PROCESS`, `VHOST_PROCESS`, `
 ONLY files & records processed by current `processLogs function` execution. 
 
 MySQL Stored Procedures can be run from Command Line Client or GUI Database Tool separately.
-Execute Stored Procedures with second parameter 'ALL' processes files & records based on `process_status` value. Files & records can contain multiple `importloadid` values.
+Execute Stored Procedures with second parameter 'ALL' processes files & records based on `process_status` value. Files & records 
+can contain multiple `importloadid` values.
 ```
 COLUMN process_status in LOAD DATA tables - load_access_combined, load_access_csv2mysql, load_access_vhost, load_error_default
 process_status=0 - LOAD DATA tables loaded with raw log data
@@ -275,7 +292,9 @@ Normalization ensures that data is organized in a way that makes sense for the d
 MySQL `apache_logs` schema currently has 49 Tables, 853 Columns, 168 Indexes, 66 Views, 7 Stored Procedures and 43 Functions to process Apache Access log in 4 formats 
 & Apache Error log in 2 formats. Database normalization at work!
 ## MySQL Access Log View by Browser - 1 of 66 schema views
-Current schema views are Access and Error Attribute Primary tables created in normalization process with simple aggregate values. These are primitive data presentations of the log data warehouse. ApacheLogs2MySQL is the 'EL' of the 'ELK' Stack. The Web interface with Drill Down Capability and [apache/echarts](https://github.com/apache/echarts) Log Visualization integration in development is the 'K' of the 'ELK' Stack.
+Current schema views are Access and Error Attribute Primary tables created in normalization process with simple aggregate values. 
+These are primitive data presentations of the log data warehouse. ApacheLogs2MySQL is the 'EL' of the 'ELK' Stack. The Web interface with 
+Drill Down Capability and [apache/echarts](https://github.com/apache/echarts) Log Visualization integration in development is the 'K' of the 'ELK' Stack.
 
 MySQL View - apache_logs.access_ua_browser_family_list - data from LogFormat: combined & csv2mysql
 ![view-access_ua_browser_family_list.png](./assets/access_ua_browser_list.png)
@@ -296,7 +315,8 @@ Each attribute has an associated table in ***apache_logs*** schema. Using these 
 ![error_log_level_list](./assets/error_log_level_list.png)
 
 ## MySQL Schema Objects - Tables, Stored Procedures, Functions and Views
-Images of the `apache_logs` schema objects. Access and Error log attributes are normalized into separate entity tables. Each table is populated with unique values of the attribute.
+Images of the `apache_logs` schema objects. Access and Error log attributes are normalized into separate entity tables. 
+Each table is populated with unique values of the attribute.
 
 Database normalization is a critical process in database design with objectives of optimizing data storage, improving data integrity, and reducing data anomalies.
 Organizing data into normalized tables greatly enhances efficiency and maintainability of a database system.
