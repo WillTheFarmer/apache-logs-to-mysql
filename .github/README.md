@@ -14,7 +14,7 @@ Three options to associate ServerName & ServerPort with Access and Error logs mi
 4 LogFormats & 2 ErrorLogFormats can be loaded and 5 MySQL Stored Procedures can be processed in a single Python `ProcessLogs function` execution.
 
 [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) consists of Express.js web application frameworks with Drill Down Capability & Apache ECharts framework
-for rapid construction of Log Data Visualization for reports & data analysis from the MySQL Schema ***apache_logs*** created by this application.
+for rapid construction of Data Visualization for reports & data analysis from MySQL Schema ***apache_logs*** created by this application.
 
 Database Schema designed to accommodate unlimited servers & domains. Step-by-step guide for easy installation :point_down:
 ## Entity Relationship Diagram of apache_logs schema tables
