@@ -293,8 +293,8 @@ MySQL `apache_logs` schema currently has 49 Tables, 853 Columns, 168 Indexes, 66
 & Apache Error log in 2 formats. Database normalization at work!
 ## MySQL Access Log View by Browser - 1 of 66 schema views
 Current schema views are Access and Error Attribute Primary tables created in normalization process with simple aggregate values. 
-These are primitive data presentations of the log data warehouse. ApacheLogs2MySQL is the 'EL' of the 'ELK' Stack. The Web interface with 
-Drill Down Capability and [apache/echarts](https://github.com/apache/echarts) Log Visualization integration in development is the 'K' of the 'ELK' Stack.
+These are primitive data presentations of the log data warehouse. ApacheLogs2MySQL is the 'EL' of the 'ELK' Stack. The Web interface 
+[MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) in development is the 'K' of the 'ELK' Stack.
 
 MySQL View - apache_logs.access_ua_browser_family_list - data from LogFormat: combined & csv2mysql
 ![view-access_ua_browser_family_list.png](./assets/access_ua_browser_list.png)
