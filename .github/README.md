@@ -1,6 +1,6 @@
 # Apache Log Parser and Data Normalization Application
 ### Python handles File Processing & MySQL handles Data Processing
-ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema to automate importing Access & Error files and normalizing data into database designed for reports & data analysis.
+ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema ***apache_logs*** to automate importing Access & Error files and normalizing data into database designed for reports & data analysis.
 
 Runs on Windows, Linux and MacOS & tested with MySQL versions 8.0.39, 8.4.3, 9.0.0 & 9.1.0.
 
@@ -13,10 +13,10 @@ Three options to associate ServerName & ServerPort with Access and Error logs mi
 
 4 LogFormats & 2 ErrorLogFormats can be loaded and 5 MySQL Stored Procedures can be processed in a single Python `ProcessLogs function` execution.
 
-[MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) consists of Express.js web application frameworks with Drill Down Capability & Apache ECharts framework
-for rapid construction of Data Visualization for reports & data analysis from MySQL Schema ***apache_logs*** created by this application.
+Database Schema ***apache_logs*** designed to accommodate unlimited servers & domains. Step-by-step guide for easy installation :point_down:
 
-Database Schema designed to accommodate unlimited servers & domains. Step-by-step guide for easy installation :point_down:
+The accompanying visualization tool for the MySQL Schema ***apache_logs*** is [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) created is a separate repository.
+The Web interface consists of Express.js web application frameworks with Drill Down Capability & Apache ECharts framework for Data Visualization of charts and reports.
 ## Entity Relationship Diagram of apache_logs schema tables
 ![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
 Diagram created with open-source database diagrams editor [chartdb/chartdb](https://github.com/chartdb/chartdb)
