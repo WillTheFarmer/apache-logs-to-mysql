@@ -20,7 +20,7 @@ and `%p - canonical ServerPort` Format Strings described :point_down:
 Database Schema ***apache_logs*** designed to accommodate unlimited servers & domains. Step-by-step guide for easy installation :point_down:
 
 The accompanying visualization tool for the MySQL Schema ***apache_logs*** is [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts)
-created is a separate repository.
+created in a separate repository.
 The Web interface consists of Express.js web application frameworks with Drill Down Capability & Apache ECharts frameworks for Data Visualization.
 ## Entity Relationship Diagram of apache_logs schema tables
 ![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
