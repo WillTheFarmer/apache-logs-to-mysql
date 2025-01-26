@@ -15,13 +15,15 @@ Error Log view images :point_down:
 Three options to associate ServerName & ServerPort with Access and Error logs missing `%v - canonical ServerName` 
 and `%p - canonical ServerPort` Format Strings described :point_down:
 
-4 LogFormats & 2 ErrorLogFormats can be loaded and 5 MySQL Stored Procedures can be processed in a single Python `ProcessLogs function` execution.
+4 LogFormats & 2 ErrorLogFormats can be loaded and 6 MySQL Stored Procedures can be processed in a single Python `ProcessLogs function` execution.
 
 Database Schema ***apache_logs*** designed to accommodate unlimited servers & domains. Step-by-step guide for easy installation :point_down:
 
 The accompanying visualization tool for the MySQL Schema ***apache_logs*** is [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts)
-created in a separate repository.
-The Web interface consists of Express.js web application frameworks with Drill Down Capability & Apache ECharts frameworks for Data Visualization.
+created in a separate repository. The Web interface consists of Express.js web application frameworks with Drill Down Capability & Apache ECharts frameworks for Data Visualization.
+
+New version with [MaxMind GeoIP2](https://github.com/maxmind/GeoIP2-python) Python API integration will be released end of January
+with 5 additional tables for IP geolocation data. Tables are shown in updated diagram :point_down: 
 ## Entity Relationship Diagram of apache_logs schema tables
 ![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
 Diagram created with open-source database diagrams editor [chartdb/chartdb](https://github.com/chartdb/chartdb)
@@ -289,7 +291,7 @@ Log files imported from multiple domains require a ServerName value to properly 
 Database normalization is the process of organizing data in a relational database to improve data integrity and reduce redundancy. 
 Normalization ensures that data is organized in a way that makes sense for the data model and attributes, and that the database functions efficiently.
 
-MySQL `apache_logs` schema currently has 49 Tables, 853 Columns, 168 Indexes, 66 Views, 7 Stored Procedures and 43 Functions to process Apache Access log in 4 formats 
+MySQL `apache_logs` schema currently has 55 Tables, 908 Columns, 188 Indexes, 72 Views, 8 Stored Procedures and 90 Functions to process Apache Access log in 4 formats 
 & Apache Error log in 2 formats. Database normalization at work!
 ## MySQL Access Log View by Browser - 1 of 66 schema views
 Current schema views are Access and Error Attribute Primary tables created in normalization process with simple aggregate values. 
