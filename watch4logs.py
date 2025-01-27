@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# version 2.1.6 - 01/09/2025 - repository name change - ApacheLogs2MySQL to apache-logs-to-mysql - see changelog
+# version 3.0.0 - 01/28/2025 - IP Geolocation integration, table & column renames, refinements - see changelog
 #
 # Copyright 2024 Will Raymond <farmfreshsoftware@gmail.com>
 #
@@ -33,13 +33,26 @@ watch_path = os.getenv('WATCH_PATH')
 watch_recursive = bool(int(os.getenv('WATCH_RECURSIVE')))
 watch_interval = int(os.getenv('WATCH_INTERVAL'))
 watch_log = int(os.getenv('WATCH_LOG'))
+# make error messages noticeable in console - all error messages start with 'ERROR - ' for keyword log search
+class bcolors:
+    GREEN = '\33[32m'
+    GREENER = '\033[92m'
+    ERROR = '\33[41m' # CREDBG - red background
+    HEADER = '\033[95m'
+    REPEAT = '\033[94m'
+    ALERT = '\033[96m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    ENDC = '\033[0m'
 class importLogs(FileSystemEventHandler):
   processFiles = 0
   def on_any_event(self, event):
     if event.event_type == 'created' and event.is_directory == False:
       setattr(importLogs, 'processFiles', 1)
       if watch_log >= 1:
-        print("@@@@@!!!!!-----File for processing -----!!!!!@@@@@")
+        print(bcolors.ALERT + "*files to process*" + bcolors.ENDC)
 
 if __name__ == "__main__":
   event_handler = importLogs()
@@ -49,7 +62,7 @@ if __name__ == "__main__":
   try:
     while True:
       if watch_log >= 2:
-        print("checking for new files")
+        print(bcolors.REPEAT + "check for new files" + bcolors.ENDC)
       if importLogs.processFiles == 1:
         setattr(importLogs, 'processFiles', 0)
         processLogs()

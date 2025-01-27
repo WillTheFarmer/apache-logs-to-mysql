@@ -39,6 +39,7 @@ Python module links & install command lines for each platform. Single quotes aro
 |[user-agents](https://pypi.org/project/user-agents/)|pip install pyyaml ua-parser user-agents|sudo apt-get install python3-user-agents|python3 -m pip install user-agents|[selwin/python-user-agents](https://github.com/selwin/python-user-agents)|
 |[watchdog](https://pypi.org/project/watchdog/)|pip install watchdog|sudo apt-get install python3-watchdog|python3 -m pip install watchdog|[gorakhargosh/watchdog](https://github.com/gorakhargosh/watchdog/tree/master)|
 |[python-dotenv](https://pypi.org/project/python-dotenv/)|pip install python-dotenv|sudo apt-get install python3-dotenv|python3 -m pip install python-dotenv|[theskumar/python-dotenv](https://github.com/theskumar/python-dotenv)|
+|[geoip2](https://pypi.org/project/geoip2/)|pip install geoip2|sudo apt-get install python3-geoip2|python3 -m pip install python-geoip2|[maxmind/GeoIP2-python](https://github.com/maxmind/GeoIP2-python)|
 
 ### 4. Settings.env steps
 First rename the settings.env file to .env
@@ -64,15 +65,15 @@ ERROR_LOG=2
 ERROR_PATH=C:\Users\farmf\Documents\apacheLogs\**/*error*.*
 ERROR_RECURSIVE=1
 ERROR_PROCESS=2
-ERROR_SERVERNAME=yourdomain.com
-ERROR_SERVERPORT=443
+ERROR_SERVER=errordomain.com
+ERROR_SERVERPORT=911
 COMBINED=1
 COMBINED_LOG=2
 COMBINED_PATH=C:\Users\farmf\Documents\apacheLogs\combined\**/*access*.*
 COMBINED_RECURSIVE=1
 COMBINED_PROCESS=2
-COMBINED_SERVERNAME=yourdomain.com
-COMBINED_SERVERPORT=443
+COMBINED_SERVER=combodomain.com
+COMBINED_SERVERPORT=311
 VHOST=1
 VHOST_LOG=2
 VHOST_PATH=C:\Users\farmf\Documents\apacheLogs\vhost\**/*access*.*
@@ -86,6 +87,11 @@ CSV2MYSQL_PROCESS=2
 USERAGENT=1
 USERAGENT_LOG=2
 USERAGENT_PROCESS=1
+GEOIP2=1
+GEOIP2_LOG=2
+GEOIP2_CITY=C:\Users\farmf\Downloads\ip_databases\dbip-city-lite-2025-01.mmdb
+GEOIP2_ASN=C:\Users\farmf\Downloads\ip_databases\dbip-asn-lite-2025-01.mmdb
+GEOIP2_PROCESS=1
 ```
 ### 6. Run Application
 If MySQL steps completed successfully, successfully installed Python modules, renamed file `settings.env` to `.env`, and updated MySQL server connection and log folder variables it is time to run application.

@@ -9,6 +9,7 @@
 - version 2.1.4 - 01/02/2025 - add import_device TABLE to separate import_client TABLE
 - version 2.1.5 - 01/03/2025 - move platformNode column from import_client to import_device
 - version 2.1.6 - 01/09/2025 - repository name change - ApacheLogs2MySQL to apache-logs-to-mysql
+- version 3.0.0 - 01/28/2025 - IP Geolocation integration, several table & column renames, many process refinements - see changelog
 - [1.0.1] apache_logs.error_systemCodeID corrected line - INTO logsystemCode to INTO logsystemCodeID
 - [1.0.1] remove debugging - SELECT statement from apache_logs.process_access_import, process_error_import & normalize_useragent.
 - [1.0.1] remove whitespace and commented out old code on all stored programs
@@ -33,12 +34,12 @@
 - [2.0.0] add ServerName & ServerPort on import Combined & Error logs stage tables. Option allow adding domains to logs.
 - [2.0.0] add ERROR_SERVERNAME,ERROR_SERVERPORT,COMBINED_SERVERNAME & COMBINED_SERVERPORT variables to settings.env. 
 - [2.0.0] add SET servername & serverport COLUMN values to LOAD DATA statements.
-- [2.0.0] create log_referer, log_remotehost, log_servername, log_serverport TABLES to assoicate Access and Error logs.
+- [2.0.0] create log_referer, log_remotehost, log_servername, log_serverport TABLES to associate Access and Error logs.
 - [2.0.0] add server_name & server_port COLUMNS to import_file TABLE. Provides second option to update Apache logs without %v. 
 - [2.0.0] add compound indexes ACCESS_LOG and ERROR_LOG for ServerName and Serverport.
 - [2.0.0] modify process_access_import & process_error_import to populate empty server_name & server_port with ServerName & ServerPort from import_file TABLE. 
 - [2.0.0] add WATCH_LOG to setting Log Level in watch4logs.py. 0=no messages, 1=message when files found, 2=message when checking for files & files found
-- [2.0.0] add class bcolors to place RED BACKGROUND on all ERROR - messsages
+- [2.0.0] add class bcolors to place RED BACKGROUND on all ERROR - messages
 - [2.0.0] add file - mysql_user_and_grants.sql - MySQL USER and GRANTS file for CREATE USER apache_upload for Python module
 - [2.0.0] add Start and End DATETIME to processLogs Function. Already had duration times.
 - [2.0.0] add file - call_processes.sql - description and CALL command lines for 5 Stored Procedures
@@ -47,7 +48,7 @@
 - [2.0.0] This version is the application baseline
 - [2.1.0] add request_log_id to access and error formats functionality. Enables easier association with access and error records. 
 - [2.1.0] add columns to load_error_default & load_access_csv2mysql TABLES
-- [2.1.0] modify process_error_parse - replace POSITION function with LOCATE function, removed unrequired brackets, add parsing logic for %v and %L String Formats.
+- [2.1.0] modify process_error_parse - replace POSITION function with LOCATE function, removed not required brackets, add parsing logic for %v and %L String Formats.
 - [2.1.0] modify process_error_import - add normalization for request_log_id, replace POSITION function with LOCATE function
 - [2.1.0] modify process_access_parse - add parsing for request_log_id, replace POSITION function with LOCATE function
 - [2.1.0] modify process_access_import - add normalization for request_log_id, replace POSITION function with LOCATE function
@@ -89,3 +90,15 @@
 - [2.1.6] modify `logs2mysql.py` line `if useragent_process == 1:` to `if useragent_process >= 1:`
 - [2.1.6] modify all files with refers to repository name. Changed `ApacheLogs2MySQL` to `apache-logs-to-mysql`
 - [2.1.6] "application name" is still referred to as `ApacheLogs2MySQL` in `README.md`, `CITATION.md`,  `logs2mysql.py`, `watch4logs.py`, `apache_logs_schema.sql`, `INSTALL.md` and `settings.env`
+- [3.0.0] This version is NOT backward compatible to previous versions due to many database and process changes. These are final major changes required for Web interface in development.
+- [3.0.0] Integration with MaxMind GeoIP2 Python API to enhance Client IP geolocation data for Log Data Visualization in charts, reports & data analysis interfaces.
+- [3.0.0] modify `logs2mysql.py` to integrate IP data retrieval process and reorganizing encapsulation of all processes within the same "Import Load Process".
+- [3.0.0] add TABLES `log_client_city`, `log_client_coordinate`, `log_client_country`, `log_client_network`, `log_client_organization` and `log_client_subdivision` for IP geolocation data.
+- [3.0.0] add `normalize_client` STORED PROCEDURE to normalize IP Address geolocation data into 6 tables.
+- [3.0.0] rename TABLES `log_clientname` to `log_client`, `log_servername` to `log_server`
+- [3.0.0] rename COLUMNS `clientnameid` to `clientid`, `servernameid` to `serverid` throughout application tables and processes.
+- [3.0.0] modify `process_access_parse` and `process_error_parse` WHERE CLAUSES for server_name UPDATE commands.
+- [3.0.0] add 16 stored functions for log attribute tables to return names for Slice and dice is a data analysis in drill-down Web interface. 
+- [3.0.0] modify and reworded all console log messages in `logs2mysql.py` to standardize messages for each process. Added COLORS to coordinate message types for better readability.
+- [3.0.0] modify all database INDEX NAMES for standardization and consolidation.
+- [3.0.0] tested simultaneously uploading logs from 10 VPS with multiple VirtualHosts on each Server processing thousands of files in different formats and millions of log records. 

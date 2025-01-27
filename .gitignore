@@ -3,12 +3,6 @@ __pycache__
 *.py[cod]
 *$py.class
 
-# Distribution / packaging
-.Python
-build/
-dist/
-var/
-
 # Visual Studio Code
 .vscode
 snippets
@@ -16,11 +10,6 @@ snippets
 # Installer logs
 pip-log.txt
 .log
-
-# Unit test / coverage reports
-.cache
-coverage.xml
-*.cover
 
 # Environments
 .env

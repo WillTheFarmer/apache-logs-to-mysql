@@ -3,31 +3,25 @@
 ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema ***apache_logs*** to automate importing Access & Error files 
 and normalizing data into database designed for reports & data analysis.
 
-Runs on Windows, Linux and MacOS & tested with MySQL versions 8.0.39, 8.4.3, 9.0.0 & 9.1.0.
-
 Imports Access Logs in LogFormats - ***common***, ***combined*** and ***vhost_combined*** & additional ***csv2mysql*** 
 LogFormat defined :point_down: 
 
-Imports Error Logs in ***default*** ErrorLogFormat & ***additional*** ErrorLogFormat defined below performing data harmonization 
-on Apache Codes & Messages, System Codes & Messages, and Log Messages to create a unified, standardized dataset. 
-Error Log view images :point_down:
+Imports Error Logs in ***default*** ErrorLogFormat & ***additional*** ErrorLogFormat defined below performing data harmonization on Apache Codes & Messages, System Codes & Messages, and Log Messages to create a unified, standardized dataset. Error Log view images :point_down:
 
-Three options to associate ServerName & ServerPort with Access and Error logs missing `%v - canonical ServerName` 
-and `%p - canonical ServerPort` Format Strings described :point_down:
+All processing stages are encapsulated within one "Import Load" that captures process metrics, notifications and errors into MySQL import tables. Every log data record is traceable back to the computer, folder, file, load process, parse process and import process it came from.
 
-4 LogFormats & 2 ErrorLogFormats can be loaded and 6 MySQL Stored Procedures can be processed in a single Python `ProcessLogs function` execution.
+Multiple Access and Error logs and formats can be loaded, parsed and imported along with User Agent parsing and IP Address geoLocation retrieval in a single execution. A single execution can also be configured to only load logs to Server.
+### Console Process Messages - 4 LogFormats, 2 ErrorLogFormats & 6 MySQL Stored Procedures
+![Processing Messages Console](./assets/processing_messages_console.png)
+New version has [MaxMind GeoIP2](https://github.com/maxmind/GeoIP2-python) Python API integration with 5 additional MySQL tables for IP geoLocation data. Two DB-IP Lite databases are required - `IP to City` and `IP to ASN`. Free DB-IP Lite databases can be found at [DB-IP](https://db-ip.com/db/lite.php)
+
+A visualization tool for the MySQL Schema ***apache_logs*** is [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) and currently under development. The Web interface consists of Express.js web application frameworks with Drill Down Capability & [Apache ECharts](https://github.com/apache/echarts) frameworks for Data Visualization.
 
 Database Schema ***apache_logs*** designed to accommodate unlimited servers & domains. Step-by-step guide for easy installation :point_down:
-
-The accompanying visualization tool for the MySQL Schema ***apache_logs*** is [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts)
-created in a separate repository. The Web interface consists of Express.js web application frameworks with Drill Down Capability & Apache ECharts frameworks for Data Visualization.
-
-New version with [MaxMind GeoIP2](https://github.com/maxmind/GeoIP2-python) Python API integration will be released end of January
-with 5 additional tables for IP geolocation data. Tables are shown in updated diagram :point_down: 
 ## Entity Relationship Diagram of apache_logs schema tables
 ![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
 Diagram created with open-source database diagrams editor [chartdb/chartdb](https://github.com/chartdb/chartdb)
-## Application Description
+## Application runs on Windows, Linux and MacOS
 This is a fast, reliable processing application with detailed logging and two stages of data parsing. 
 First stage is performed in `LOAD DATA LOCAL INFILE` statements. 
 Second stage is performed in `process_access_parse` and `process_error_parse` Stored Procedures.
@@ -49,7 +43,7 @@ All folder paths, filename patterns, logging, processing, MySQL connection setti
 
 Two Python Client modules can run in PM2 daemon process manager for 24/7 online processing on multiple web servers feeding a single Server module simultaneous.
 
-Application is developed with Python 3.12, MySQL and 4 Python modules. Modules are listed with Python Package Index link, 
+Application is developed with Python 3.12, MySQL and 5 Python modules. Modules are listed with Python Package Index link, 
 install command for each platform & GitHub Repository link.
 ## Four Supported Access Log Formats
 Apache uses same Standard Access LogFormats (***common***, ***combined***, ***vhost_combined***) on all 3 platforms. Each LogFormat adds 2 Format Strings to the prior. 
@@ -144,7 +138,7 @@ To use this format place `ErrorLogFormat` before `ErrorLog` in `apache2.conf` to
 |%v|The canonical ServerName of the server serving the request.|
 |%L|Log ID of the request. A %L format string is also available in `mod_log_config` to allow to correlate access log entries with error log lines. If [mod_unique_id](https://httpd.apache.org/docs/current/mod/mod_unique_id.html) is loaded, its unique id will be used as log ID for requests.|
 
-## Three options to attach ServerName & ServerPort to Access & Error logs
+## Three options to associate ServerName & ServerPort to Access & Error logs
 Apache LogFormats - ***common***, ***combined*** and Apache ErrorLogFormat - ***default*** do not contain `%v - canonical ServerName` and `%p - canonical ServerPort`.
 
 In order to consolidate logs from multiple domains `%v - canonical ServerName` is required and `%p - canonical ServerPort` is optional. 
@@ -187,6 +181,7 @@ command line under '2. Python Steps' below. If that works you are all set.
 |[user-agents](https://pypi.org/project/user-agents/)|pip install pyyaml ua-parser user-agents|sudo apt-get install python3-user-agents|python3 -m pip install user-agents|[selwin/python-user-agents](https://github.com/selwin/python-user-agents)|
 |[watchdog](https://pypi.org/project/watchdog/)|pip install watchdog|sudo apt-get install python3-watchdog|python3 -m pip install watchdog|[gorakhargosh/watchdog](https://github.com/gorakhargosh/watchdog/tree/master)|
 |[python-dotenv](https://pypi.org/project/python-dotenv/)|pip install python-dotenv|sudo apt-get install python3-dotenv|python3 -m pip install python-dotenv|[theskumar/python-dotenv](https://github.com/theskumar/python-dotenv)|
+|[geoip2](https://pypi.org/project/geoip2/)|pip install geoip2|sudo apt-get install python3-geoip2|python3 -m pip install python-geoip2|[maxmind/GeoIP2-python](https://github.com/maxmind/GeoIP2-python)|
 
 ## Installation Instructions
 Steps make installation quick and straightforward. Application will be ready to import Apache logs on completion.

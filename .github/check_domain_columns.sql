@@ -1,5 +1,5 @@
 /* Important SQL UPDATE information to properly import, filter and report on Apache log data imported from multiple domains.  
-If importing multiple domains to filter & report data ALL records MUST BE associated with ServerName regardless of LogFormat or ErrorLogFormat. 
+If importing multiple domains to filter & report data ALL records MUST BE associated with Server regardless of LogFormat or ErrorLogFormat. 
 Use environment variables in Python to SET server_name & server_port COLUMNS during LOAD DATA for Common, Combined and Error formats.  
 
 Process_error_parse & process_access_parse STORED PROCEDURES UPDATE server_name & server_port COLUMNs for formats that contain %v Format String.
@@ -51,10 +51,10 @@ After executing process_error_import and process_access_import STORED PROCEDURES
        FROM apache_logs.access_log a
  INNER JOIN apache_logs.import_file f 
          ON a.importfileid=f.id 
-      WHERE a.servernameid IS NULL;
+      WHERE a.serverid IS NULL;
 
      SELECT f.name,e.* 
        FROM apache_logs.error_log e
  INNER JOIN apache_logs.import_file f 
          ON e.importfileid=f.id 
-      WHERE e.servernameid IS NULL;
+      WHERE e.serverid IS NULL;
