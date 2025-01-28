@@ -1,4 +1,6 @@
+![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
 ## Apache Log Parser and Data Normalization Application
+Database Schema ***apache_logs*** designed to accommodate unlimited servers & domains. Step-by-step guide for easy installation :point_down:
 ### Python handles File Processing & MySQL handles Data Processing
 ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema ***apache_logs*** to automate importing Access & Error files 
 and normalizing data into database designed for reports & data analysis.
@@ -16,17 +18,6 @@ Multiple Access and Error logs and formats can be loaded, parsed and imported al
 A single execution can also be configured to only load logs to Server leaving other processes to be executed in another "Import Load" on a centralized computer.
 #### Process Messages in Console - 4 LogFormats, 2 ErrorLogFormats & 6 MySQL Stored Procedures
 ![Processing Messages Console](./assets/processing_messages_console.png)
-ApacheLogs2MySQL has [MaxMind GeoIP2](https://github.com/maxmind/GeoIP2-python) Python API integration with 6 MySQL tables for IP Geolocation data normalization. 
-Two DB-IP Lite databases are required - `IP to City` and `IP to ASN`. Free DB-IP Lite databases can be found at [DB-IP](https://db-ip.com/db/lite.php)
-
-Database Schema ***apache_logs*** designed to accommodate unlimited servers & domains. Step-by-step guide for easy installation :point_down:
-
-A visualization tool for the MySQL Schema ***apache_logs*** is [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) and currently under development. 
-The Web interface consists of [Express](https://github.com/expressjs/express) web application frameworks with Drill Down Capability 
-& [Apache ECharts](https://github.com/apache/echarts) frameworks for Data Visualization.
-### Entity Relationship Diagram of apache_logs schema tables
-![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
-Diagram created with open-source database diagrams editor [chartdb/chartdb](https://github.com/chartdb/chartdb)
 ### Application runs on Windows, Linux and MacOS
 This is a fast, reliable processing application with detailed logging and two stages of data parsing. 
 First stage is performed in `LOAD DATA LOCAL INFILE` statements. 
@@ -48,9 +39,17 @@ This enables a complete audit trail providing ability to determine when, where a
 All folder paths, filename patterns, logging, processing, MySQL connection setting variables are in .env file for easy installation and maintenance.
 
 Two Python Client modules can run in [PM2](https://github.com/Unitech/pm2) daemon process manager for 24/7 online processing on multiple web servers feeding a single Server module simultaneous.
+### Valuable Data Enrichment and Visual Enhancements
+IP Geolocation data integration using [MaxMind GeoIP2](https://pypi.org/project/geoip2/) Python API provides IP country, subdivision, city, system organization, 
+network and coordinates information stored and normalized into 6 MySQL schema tables.
 
-Application is developed with Python 3.12, MySQL and 5 Python modules. Modules are listed with Python Package Index link, 
-install command for each platform & GitHub Repository link.
+Two DB-IP Lite databases are required - `IP to City` and `IP to ASN`. Free DB-IP Lite databases can be found at [DB-IP](https://db-ip.com/db/lite.php)
+
+User-Agent data integration using [user-agents](https://pypi.org/project/user-agents/) provides browser, device and operating system information stored and normalized into 11 MySQL schema tables.
+
+A visualization tool for the MySQL Schema ***apache_logs*** is [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) and currently under development. 
+The Web interface consists of [Express](https://github.com/expressjs/express) web application frameworks with Drill Down Capability 
+& [Apache ECharts](https://github.com/apache/echarts) frameworks for Data Visualization.
 ### Four Supported Access Log Formats
 Apache uses same Standard Access LogFormats (***common***, ***combined***, ***vhost_combined***) on all 3 platforms. Each LogFormat adds 2 Format Strings to the prior. 
 Format String descriptions are listed below each LogFormat. Information from: https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#logformat 
