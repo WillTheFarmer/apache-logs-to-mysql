@@ -9,7 +9,7 @@ Imports Access Logs in LogFormats - ***common***, ***combined*** and ***vhost_co
 LogFormat defined below.
 
 Imports Error Logs in ***default*** ErrorLogFormat & ***additional*** ErrorLogFormat defined below performing data harmonization 
-on Apache Codes & Messages, System Codes & Messages, and Log Messages to create a unified, standardized dataset. Error Log view images below.
+on Apache Codes & Messages, System Codes & Messages, and Log Messages to create a unified, standardized dataset.
 
 All processing stages are encapsulated within one "Import Load" that captures process metrics, notifications and errors into MySQL import tables. 
 Every log data record is traceable back to the computer, folder, file, load process, parse process and import process it came from.
