@@ -12,11 +12,11 @@ on Apache Codes & Messages, System Codes & Messages, and Log Messages to create 
 All processing stages are encapsulated within one "Import Load" that captures process metrics, notifications and errors into MySQL import tables. 
 Every log data record is traceable back to the computer, folder, file, load process, parse process and import process it came from.
 
-Multiple Access and Error logs and formats can be loaded, parsed and imported along with User Agent parsing and IP Address geolocation retrieval in a single execution. 
+Multiple Access and Error logs and formats can be loaded, parsed and imported along with User Agent parsing and IP Address Geolocation retrieval in a single execution. 
 A single execution can also be configured to only load logs to Server.
 #### Process Messages in Console - 4 LogFormats, 2 ErrorLogFormats & 6 MySQL Stored Procedures
 ![Processing Messages Console](./assets/processing_messages_console.png)
-ApacheLogs2MySQL has [MaxMind GeoIP2](https://github.com/maxmind/GeoIP2-python) Python API integration with 6 MySQL tables for IP geolocation data normalization. 
+ApacheLogs2MySQL has [MaxMind GeoIP2](https://github.com/maxmind/GeoIP2-python) Python API integration with 6 MySQL tables for IP Geolocation data normalization. 
 Two DB-IP Lite databases are required - `IP to City` and `IP to ASN`. Free DB-IP Lite databases can be found at [DB-IP](https://db-ip.com/db/lite.php)
 
 Database Schema ***apache_logs*** designed to accommodate unlimited servers & domains. Step-by-step guide for easy installation :point_down:
