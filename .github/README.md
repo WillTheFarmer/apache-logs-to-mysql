@@ -47,8 +47,7 @@ Two DB-IP Lite databases are required - `IP to City` and `IP to ASN`. Free DB-IP
 
 User-Agent data integration using [user-agents](https://pypi.org/project/user-agents/) provides browser, device and operating system information stored and normalized into 11 MySQL schema tables.
 
-A visualization tool for the MySQL Schema ***apache_logs*** is [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) and currently under development. 
-The Web interface consists of [Express](https://github.com/expressjs/express) web application frameworks with Drill Down Capability 
+[MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) is a visualization tool for the MySQL Schema ***apache_logs*** currently under development. The Web interface consists of [Express](https://github.com/expressjs/express) web application frameworks with Drill Down Capability 
 & [Apache ECharts](https://github.com/apache/echarts) frameworks for Data Visualization.
 ### Four Supported Access Log Formats
 Apache uses same Standard Access LogFormats (***common***, ***combined***, ***vhost_combined***) on all 3 platforms. Each LogFormat adds 2 Format Strings to the prior. 
