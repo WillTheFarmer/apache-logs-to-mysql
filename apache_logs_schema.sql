@@ -1,3 +1,25 @@
+-- # Licensed under the Apache License, Version 2.0 (the "License");
+-- # you may not use this file except in compliance with the License.
+-- # You may obtain a copy of the License at
+-- #
+-- #     http://www.apache.org/licenses/LICENSE-2.0
+-- #
+-- # Unless required by applicable law or agreed to in writing, software
+-- # distributed under the License is distributed on an "AS IS" BASIS,
+-- # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-- # See the License for the specific language governing permissions and
+-- # limitations under the License.
+-- #
+-- # version 3.0.0 - 01/28/2025 - IP Geolocation integration, table & column renames, refinements - see changelog
+-- #
+-- # Copyright 2024 Will Raymond <farmfreshsoftware@gmail.com>
+-- #
+-- # CHANGELOG.md in repository - https://github.com/WillTheFarmer/apache-logs-to-mysql
+-- #
+-- file: apache_logs_schema.sql 
+-- synopsis: Data definition language (DDL) for creating MySQL schema apache_logs for ApacheLogs2MySQL application
+-- author: Will Raymond <farmfreshsoftware@gmail.com>
+
 CREATE DATABASE  IF NOT EXISTS `apache_logs` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `apache_logs`;
 -- MySQL dump 10.13  Distrib 8.0.40, for Win64 (x86_64)

@@ -6,18 +6,24 @@ and normalizing data into database designed for reports & data analysis.
 Imports Access Logs in LogFormats - ***common***, ***combined*** and ***vhost_combined*** & additional ***csv2mysql*** 
 LogFormat defined :point_down: 
 
-Imports Error Logs in ***default*** ErrorLogFormat & ***additional*** ErrorLogFormat defined below performing data harmonization on Apache Codes & Messages, System Codes & Messages, and Log Messages to create a unified, standardized dataset. Error Log view images :point_down:
+Imports Error Logs in ***default*** ErrorLogFormat & ***additional*** ErrorLogFormat defined below performing data harmonization 
+on Apache Codes & Messages, System Codes & Messages, and Log Messages to create a unified, standardized dataset. Error Log view images :point_down:
 
-All processing stages are encapsulated within one "Import Load" that captures process metrics, notifications and errors into MySQL import tables. Every log data record is traceable back to the computer, folder, file, load process, parse process and import process it came from.
+All processing stages are encapsulated within one "Import Load" that captures process metrics, notifications and errors into MySQL import tables. 
+Every log data record is traceable back to the computer, folder, file, load process, parse process and import process it came from.
 
-Multiple Access and Error logs and formats can be loaded, parsed and imported along with User Agent parsing and IP Address geoLocation retrieval in a single execution. A single execution can also be configured to only load logs to Server.
-### Console Process Messages - 4 LogFormats, 2 ErrorLogFormats & 6 MySQL Stored Procedures
+Multiple Access and Error logs and formats can be loaded, parsed and imported along with User Agent parsing and IP Address geolocation retrieval in a single execution. 
+A single execution can also be configured to only load logs to Server.
+### Process Messages in Console - 4 LogFormats, 2 ErrorLogFormats & 6 MySQL Stored Procedures
 ![Processing Messages Console](./assets/processing_messages_console.png)
-New version has [MaxMind GeoIP2](https://github.com/maxmind/GeoIP2-python) Python API integration with 5 additional MySQL tables for IP geoLocation data. Two DB-IP Lite databases are required - `IP to City` and `IP to ASN`. Free DB-IP Lite databases can be found at [DB-IP](https://db-ip.com/db/lite.php)
-
-A visualization tool for the MySQL Schema ***apache_logs*** is [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) and currently under development. The Web interface consists of Express.js web application frameworks with Drill Down Capability & [Apache ECharts](https://github.com/apache/echarts) frameworks for Data Visualization.
+ApacheLogs2MySQL has [MaxMind GeoIP2](https://github.com/maxmind/GeoIP2-python) Python API integration with 6 MySQL tables for IP geolocation data normalization. 
+Two DB-IP Lite databases are required - `IP to City` and `IP to ASN`. Free DB-IP Lite databases can be found at [DB-IP](https://db-ip.com/db/lite.php)
 
 Database Schema ***apache_logs*** designed to accommodate unlimited servers & domains. Step-by-step guide for easy installation :point_down:
+
+A visualization tool for the MySQL Schema ***apache_logs*** is [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) and currently under development. 
+The Web interface consists of [Express](https://github.com/expressjs/express) web application frameworks with Drill Down Capability 
+& [Apache ECharts](https://github.com/apache/echarts) frameworks for Data Visualization.
 ## Entity Relationship Diagram of apache_logs schema tables
 ![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
 Diagram created with open-source database diagrams editor [chartdb/chartdb](https://github.com/chartdb/chartdb)
@@ -105,7 +111,8 @@ LogFormat "%v,%p,%h,%l,%u,%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\"
 |%{VARNAME}C|ADDED - The contents of cookie VARNAME in request sent to server. Only version 0 cookies are fully supported. Format String is optional.|
 |%L|ADDED - The request log ID from the error log (or '-' if nothing has been logged to the error log for this request). Look for the matching error log line to see what request| caused what error.
 ## Two supported Error Log Formats
-Application processes Error Logs with ***default format*** for threaded MPMs (Multi-Processing Modules). If running Apache 2.4 on any platform and ErrorLogFormat is not defined in config files this is the Error Log format.
+Application processes Error Logs with ***default format*** for threaded MPMs (Multi-Processing Modules). If running Apache 2.4 on any platform 
+and ErrorLogFormat is not defined in config files this is the Error Log format.
 Information from: https://httpd.apache.org/docs/2.4/mod/core.html#errorlogformat
 ```
 ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i"
@@ -289,7 +296,7 @@ Normalization ensures that data is organized in a way that makes sense for the d
 MySQL `apache_logs` schema currently has 55 Tables, 908 Columns, 188 Indexes, 72 Views, 8 Stored Procedures and 90 Functions to process Apache Access log in 4 formats 
 & Apache Error log in 2 formats. Database normalization at work!
 ## MySQL Access Log View by Browser - 1 of 66 schema views
-Current schema views are Access and Error Attribute Primary tables created in normalization process with simple aggregate values. 
+Current schema views are Access and Error primary attribute tables created in normalization process with simple aggregate values. 
 These are primitive data presentations of the log data warehouse. ApacheLogs2MySQL is the 'EL' of the 'ELK' Stack. The Web interface 
 [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) in development is the 'K' of the 'ELK' Stack.
 

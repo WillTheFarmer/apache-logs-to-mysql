@@ -38,7 +38,7 @@ from user_agents import parse
 from time import time
 from time import ctime
 from datetime import datetime
-load_dotenv()  # Loads variables from .env into the environment
+load_dotenv() # Loads variables from .env into the environment
 mysql_host = getenv('MYSQL_HOST')
 mysql_port = int(getenv('MYSQL_PORT'))
 mysql_user = getenv('MYSQL_USER')
@@ -76,7 +76,7 @@ geoip2_log = int(getenv('GEOIP2_LOG'))
 geoip2_city = getenv('GEOIP2_CITY')
 geoip2_asn = getenv('GEOIP2_ASN')
 geoip2_process = int(getenv('GEOIP2_PROCESS'))
-# makes process start, complete, info and error messages noticeable in console - all error messages start with 'ERROR - ' for keyword log search
+# Readability of process start, complete, info and error messages in console - all error messages start with 'ERROR - ' for keyword log search
 class bcolors:
     GREEN = '\33[32m'
     GREENER = '\033[92m'
@@ -98,7 +98,7 @@ db_params = {
     'database': mysql_schema,
     'local_infile': True
  }
-# information to identify & register import upload client 
+# Information to identify & register import load clients 
 def get_device_id():
     sys_os = system()
     if sys_os == "Windows":
@@ -591,7 +591,7 @@ def processLogs():
     # SECONDARY PROCESSES BELOW: Client Module UPLOAD is done with load, parse and import processes of access and error logs. The below processes enhance User Agent and Client IP log data.
     # Initially UserAgent and GeoIP2 processes were each in separate files. After much design consideration and application experience and Code Redundancy being problematic
     # the decision was made to encapsulate all processes within the same "Import Load" which captures and logs all execution metrics, notifications and errors
-    # into MySQL tables for each execution. Every log datarecord can be tracked back to the file, folder, computer, load process, parse process and import process it came from.  
+    # into MySQL tables for each execution. Every log data record can be tracked back to the file, folder, computer, load process, parse process and import process it came from.  
     # Processes may require individual execution even when NONE of above processes are executed. If this Module is run automatically on a client server to upload Apache Logs to centralized 
     # MySQL Server the processes below will never be executed. In some cases, only the processes below are needed for execution on MySQL Server or another centralized computer.
     # In some cases, ALL processes above and below will be executed in a single "Import Load" execution. Therefore, the encapsulation of all processes in a single module.

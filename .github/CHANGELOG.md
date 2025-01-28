@@ -9,7 +9,7 @@
 - version 2.1.4 - 01/02/2025 - add import_device TABLE to separate import_client TABLE
 - version 2.1.5 - 01/03/2025 - move platformNode column from import_client to import_device
 - version 2.1.6 - 01/09/2025 - repository name change - ApacheLogs2MySQL to apache-logs-to-mysql
-- version 3.0.0 - 01/28/2025 - IP Geolocation integration, several table & column renames, many process refinements - see changelog
+- version 3.0.0 - 01/28/2025 - IP Geolocation integration, several table & column renames, many process refinements
 - [1.0.1] apache_logs.error_systemCodeID corrected line - INTO logsystemCode to INTO logsystemCodeID
 - [1.0.1] remove debugging - SELECT statement from apache_logs.process_access_import, process_error_import & normalize_useragent.
 - [1.0.1] remove whitespace and commented out old code on all stored programs
@@ -98,7 +98,7 @@
 - [3.0.0] rename TABLES `log_clientname` to `log_client`, `log_servername` to `log_server`
 - [3.0.0] rename COLUMNS `clientnameid` to `clientid`, `servernameid` to `serverid` throughout application tables and processes.
 - [3.0.0] modify `process_access_parse` and `process_error_parse` WHERE CLAUSES for server_name UPDATE commands.
-- [3.0.0] add 16 stored functions for log attribute tables to return names for Slice and dice is a data analysis in drill-down Web interface. 
+- [3.0.0] add 16 stored functions for primary attribute tables to return names for Slice and dice is a data analysis in drill-down Web interface. 
 - [3.0.0] modify and reworded all console log messages in `logs2mysql.py` to standardize messages for each process. Added COLORS to coordinate message types for better readability.
 - [3.0.0] modify all database INDEX NAMES for standardization and consolidation.
 - [3.0.0] tested simultaneously uploading logs from 10 VPS with multiple VirtualHosts on each Server processing thousands of files in different formats and millions of log records. 

@@ -28,12 +28,12 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from dotenv import load_dotenv
 from logs2mysql import processLogs
-load_dotenv()  # Loads variables from .env into the environment
+load_dotenv() # Loads variables from .env into the environment
 watch_path = os.getenv('WATCH_PATH')
 watch_recursive = bool(int(os.getenv('WATCH_RECURSIVE')))
 watch_interval = int(os.getenv('WATCH_INTERVAL'))
 watch_log = int(os.getenv('WATCH_LOG'))
-# make error messages noticeable in console - all error messages start with 'ERROR - ' for keyword log search
+# Readability of event messages in console
 class bcolors:
     GREEN = '\33[32m'
     GREENER = '\033[92m'
