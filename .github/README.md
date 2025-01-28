@@ -38,7 +38,7 @@ Python drives the application but MySQL does all Data Manipulation & Processing.
 Log files can be left in folders imported from for later reference. Application determines what files have been processed using `apache_logs.import_file` TABLE. 
 Each imported file has record with name, path, size, created, modified attributes inserted during `processLogs`. Application runs with no need for user interaction. 
 
-Log-level variables can be set to display info messages in console or inserted into PM2 logs for every process step. 
+Log-level variables can be set to display info messages in console or inserted into [PM2](https://github.com/Unitech/pm2) logs for every process step. 
 All import errors in Python `processLogs` (client) and MySQL Stored Procedures (server) are inserted into `apache_logs.import_error` TABLE.
 This is the only schema table that uses ENGINE=MYISAM to avoid TRANSACTION ROLLBACKS.
 
@@ -47,7 +47,7 @@ This enables a complete audit trail providing ability to determine when, where a
 
 All folder paths, filename patterns, logging, processing, MySQL connection setting variables are in .env file for easy installation and maintenance.
 
-Two Python Client modules can run in PM2 daemon process manager for 24/7 online processing on multiple web servers feeding a single Server module simultaneous.
+Two Python Client modules can run in [PM2](https://github.com/Unitech/pm2) daemon process manager for 24/7 online processing on multiple web servers feeding a single Server module simultaneous.
 
 Application is developed with Python 3.12, MySQL and 5 Python modules. Modules are listed with Python Package Index link, 
 install command for each platform & GitHub Repository link.
@@ -253,7 +253,7 @@ Run polling module:
 ```
 python watch4logs.py
 ```
-Once existing logs are processed & a better understanding of application is acquired use PM2 to run application 24/7 watching for files to process.
+Once existing logs are processed & a better understanding of application is acquired use [PM2](https://github.com/Unitech/pm2) to run application 24/7 watching for files to process.
 Run polling module from PM2:
 ```
 pm2 start watch4logs.py
