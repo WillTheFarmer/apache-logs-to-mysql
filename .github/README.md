@@ -1,21 +1,22 @@
 ![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
 ## Apache Log Parser and Data Normalization Application
-Database Schema ***apache_logs*** designed to accommodate unlimited servers & domains. Step-by-step guide for easy installation :point_down:
+Database Schema ***apache_logs*** is designed to accommodate unlimited servers & domains. Step-by-step guide for easy installation below.
 ### Python handles File Processing & MySQL handles Data Processing
 ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema ***apache_logs*** to automate importing Access & Error files 
 and normalizing data into database designed for reports & data analysis.
 
 Imports Access Logs in LogFormats - ***common***, ***combined*** and ***vhost_combined*** & additional ***csv2mysql*** 
-LogFormat defined :point_down: 
+LogFormat defined below.
 
 Imports Error Logs in ***default*** ErrorLogFormat & ***additional*** ErrorLogFormat defined below performing data harmonization 
-on Apache Codes & Messages, System Codes & Messages, and Log Messages to create a unified, standardized dataset. Error Log view images :point_down:
+on Apache Codes & Messages, System Codes & Messages, and Log Messages to create a unified, standardized dataset. Error Log view images below.
 
 All processing stages are encapsulated within one "Import Load" that captures process metrics, notifications and errors into MySQL import tables. 
 Every log data record is traceable back to the computer, folder, file, load process, parse process and import process it came from.
 
-Multiple Access and Error logs and formats can be loaded, parsed and imported along with User Agent parsing and IP Address Geolocation retrieval in a single execution. 
-A single execution can also be configured to only load logs to Server leaving other processes to be executed in another "Import Load" on a centralized computer.
+Multiple Access and Error logs and formats can be loaded, parsed and imported along with User Agent parsing and IP Address Geolocation retrieval processes in a single "Import Load" execution. 
+
+A single "Import Load" execution can also be configured to only load logs to Server leaving other processes to be executed in another "Import Load" on a centralized computer.
 #### Process Messages in Console - 4 LogFormats, 2 ErrorLogFormats & 6 MySQL Stored Procedures
 ![Processing Messages Console](./assets/processing_messages_console.png)
 ### Application runs on Windows, Linux and MacOS
