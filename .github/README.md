@@ -1,5 +1,5 @@
-![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
 ## Apache Log Parser and Data Normalization Application
+![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
 Database Schema ***apache_logs*** is designed to accommodate unlimited servers & domains. Step-by-step guide for easy installation below.
 ### Python handles File Processing & MySQL handles Data Processing
 ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema ***apache_logs*** to automate importing Access & Error files 
