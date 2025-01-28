@@ -12,9 +12,9 @@ on Apache Codes & Messages, System Codes & Messages, and Log Messages to create 
 All processing stages are encapsulated within one "Import Load" that captures process metrics, notifications and errors into MySQL import tables. 
 Every log data record is traceable back to the computer, folder, file, load process, parse process and import process it came from.
 
-Multiple Access and Error logs and formats can be loaded, parsed and imported along with User Agent parsing and IP Address Geolocation retrieval processes in a single "Import Load" execution. 
+Multiple Access and Error logs and formats can be loaded, parsed and imported along with User Agent parsing and IP Address Geolocation retrieval processes within a single "Import Load" execution. 
 
-A single "Import Load" execution can also be configured to only load logs to Server leaving other processes to be executed in another "Import Load" on a centralized computer.
+A single "Import Load" execution can also be configured to only load logs to Server leaving other processes to be executed within another "Import Load" on a centralized computer.
 #### Process Messages in Console - 4 LogFormats, 2 ErrorLogFormats & 6 MySQL Stored Procedures
 ![Processing Messages Console](./assets/processing_messages_console.png)
 ### Application runs on Windows, Linux and MacOS
