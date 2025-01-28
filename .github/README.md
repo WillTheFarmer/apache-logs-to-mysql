@@ -1,7 +1,7 @@
 Database Schema ***apache_logs*** is designed for data analysis of Apache Logs from unlimited servers & domains.
 ![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
 ## Python handles File Processing & MySQL handles Data Processing
-ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema ***apache_logs*** to automate importing Access & Error files and normalizing data into database and tracking the processes, files, domains and computers the data originates from.
+ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema ***apache_logs*** to automate importing Access & Error files, normalizing log data into database and generating a well-documented data lineage audit trail.
 
 Imports Access Logs in LogFormats - ***common***, ***combined*** and ***vhost_combined*** & additional ***csv2mysql*** 
 LogFormat defined below.
@@ -9,12 +9,12 @@ LogFormat defined below.
 Imports Error Logs in ***default*** ErrorLogFormat & ***additional*** ErrorLogFormat defined below performing data harmonization 
 on Apache Codes & Messages, System Codes & Messages, and Log Messages to create a unified, standardized dataset.
 
-All processing stages are encapsulated within one "Import Load" that captures process metrics, notifications and errors into MySQL import tables. 
-Every log data record is traceable back to the computer, folder, file, load process, parse process and import process it came from.
+All processing stages (child processes) are encapsulated within one "Import Load" (parent process) that captures process metrics, notifications and errors into MySQL import tables. 
+Every log data record is traceable back to the computer, path, file, load process, parse process and import process the data originates from.
 
 Multiple Access and Error logs and formats can be loaded, parsed and imported along with User Agent parsing and IP Address Geolocation retrieval processes within a single "Import Load" execution. 
 
-A single "Import Load" execution can also be configured to only load logs to Server leaving other processes to be executed within another "Import Load" on a centralized computer.
+A single "Import Load" execution can also be configured to only load logs to Server (single child process) leaving other processes to be executed within another "Import Load" on a centralized computer.
 #### Process Messages in Console - 4 LogFormats, 2 ErrorLogFormats & 6 MySQL Stored Procedures
 ![Processing Messages Console](./assets/processing_messages_console.png)
 ### Application runs on Windows, Linux and MacOS
