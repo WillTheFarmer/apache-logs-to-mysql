@@ -24,13 +24,14 @@ This is a fast, reliable processing application with detailed logging and two st
 First stage is performed in `LOAD DATA LOCAL INFILE` statements. 
 Second stage is performed in `process_access_parse` and `process_error_parse` Stored Procedures.
 
-Python handles polling of log file folders and executing MySQL Database LOAD DATA, Stored Procedures, Stored Functions and SQL Statements. 
-Python drives the application but MySQL does all Data Manipulation & Processing.
+Python handles polling of log file folders and executing MySQL Database LOAD DATA, Stored Procedures, Stored Functions and SQL Statements. Python drives the application but MySQL does all Data Manipulation & Processing.
 
-Log files can be left in folders imported from for later reference. Application determines what files have been processed using `apache_logs.import_file` TABLE. 
-Each imported file has record with name, path, size, created, modified attributes inserted during `processLogs`. Application runs with no need for user interaction. 
+Application determines what files have been processed using `apache_logs.import_file` TABLE. 
+Each imported file has record with name, path, size, created, modified attributes inserted during `processLogs`.
 
-Log-level variables can be set to display info messages in console or inserted into [PM2](https://github.com/Unitech/pm2) logs for every process step. 
+File deletion is not required by application if desired for later reference. File record does have a setting to delete file from folder imported from after a certain amount of time if desired. Application runs with no need for user interaction.
+
+Log-level variables can be set to display Process Messages in console or inserted into [PM2](https://github.com/Unitech/pm2) logs for every process step. 
 All import errors in Python `processLogs` (client) and MySQL Stored Procedures (server) are inserted into `apache_logs.import_error` TABLE.
 This is the only schema table that uses ENGINE=MYISAM to avoid TRANSACTION ROLLBACKS.
 
