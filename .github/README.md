@@ -298,7 +298,7 @@ MySQL `apache_logs` schema currently has 55 Tables, 908 Columns, 188 Indexes, 72
 
 Database normalization is a critical process in database design with objectives of optimizing data storage, improving data integrity, and reducing data anomalies.
 Organizing data into normalized tables greatly enhances efficiency and maintainability of a database system.
-### MySQL Access Log View by Browser - 1 of 66 schema views
+### MySQL Access Log View by Browser - 1 of 72 schema views
 Current schema views are Access and Error primary attribute tables created in normalization process with simple aggregate values. 
 These are primitive data presentations of the log data warehouse. ApacheLogs2MySQL is the 'EL' of the 'ELK' Stack. The Web interface 
 [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) in development is the 'K' of the 'ELK' Stack.
