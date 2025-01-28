@@ -295,6 +295,9 @@ Normalization ensures that data is organized in a way that makes sense for the d
 
 MySQL `apache_logs` schema currently has 55 Tables, 908 Columns, 188 Indexes, 72 Views, 8 Stored Procedures and 90 Functions to process Apache Access log in 4 formats 
 & Apache Error log in 2 formats. Database normalization at work!
+
+Database normalization is a critical process in database design with objectives of optimizing data storage, improving data integrity, and reducing data anomalies.
+Organizing data into normalized tables greatly enhances efficiency and maintainability of a database system.
 ### MySQL Access Log View by Browser - 1 of 66 schema views
 Current schema views are Access and Error primary attribute tables created in normalization process with simple aggregate values. 
 These are primitive data presentations of the log data warehouse. ApacheLogs2MySQL is the 'EL' of the 'ELK' Stack. The Web interface 
@@ -317,12 +320,3 @@ Each attribute has an associated table in ***apache_logs*** schema. Using these 
 ![error_log_system_code_list](./assets/error_log_system_code_list.png)
 ![error_log_module_list](./assets/error_log_module_list.png)
 ![error_log_level_list](./assets/error_log_level_list.png)
-
-### MySQL Schema Objects - Tables, Stored Procedures, Functions and Views
-Images of the `apache_logs` schema objects. Access and Error log attributes are normalized into separate entity tables. 
-Each table is populated with unique values of the attribute.
-
-Database normalization is a critical process in database design with objectives of optimizing data storage, improving data integrity, and reducing data anomalies.
-Organizing data into normalized tables greatly enhances efficiency and maintainability of a database system.
-
-![apache_logs.tables](<./assets/apache_logs.tables.png>) ![apache_logs.stored_programs](<./assets/apache_logs.stored_programs.png>) ![apache_logs.views](<./assets/apache_logs.views.png>)
