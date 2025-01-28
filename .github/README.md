@@ -14,7 +14,7 @@ Every log data record is traceable back to the computer, folder, file, load proc
 
 Multiple Access and Error logs and formats can be loaded, parsed and imported along with User Agent parsing and IP Address geolocation retrieval in a single execution. 
 A single execution can also be configured to only load logs to Server.
-### Process Messages in Console - 4 LogFormats, 2 ErrorLogFormats & 6 MySQL Stored Procedures
+#### Process Messages in Console - 4 LogFormats, 2 ErrorLogFormats & 6 MySQL Stored Procedures
 ![Processing Messages Console](./assets/processing_messages_console.png)
 ApacheLogs2MySQL has [MaxMind GeoIP2](https://github.com/maxmind/GeoIP2-python) Python API integration with 6 MySQL tables for IP geolocation data normalization. 
 Two DB-IP Lite databases are required - `IP to City` and `IP to ASN`. Free DB-IP Lite databases can be found at [DB-IP](https://db-ip.com/db/lite.php)
@@ -24,10 +24,10 @@ Database Schema ***apache_logs*** designed to accommodate unlimited servers & do
 A visualization tool for the MySQL Schema ***apache_logs*** is [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) and currently under development. 
 The Web interface consists of [Express](https://github.com/expressjs/express) web application frameworks with Drill Down Capability 
 & [Apache ECharts](https://github.com/apache/echarts) frameworks for Data Visualization.
-## Entity Relationship Diagram of apache_logs schema tables
+### Entity Relationship Diagram of apache_logs schema tables
 ![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
 Diagram created with open-source database diagrams editor [chartdb/chartdb](https://github.com/chartdb/chartdb)
-## Application runs on Windows, Linux and MacOS
+### Application runs on Windows, Linux and MacOS
 This is a fast, reliable processing application with detailed logging and two stages of data parsing. 
 First stage is performed in `LOAD DATA LOCAL INFILE` statements. 
 Second stage is performed in `process_access_parse` and `process_error_parse` Stored Procedures.
@@ -51,7 +51,7 @@ Two Python Client modules can run in PM2 daemon process manager for 24/7 online 
 
 Application is developed with Python 3.12, MySQL and 5 Python modules. Modules are listed with Python Package Index link, 
 install command for each platform & GitHub Repository link.
-## Four Supported Access Log Formats
+### Four Supported Access Log Formats
 Apache uses same Standard Access LogFormats (***common***, ***combined***, ***vhost_combined***) on all 3 platforms. Each LogFormat adds 2 Format Strings to the prior. 
 Format String descriptions are listed below each LogFormat. Information from: https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#logformat 
 ```
@@ -110,7 +110,7 @@ LogFormat "%v,%p,%h,%l,%u,%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\"
 |%{User-Agent}i|The User-Agent HTTP request header. This is the identifying information that the client browser reports about itself.|
 |%{VARNAME}C|ADDED - The contents of cookie VARNAME in request sent to server. Only version 0 cookies are fully supported. Format String is optional.|
 |%L|ADDED - The request log ID from the error log (or '-' if nothing has been logged to the error log for this request). Look for the matching error log line to see what request| caused what error.
-## Two supported Error Log Formats
+### Two supported Error Log Formats
 Application processes Error Logs with ***default format*** for threaded MPMs (Multi-Processing Modules). If running Apache 2.4 on any platform 
 and ErrorLogFormat is not defined in config files this is the Error Log format.
 Information from: https://httpd.apache.org/docs/2.4/mod/core.html#errorlogformat
@@ -145,7 +145,7 @@ To use this format place `ErrorLogFormat` before `ErrorLog` in `apache2.conf` to
 |%v|The canonical ServerName of the server serving the request.|
 |%L|Log ID of the request. A %L format string is also available in `mod_log_config` to allow to correlate access log entries with error log lines. If [mod_unique_id](https://httpd.apache.org/docs/current/mod/mod_unique_id.html) is loaded, its unique id will be used as log ID for requests.|
 
-## Three options to associate ServerName & ServerPort to Access & Error logs
+### Three options to associate ServerName & ServerPort to Access & Error logs
 Apache LogFormats - ***common***, ***combined*** and Apache ErrorLogFormat - ***default*** do not contain `%v - canonical ServerName` and `%p - canonical ServerPort`.
 
 In order to consolidate logs from multiple domains `%v - canonical ServerName` is required and `%p - canonical ServerPort` is optional. 
@@ -295,17 +295,17 @@ Normalization ensures that data is organized in a way that makes sense for the d
 
 MySQL `apache_logs` schema currently has 55 Tables, 908 Columns, 188 Indexes, 72 Views, 8 Stored Procedures and 90 Functions to process Apache Access log in 4 formats 
 & Apache Error log in 2 formats. Database normalization at work!
-## MySQL Access Log View by Browser - 1 of 66 schema views
+### MySQL Access Log View by Browser - 1 of 66 schema views
 Current schema views are Access and Error primary attribute tables created in normalization process with simple aggregate values. 
 These are primitive data presentations of the log data warehouse. ApacheLogs2MySQL is the 'EL' of the 'ELK' Stack. The Web interface 
 [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) in development is the 'K' of the 'ELK' Stack.
 
 MySQL View - apache_logs.access_ua_browser_family_list - data from LogFormat: combined & csv2mysql
 ![view-access_ua_browser_family_list.png](./assets/access_ua_browser_list.png)
-## MySQL Access Log View by URI
+### MySQL Access Log View by URI
 MySQL View - apache_logs.access_requri_list - data from LogFormat: combined & csv2mysql
 ![view-access_requri_list](./assets/access_requri_list.png)
-## MySQL Error Log Views
+### MySQL Error Log Views
 Application imports and normalizes error log data. Some of the Error Log schema views below. Error log attribute is name of first column or first and second column.
 Each attribute has an associated table in ***apache_logs*** schema. Using these views it is quick and easy to identify the origin of errors.
 ![error_log_apache_message_list](./assets/error_log_apache_message_list.png)
@@ -318,7 +318,7 @@ Each attribute has an associated table in ***apache_logs*** schema. Using these 
 ![error_log_module_list](./assets/error_log_module_list.png)
 ![error_log_level_list](./assets/error_log_level_list.png)
 
-## MySQL Schema Objects - Tables, Stored Procedures, Functions and Views
+### MySQL Schema Objects - Tables, Stored Procedures, Functions and Views
 Images of the `apache_logs` schema objects. Access and Error log attributes are normalized into separate entity tables. 
 Each table is populated with unique values of the attribute.
 
