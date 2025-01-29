@@ -314,7 +314,7 @@ MySQL View - apache_logs.access_ua_browser_family_list - data from LogFormat: co
 MySQL View - apache_logs.access_requri_list - data from LogFormat: combined & csv2mysql
 ![view-access_requri_list](./assets/access_requri_list.png)
 ### MySQL Error Log Views
-Error logs consist of three different data formats each error type. 
+Error logs consist of three different data formats for error types. 
 Application harmonizes the 3 formats into a single standardized format and normalizes primary attributes.
 Error log attribute is name of first column or first and second column.
 Each attribute has an associated table in ***apache_logs*** schema.
