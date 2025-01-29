@@ -286,14 +286,12 @@ Execute Stored Procedures with second parameter `importloadid` value as a STRING
 
 Second parameter enables Python Client modules to run on multiple servers simultaneously uploading to a single MySQL Server `apache_logs` schema.
 
-`call_processes.sql` contains execution commands for each stored procedure. Comment area has helpful functionality explanation.
+`call_processes.sql` contains execution commands for each stored procedure. Comment area has helpful functionality explanation. (`call_processes.sql` in repository)
 ![call_processes.sql in repository](./assets/call_processes.png)
-(`call_processes.sql` in repository)
 ## Verify ServerNames using Command Line
 `check_domain_columns.sql` contains SQL SELECT and UPDATE statements to check, validate and update Domain data.
-Log files imported from multiple domains require a ServerName value to properly filter and report data.
+Log files imported from multiple domains require a ServerName value to properly filter and report data. (`check_domain_columns.sql` in repository)
 ![check_domain_columns.sql in repository](./assets/check_domain_columns.png)
-(`check_domain_columns.sql` in repository)
 ## Database Normalization
 Database normalization is the process of organizing data in a relational database to improve data integrity and reduce redundancy. 
 Normalization ensures that data is organized in a way that makes sense for the data model and attributes, and that the database functions efficiently.
@@ -314,8 +312,8 @@ MySQL View - apache_logs.access_ua_browser_family_list - data from LogFormat: co
 MySQL View - apache_logs.access_requri_list - data from LogFormat: combined & csv2mysql
 ![view-access_requri_list](./assets/access_requri_list.png)
 ### MySQL Error Log Views
-Application imports and normalizes error log data. Some of the Error Log schema views below. Error log attribute is name of first column or first and second column.
-Each attribute has an associated table in ***apache_logs*** schema. Using these views it is quick and easy to identify the origin of errors.
+Application imports and normalizes error log data. Error log attribute is name of first column or first and second column.
+Each attribute has an associated table in ***apache_logs*** schema.
 ![error_log_apache_message_list](./assets/error_log_apache_message_list.png)
 ![error_log_system_message](./assets/error_log_system_message.png)
 ![error_log_message_list](./assets/error_log_message_list.png)
