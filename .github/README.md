@@ -302,8 +302,10 @@ MySQL `apache_logs` schema currently has 55 Tables, 908 Columns, 188 Indexes, 72
 Database normalization is a critical process in database design with objectives of optimizing data storage, improving data integrity, and reducing data anomalies.
 Organizing data into normalized tables greatly enhances efficiency and maintainability of a database system.
 ### MySQL Access Log View by Browser - 1 of 72 schema views
-Current schema views are Access and Error primary attribute tables created in normalization process with simple aggregate values. 
-These are primitive data presentations of the log data warehouse. ApacheLogs2MySQL is the 'EL' of the 'ELK' Stack. The Web interface 
+Current schema views of Access and Error primary attribute tables created in normalization process with simple aggregate values. 
+These are primitive access and error data presentations of the log data warehouse. The complex data Slicing and Dicing is done in MySQL2ApacheLogs.
+
+ApacheLogs2MySQL is the 'EL' of the 'ELK' Stack. The Web interface 
 [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) in development is the 'K' of the 'ELK' Stack.
 
 MySQL View - apache_logs.access_ua_browser_family_list - data from LogFormat: combined & csv2mysql
@@ -312,7 +314,9 @@ MySQL View - apache_logs.access_ua_browser_family_list - data from LogFormat: co
 MySQL View - apache_logs.access_requri_list - data from LogFormat: combined & csv2mysql
 ![view-access_requri_list](./assets/access_requri_list.png)
 ### MySQL Error Log Views
-Application imports and normalizes error log data. Error log attribute is name of first column or first and second column.
+Error logs consist of three different data formats each error type. 
+Application harmonizes into standardized format and normalizes primary attributes.
+Error log attribute is name of first column or first and second column.
 Each attribute has an associated table in ***apache_logs*** schema.
 ![error_log_apache_message_list](./assets/error_log_apache_message_list.png)
 ![error_log_system_message](./assets/error_log_system_message.png)
