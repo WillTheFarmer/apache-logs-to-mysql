@@ -32,7 +32,7 @@ Application runs with no need for user interaction. File deletion is not require
 On servers, run application in conjunction with [logrotate](https://github.com/logrotate/logrotate) using [configuration file directives](https://man7.org/linux/man-pages/man8/logrotate.8.html) - `dateext`, `rotate`, `olddir`, `nocompress`, `notifempty`, `maxage`.
 Set `WATCH_PATH` to same folder as `olddir` and configure logrotate to delete files.
 
-On centralized computers, environment variables - `FILE_ROTATE` and `FILE_OLDDIR` can be configured for file removal to reduce `apache_logs.importFileExists` execution in `processLogs` when tens of thousands of files exist in `WATCH_PATH`.
+On centralized computers, environment variables - `FILE_ROTATE` and `FILE_OLDDIR` can be configured for file removal from `WATCH_PATH` to reduce `apache_logs.importFileExists` execution in `processLogs` when tens of thousands of files exist in `WATCH_PATH`.
 
 Log-level variables can be set to display Process Messages in console or inserted into [PM2](https://github.com/Unitech/pm2) logs for every process step. 
 All import errors in Python `processLogs` (client) and MySQL Stored Procedures (server) are inserted into `apache_logs.import_error` TABLE.
