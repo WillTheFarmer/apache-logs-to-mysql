@@ -39,7 +39,7 @@ All import errors in Python `processLogs` (client) and MySQL Stored Procedures (
 This is the only schema table that uses ENGINE=MYISAM to avoid TRANSACTION ROLLBACKS.
 
 Logging functionality, database design and table relationship constraints produce both physical and logical integrity. 
-This enables a complete audit trail providing ability to determine who, when, where and what file each record originated from.
+This enables a complete audit trail providing ability to determine who, what, when and where each log record originated from.
 
 All folder paths, filename patterns, logging, processing, MySQL connection setting variables are in .env file for easy installation and maintenance.
 
