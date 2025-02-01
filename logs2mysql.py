@@ -340,7 +340,7 @@ def processLogs():
                 if errorlog_log >= 1:
                     print('*','*','Completed Importing Error Logs Stored Procedure - %s seconds' % round((time() - start_time),4))
         if errorlog_log >= 1:
-            print(fg.MAGENTA + style.DIM + 'Completed Error Logs processing. Loaded '+ str(errorFilesFound) + ' files - %s seconds' % round((time() - start_time),4) + style.END)
+            print(fg.MAGENTA + style.DIM + 'Completed Error Logs processing. Loaded '+ str(errorFilesLoaded) + ' files - %s seconds' % round((time() - start_time),4) + style.END)
         errorInsertCursor.close()
         errorLoadCursor.close()
         errorExistsCursor.close()
@@ -440,7 +440,7 @@ def processLogs():
                 if combined_log >= 1:
                     print('*','*','Completed Importing Combined Access Logs Stored Procedure - %s seconds' % round((time() - start_time),4))
         if combined_log >= 1:
-            print(fg.MAGENTA + style.DIM + 'Completed Combined Access Logs processing. Loaded '+ str(combinedFilesFound) + ' files - %s seconds' % round((time() - start_time),4) + style.END)
+            print(fg.MAGENTA + style.DIM + 'Completed Combined Access Logs processing. Loaded '+ str(combinedFilesLoaded) + ' files - %s seconds' % round((time() - start_time),4) + style.END)
         combinedInsertCursor.close()
         combinedLoadCursor.close()
         combinedExistsCursor.close()
