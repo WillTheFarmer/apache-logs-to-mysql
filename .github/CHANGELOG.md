@@ -10,6 +10,7 @@
 - version 2.1.5 - 01/03/2025 - move platformNode column from import_client to import_device
 - version 2.1.6 - 01/09/2025 - repository name change - ApacheLogs2MySQL to apache-logs-to-mysql
 - version 3.0.0 - 01/28/2025 - IP Geolocation integration, several table & column renames, many process refinements
+- version 3.2.0 - 02/01/2025 - MariaDB compatible and Log Rotation
 - [1.0.1] apache_logs.error_systemCodeID corrected line - INTO logsystemCode to INTO logsystemCodeID
 - [1.0.1] remove debugging - SELECT statement from apache_logs.process_access_import, process_error_import & normalize_useragent.
 - [1.0.1] remove whitespace and commented out old code on all stored programs
