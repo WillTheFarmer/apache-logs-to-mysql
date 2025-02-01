@@ -1,6 +1,6 @@
 #### Database Schema ***apache_logs*** is designed for data analysis of Apache Logs from unlimited Domains & Servers
 ![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
-## Python handles File Processing & MySQL or MariaDB handles Data Processing
+### Python handles File Processing & MySQL or MariaDB handles Data Processing
 ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema ***apache_logs*** to automate importing Access & Error files, normalizing log data into database and generating a well-documented data lineage audit trail.
 
 Imports Access Logs in LogFormats - ***common***, ***combined*** and ***vhost_combined*** & additional ***csv2mysql*** 
