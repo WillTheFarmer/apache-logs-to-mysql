@@ -102,3 +102,9 @@
 - [3.0.0] modify and reworded all console log messages in `logs2mysql.py` to standardize messages for each process. Added COLORS to coordinate message types for better readability.
 - [3.0.0] modify all database INDEX NAMES for standardization and consolidation.
 - [3.0.0] tested simultaneously uploading logs from 10 VPS with multiple VirtualHosts on each Server processing thousands of files in different formats and millions of log records. 
+- [3.2.0] Database function and procedure modifications required for compatibility with MariaDB. Application processes have been tested with version 11.6. MariaDB tests twice as fast as MYSQL. 
+- [3.2.0] Major reworking of logs2mysql.py logging process messaging and incorporate Log File Rotation functionality with environment variables - BACKUP_DAYS and BACKUP_PATH
+- [3.2.0] modify Store Function `apache_logs`.`importFileExists` for Log File Rotation functionality.
+- [3.2.0] modify Store Function `apache_logs`.`importProcessID` for compatibility with MariaDB.
+- [3.2.0] add Python function `def copy_backup_file(log_path_file, log_days)` to reuse log file copy and delete functionality,
+- [3.2.0] add log summary to end of Python `processLogs` in `logs2mysql.py` to provide more process information to PM2 logs. 

@@ -10,9 +10,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# version 3.0.0 - 01/28/2025 - IP Geolocation integration, table & column renames, refinements - see changelog
+# version 3.2.0 - 02/01/2025 - MariaDB compatible and Log Rotation - see changelog
 #
-# Copyright 2024 Will Raymond <farmfreshsoftware@gmail.com>
+# Copyright 2024-2025 Will Raymond <farmfreshsoftware@gmail.com>
 #
 # CHANGELOG.md in repository - https://github.com/WillTheFarmer/apache-logs-to-mysql
 """
@@ -25,6 +25,8 @@ from os import getenv
 from os import path
 from os import getlogin
 from os import sep
+from os import remove
+from os import makedirs
 from platform import processor
 from platform import uname
 from platform import system
@@ -38,12 +40,19 @@ from user_agents import parse
 from time import time
 from time import ctime
 from datetime import datetime
+import shutil
+from pathlib import Path
+# Readability of process start, complete, info and error messages in console - all error messages start with 'ERROR - ' for keyword log search
+from color import fg
+from color import bg
+from color import style
 load_dotenv() # Loads variables from .env into the environment
 mysql_host = getenv('MYSQL_HOST')
 mysql_port = int(getenv('MYSQL_PORT'))
 mysql_user = getenv('MYSQL_USER')
 mysql_password = getenv('MYSQL_PASSWORD')
 mysql_schema = getenv('MYSQL_SCHEMA')
+watch_path = getenv('WATCH_PATH')
 errorlog = int(getenv('ERROR'))
 errorlog_path = getenv('ERROR_PATH')
 errorlog_recursive = bool(int(getenv('ERROR_RECURSIVE')))
@@ -76,19 +85,9 @@ geoip2_log = int(getenv('GEOIP2_LOG'))
 geoip2_city = getenv('GEOIP2_CITY')
 geoip2_asn = getenv('GEOIP2_ASN')
 geoip2_process = int(getenv('GEOIP2_PROCESS'))
-# Readability of process start, complete, info and error messages in console - all error messages start with 'ERROR - ' for keyword log search
-class bcolors:
-    GREEN = '\33[32m'
-    GREENER = '\033[92m'
-    ERROR = '\33[41m' # CREDBG - red background
-    HEADER = '\033[95m'
-    REPEAT = '\033[94m'
-    ALERT = '\033[96m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-    ENDC = '\033[0m'
+backup_days = int(getenv('BACKUP_DAYS'))
+backup_path = getenv('BACKUP_PATH')
+watch_path = getenv('WATCH_PATH')
 # Database connection parameters
 db_params = {
     'host': mysql_host,
@@ -133,7 +132,7 @@ platformProcessor = processor()
 def processLogs():
     processError = 0
     start_time = time()
-    print(bcolors.WARNING + "ProcessLogs start: " + str(datetime.now()) + bcolors.ENDC)
+    print (fg.YELLOW + style.BRIGHT + 'ProcessLogs start: ' + str(datetime.now()) + style.END) 
     conn = connect(**db_params)
     getImportDeviceID = ("SELECT apache_logs.importDeviceID('" + deviceid + 
                          "', '"  + platformNode + 
@@ -145,7 +144,7 @@ def processLogs():
         importDeviceCursor.execute( getImportDeviceID )
     except:
         processError += 1
-        print(bcolors.ERROR + "ERROR - Function apache_logs.importDeviceID() failed" + bcolors.ENDC)
+        print(bg.RED + style.BRIGHT + 'ERROR - Function apache_logs.importDeviceID() failed' + style.END)
         showWarnings = conn.show_warnings()
         print(showWarnings)
         importDeviceCursor.callproc("errorLoad",["Function apache_logs.importDeviceID()",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
@@ -162,7 +161,7 @@ def processLogs():
         importClientCursor.execute( getImportClientID )
     except:
         processError += 1
-        print(bcolors.ERROR + "ERROR - Function apache_logs.importClientID() failed" + bcolors.ENDC)
+        print(bg.RED + style.BRIGHT + 'ERROR - Function apache_logs.importClientID() failed' + style.END)
         showWarnings = conn.show_warnings()
         print(showWarnings)
         importClientCursor.callproc("errorLoad",["Function apache_logs.importClientID()",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
@@ -174,7 +173,7 @@ def processLogs():
         importLoadCursor.execute( getImportLoadID )
     except:
         processError += 1
-        print(bcolors.ERROR + "ERROR - Function apache_logs.importLoadID(importClientID) failed" + bcolors.ENDC)
+        print(bg.RED + style.BRIGHT + 'ERROR - Function apache_logs.importLoadID(importClientID) failed' + style.END)
         showWarnings = conn.show_warnings()
         print(showWarnings)
         importClientCursor.callproc("errorLoad",["Function apache_logs.importLoadID(importClientID)",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
@@ -203,10 +202,51 @@ def processLogs():
     userAgentRecordsParsed = 0 
     userAgentNormalizeCalled = 0
     ipAddressRecordsParsed = 0 
-    ipAddressNormalizeCalled = 0 
+    ipAddressNormalizeCalled = 0
+    backup_Path = Path(backup_path)
+    watch_Path = Path(watch_path) 
+    def copy_backup_file(log_path_file, log_days):
+        fileCopied = False
+        if backup_days > 0 and log_days > backup_days:
+            log_relpath = path.relpath(log_path_file, watch_Path)
+            copy_path =  path.join(backup_Path, log_relpath)
+            try:
+                makedirs(path.dirname(copy_path), exist_ok=True)
+                try:
+                    shutil.copy2(log_path_file, copy_path)
+                    print(fg.GREENER + style.BRIGHT + "Copied file to : " + copy_path + style.END)
+                    fileCopied = True
+                except FileNotFoundError:
+                    print(bg.RED + style.BRIGHT + 'ERROR - Source file not found: ' + log_path_file + style.END)
+                    importClientCursor.callproc("errorLoad",["copy_backup_file(log_path_file, log_days)",'8888',"Source file not found: " + log_path_file,str(importLoadID)])
+                except PermissionError:
+                    print(bg.RED + style.BRIGHT + 'ERROR - Permission denied: Cannot copy ' + log_path_file + style.END)
+                    importClientCursor.callproc("errorLoad",["copy_backup_file(log_path_file, log_days)",'8888',"Permission denied: Cannot copy " + log_path_file,str(importLoadID)])
+                except shutil.SameFileError:
+                    print(bg.RED + style.BRIGHT + 'ERROR - Source and destination are the same file - ' + log_path_file + style.END)
+                    importClientCursor.callproc("errorLoad",["copy_backup_file(log_path_file, log_days)",'8888',"Source and destination are the same file - " + log_path_file,str(importLoadID)])
+                except OSError as e:
+                    print(bg.RED + style.BRIGHT + 'ERROR - Error copying file: ' + log_path_file + style.END, e)
+                    importClientCursor.callproc("errorLoad",["copy_backup_file(log_path_file, log_days)",'8888',"Error copying file: " + log_path_file,str(importLoadID)])
+            except FileExistsError:
+                print(bg.RED + style.BRIGHT + 'ERROR - One or more directories in ' + log_path_file + ' already exist.' + style.END)
+                importClientCursor.callproc("errorLoad",["copy_backup_file(log_path_file, log_days)",'8888',"One or more directories in " + log_path_file + " already exist.",str(importLoadID)])
+            except PermissionError:
+                print(bg.RED + style.BRIGHT + 'ERROR - Permission denied: Unable to create ' + log_path_file + style.END)
+                importClientCursor.callproc("errorLoad",["copy_backup_file(log_path_file, log_days)",'8888',"Permission denied: Unable to create  " + log_path_file,str(importLoadID)])
+            except Exception as e:
+                print(bg.RED + style.BRIGHT + 'ERROR - An error occurred: ' + log_path_file + style.END, e)
+                importClientCursor.callproc("errorLoad",["copy_backup_file(log_path_file, log_days)",'8888',"An error occurred: " + log_path_file,str(importLoadID)])
+        if backup_days == -1 or fileCopied:
+            try:
+                remove(log_path_file)
+                print(bg.CYAN + style.BRIGHT + "Deleted file : " + log_path_file + style.END)
+            except Exception as e:
+                print(bg.RED + style.BRIGHT + 'ERROR - An error occurred deleting file: ' + log_path_file + style.END, e)
+                importClientCursor.callproc("errorLoad",["copy_backup_file(log_path_file, log_days)",'8888',"An error occurred deleting file: " + log_path_file,str(importLoadID)])
     if errorlog == 1:
         if errorlog_log >= 1:
-            print(bcolors.HEADER + 'Starting Error Logs processing - %s seconds' % (time() - start_time) + bcolors.ENDC)
+            print(fg.HEADER + style.NORMAL + 'Starting Error Logs processing - %s second' % round((time() - start_time),4) + style.END)
         errorExistsCursor = conn.cursor()
         errorInsertCursor = conn.cursor()
         errorLoadCursor = conn.cursor()
@@ -218,13 +258,13 @@ def processLogs():
                 errorExistsCursor.execute( errorExistsSQL )
             except:
                 processError += 1
-                print(bcolors.ERROR + "ERROR - Function apache_logs.importFileExists(error_log) failed" + bcolors.ENDC)
+                print(bg.RED + style.BRIGHT + 'ERROR - Function apache_logs.importFileExists(error_log) failed' + style.END)
                 showWarnings = conn.show_warnings()
                 print(showWarnings)
                 importClientCursor.callproc("errorLoad",["Function apache_logs.importFileExists(error_log)",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
             errorExistsTuple = errorExistsCursor.fetchall()
             errorExists = errorExistsTuple[0][0]
-            if errorExists == 0:
+            if errorExists is None:
                 errorFilesLoaded += 1
                 errorDataLoaded = 1
                 if errorlog_log >= 2:
@@ -244,7 +284,7 @@ def processLogs():
                     errorInsertCursor.execute( errorInsertSQL )
                 except:
                     processError += 1
-                    print(bcolors.ERROR + "ERROR - Function apache_logs.importFileID(error_log) failed" + bcolors.ENDC)
+                    print(bg.RED + style.BRIGHT + 'ERROR - Function apache_logs.importFileID(error_log) failed' + style.END)
                     showWarnings = conn.show_warnings()
                     print(showWarnings)
                     importClientCursor.callproc("errorLoad",["Function apache_logs.importFileID(error_log)",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
@@ -260,51 +300,53 @@ def processLogs():
                     errorLoadCursor.execute( errorLoadSQL )
                 except:
                     processError += 1
-                    print(bcolors.ERROR + "ERROR - LOAD DATA LOCAL INFILE INTO TABLE load_error_default failed" + bcolors.ENDC)
+                    print(bg.RED + style.BRIGHT + 'ERROR - LOAD DATA LOCAL INFILE INTO TABLE load_error_default failed' + style.END)
                     showWarnings = conn.show_warnings()
                     print(showWarnings)
                     importClientCursor.callproc("errorLoad",["LOAD DATA LOCAL INFILE INTO TABLE load_error_default",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
                 conn.commit()
+            elif backup_days != 0:
+               copy_backup_file(errorFile, errorExists)
         if errorlog_process >= 1 and errorDataLoaded == 1:
             errorParseCalled += 1
             if errorlog_log >= 1:
-                print('-Started Parsing Error Logs Stored Procedure - %s seconds' % (time() - start_time))
+                print('*','Started Parsing Error Logs Stored Procedure - %s seconds' % round((time() - start_time),4))
             try:
                errorLoadCursor.callproc("process_error_parse",["default",str(importLoadID)])
             except:
                 processError += 1
-                print(bcolors.ERROR + "ERROR - Stored Procedure process_error_parse(default) failed" + bcolors.ENDC)
+                print(bg.RED + style.BRIGHT + 'ERROR - Stored Procedure process_error_parse(default) failed' + style.END)
                 showWarnings = conn.show_warnings()
                 print(showWarnings)
                 importClientCursor.callproc("errorLoad",["Stored Procedure process_error_parse(default)",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
             conn.commit()
             if errorlog_log >= 1:
-                print('-Completed Parsing Error Logs Stored Procedure - %s seconds' % (time() - start_time))
+                print('*','Completed Parsing Error Logs Stored Procedure - %s seconds' % round((time() - start_time),4))
             if errorlog_process >= 2:
                 errorImportCalled += 1
                 if errorlog_log >= 1:
-                    print('--Started Importing Error Logs Stored Procedure - %s seconds' % (time() - start_time))
+                    print('*','*','Started Importing Error Logs Stored Procedure - %s seconds' % round((time() - start_time),4))
                 errorProcedureCursor = conn.cursor()
                 try:
                     errorProcedureCursor.callproc("process_error_import",["default",str(importLoadID)])
                 except:
                     processError += 1
-                    print(bcolors.ERROR + "ERROR - Stored Procedure process_error_import(default) failed" + bcolors.ENDC)
+                    print(bg.RED + style.BRIGHT + 'ERROR - Stored Procedure process_error_import(default) failed' + style.END)
                     showWarnings = conn.show_warnings()
                     print(showWarnings)
                     importClientCursor.callproc("errorLoad",["Stored Procedure process_error_import(default)",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
                 conn.commit()
                 errorProcedureCursor.close()
                 if errorlog_log >= 1:
-                    print('--Completed Importing Error Logs Stored Procedure - %s seconds' % (time() - start_time))
+                    print('*','*','Completed Importing Error Logs Stored Procedure - %s seconds' % round((time() - start_time),4))
         if errorlog_log >= 1:
-            print('Completed Error Logs processing - %s seconds' % (time() - start_time))
+            print(fg.MAGENTA + style.DIM + 'Completed Error Logs processing. Loaded '+ str(errorFilesFound) + ' files - %s seconds' % round((time() - start_time),4) + style.END)
         errorInsertCursor.close()
         errorLoadCursor.close()
         errorExistsCursor.close()
     if combined == 1:
         if combined_log >= 1:
-            print(bcolors.HEADER + 'Starting Combined Access Logs processing - %s seconds' % (time() - start_time) + bcolors.ENDC)
+            print(fg.HEADER + style.NORMAL + 'Starting Combined Access Logs processing - %s seconds' % round((time() - start_time),4) + style.END)
         combinedExistsCursor = conn.cursor()
         combinedInsertCursor = conn.cursor()
         combinedLoadCursor = conn.cursor()
@@ -316,13 +358,13 @@ def processLogs():
                 combinedExistsCursor.execute( combinedExistsSQL )
             except:
                 processError += 1
-                print(bcolors.ERROR + "ERROR - Function apache_logs.importFileExists(combined_log) failed")
+                print(bg.RED + style.BRIGHT + 'ERROR - Function apache_logs.importFileExists(combined_log) failed')
                 showWarnings = conn.show_warnings()
                 print(showWarnings)
                 importClientCursor.callproc("errorLoad",["Function apache_logs.importFileExists(combined_log)",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
             combinedExistsTuple = combinedExistsCursor.fetchall()
             combinedExists = combinedExistsTuple[0][0]
-            if combinedExists == 0:
+            if combinedExists is None:
                 combinedFilesLoaded += 1
                 if combined_log >= 2:
                     print('Loading Combined Access Logs - ' + combinedFile )
@@ -342,7 +384,7 @@ def processLogs():
                     combinedInsertCursor.execute( combinedInsertSQL )
                 except:
                     processError += 1
-                    print(bcolors.ERROR + "ERROR - Function apache_logs.importFileID(combined_log) failed" + bcolors.ENDC)
+                    print(bg.RED + style.BRIGHT + 'ERROR - Function apache_logs.importFileID(combined_log) failed' + style.END)
                     showWarnings = conn.show_warnings()
                     print(showWarnings)
                     importClientCursor.callproc("errorLoad",["Function apache_logs.importFileID(combined_log)",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
@@ -358,51 +400,53 @@ def processLogs():
                     combinedLoadCursor.execute( combinedLoadSQL )
                 except:
                     processError += 1
-                    print(bcolors.ERROR + "ERROR - LOAD DATA LOCAL INFILE INTO TABLE load_access_combined failed")
+                    print(bg.RED + style.BRIGHT + 'ERROR - LOAD DATA LOCAL INFILE INTO TABLE load_access_combined failed')
                     showWarnings = conn.show_warnings()
                     print(showWarnings)
                     importClientCursor.callproc("errorLoad",["LOAD DATA LOCAL INFILE INTO TABLE load_access_combined",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
                 conn.commit()
+            elif backup_days != 0:
+               copy_backup_file(combinedFile, combinedExists)
         if combined_process >= 1 and combinedDataLoaded == 1:
             combinedParseCalled += 1
             if combined_log >= 1:
-                print('-Started Parsing Combined Access Logs Stored Procedure - %s seconds' % (time() - start_time))
+                print('*','Started Parsing Combined Access Logs Stored Procedure - %s seconds' % round((time() - start_time),4))
             try:
                 combinedLoadCursor.callproc("process_access_parse",["combined",str(importLoadID)])
             except:
                 processError += 1
-                print(bcolors.ERROR + "ERROR - Stored Procedure process_access_parse(combined) failed")
+                print(bg.RED + style.BRIGHT + 'ERROR - Stored Procedure process_access_parse(combined) failed')
                 showWarnings = conn.show_warnings()
                 print(showWarnings)
                 importClientCursor.callproc("errorLoad",["Stored Procedure process_access_parse(combined)",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
             conn.commit()
             if combined_log >= 1:
-                print('-Completed Parsing Combined Access Logs Stored Procedure - %s seconds' % (time() - start_time))
+                print('*','Completed Parsing Combined Access Logs Stored Procedure - %s seconds' % round((time() - start_time),4))
             if combined_process >= 2:
                 combinedImportCalled += 1
                 if combined_log >= 1:
-                    print('--Started Importing Combined Access Logs Stored Procedure - %s seconds' % (time() - start_time))
+                    print('*','*','Started Importing Combined Access Logs Stored Procedure - %s seconds' % round((time() - start_time),4))
                 combinedProcedureCursor = conn.cursor()
                 try:
                     combinedProcedureCursor.callproc("process_access_import",["combined",str(importLoadID)])
                 except:
                     processError += 1
-                    print(bcolors.ERROR + "ERROR - Stored Procedure process_access_import(combined) failed" + bcolors.ENDC)
+                    print(bg.RED + style.BRIGHT + 'ERROR - Stored Procedure process_access_import(combined) failed' + style.END)
                     showWarnings = conn.show_warnings()
                     print(showWarnings)
                     importClientCursor.callproc("errorLoad",["Stored Procedure process_access_import(combined)",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
                 conn.commit()
                 combinedProcedureCursor.close()
                 if combined_log >= 1:
-                    print('--Completed Importing Combined Access Logs Stored Procedure - %s seconds' % (time() - start_time))
+                    print('*','*','Completed Importing Combined Access Logs Stored Procedure - %s seconds' % round((time() - start_time),4))
         if combined_log >= 1:
-            print('Completed Combined Access Logs processing - %s seconds' % (time() - start_time))
+            print(fg.MAGENTA + style.DIM + 'Completed Combined Access Logs processing. Loaded '+ str(combinedFilesFound) + ' files - %s seconds' % round((time() - start_time),4) + style.END)
         combinedInsertCursor.close()
         combinedLoadCursor.close()
         combinedExistsCursor.close()
     if vhost == 1:
         if vhost_log >= 1:
-            print(bcolors.HEADER + 'Starting Vhost Access Logs processing - %s seconds' % (time() - start_time) + bcolors.ENDC)
+            print(fg.HEADER + style.NORMAL + "Starting Vhost Access Logs processing - %s seconds" % round((time() - start_time),4) + style.END)
         vhostExistsCursor = conn.cursor()
         vhostInsertCursor = conn.cursor()
         vhostLoadCursor = conn.cursor()
@@ -414,13 +458,13 @@ def processLogs():
                 vhostExistsCursor.execute( vhostExistsSQL )
             except:
                 processError += 1
-                print(bcolors.ERROR + "ERROR - Function apache_logs.importFileExists(vhost_log) failed")
+                print(bg.RED + style.BRIGHT + 'ERROR - Function apache_logs.importFileExists(vhost_log) failed' + style.END)
                 showWarnings = conn.show_warnings()
                 print(showWarnings)
                 importClientCursor.callproc("errorLoad",["Function apache_logs.importFileExists(vhost_log)",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
             vhostExistsTuple = vhostExistsCursor.fetchall()
             vhostExists = vhostExistsTuple[0][0]
-            if vhostExists == 0:
+            if vhostExists is None:
                 vhostFilesLoaded += 1
                 if vhost_log >= 2:
                     print('Loading Vhost Access Log - ' + vhostFile)
@@ -440,7 +484,7 @@ def processLogs():
                     vhostInsertCursor.execute( vhostInsertSQL )
                 except:
                     processError += 1
-                    print(bcolors.ERROR + "ERROR - Function apache_logs.importFileID(vhost_log) failed" + bcolors.ENDC)
+                    print(bg.RED + style.BRIGHT + 'ERROR - Function apache_logs.importFileID(vhost_log) failed' + style.END)
                     showWarnings = conn.show_warnings()
                     print(showWarnings)
                     importClientCursor.callproc("errorLoad",["Function apache_logs.importFileID(vhost_log)",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
@@ -451,52 +495,54 @@ def processLogs():
                     vhostLoadCursor.execute( vhostLoadSQL )
                 except:
                     processError += 1
-                    print(bcolors.ERROR + "ERROR - LOAD DATA LOCAL INFILE INTO TABLE load_access_vhost failed" + bcolors.ENDC)
+                    print(bg.RED + style.BRIGHT + 'ERROR - LOAD DATA LOCAL INFILE INTO TABLE load_access_vhost failed' + style.END)
                     showWarnings = conn.show_warnings()
                     print(showWarnings)
                     importClientCursor.callproc("errorLoad",["LOAD DATA LOCAL INFILE INTO TABLE load_access_vhost",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
                 conn.commit()
+            elif backup_days != 0:
+               copy_backup_file(vhostFile, vhostExists)
         if vhost_process >= 1 and vhostDataLoaded == 1:
             vhostParseCalled += 1
             if vhost_log >= 1:
-                print('-Started Parsing Vhost Access Logs Stored Procedure - %s seconds' % (time() - start_time))
+                print('*','Started Parsing Vhost Access Logs Stored Procedure - %s seconds' % round((time() - start_time),4) + style.END)
             try:
                 vhostLoadCursor.callproc("process_access_parse",["vhost",str(importLoadID)])
             except:
                 processError += 1
-                print(bcolors.ERROR + "ERROR - Stored Procedure process_access_parse(vhost) failed" + bcolors.ENDC)
+                print(bg.RED + style.BRIGHT + 'ERROR - Stored Procedure process_access_parse(vhost) failed' + style.END)
                 showWarnings = conn.show_warnings()
                 print(showWarnings)
                 importClientCursor.callproc("errorLoad",["Stored Procedure process_access_parse(vhost)",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
             conn.commit()
             if vhost_log >= 1:
-                print('-Completed Parsing Vhost Access Logs Stored Procedure - %s seconds' % (time() - start_time))
+                print('*','Completed Parsing Vhost Access Logs Stored Procedure - %s seconds' % round((time() - start_time),4) + style.END)
             # Processing loaded data
             if vhost_process >= 2:
                 vhostImportCalled += 1
                 if vhost_log >= 1:
-                    print('--Started Importing Vhost Access Logs Stored Procedure - %s seconds' % (time() - start_time))
+                    print('*','*','Started Importing Vhost Access Logs Stored Procedure - %s seconds' % round((time() - start_time),4) + style.END)
                 vhostProcedureCursor = conn.cursor()
                 try:
                     vhostProcedureCursor.callproc("process_access_import",["vhost",str(importLoadID)])
                 except:
                     processError += 1
-                    print(bcolors.ERROR + "ERROR - Stored Procedure process_access_import(vhost) failed" + bcolors.ENDC)
+                    print(bg.RED + style.BRIGHT + 'ERROR - Stored Procedure process_access_import(vhost) failed' + style.END)
                     showWarnings = conn.show_warnings()
                     print(showWarnings)
                     importClientCursor.callproc("errorLoad",["Stored Procedure process_access_import(vhost)",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
                 conn.commit()
                 vhostProcedureCursor.close()
                 if vhost_log >= 1:
-                    print('--Completed Importing Vhost Access Logs Stored Procedure - %s seconds' % (time() - start_time))
+                    print('*','*','Completed Importing Vhost Access Logs Stored Procedure - %s seconds' % round((time() - start_time),4) + style.END)
         if vhost_log >= 1:
-            print('Completed Vhost Access Logs processing - %s seconds' % (time() - start_time))
+            print(fg.MAGENTA + style.DIM + 'Completed Vhost Access Logs processing. Loaded '+ str(vhostFilesLoaded) + ' files - %s seconds' % round((time() - start_time),4) + style.END)
         vhostInsertCursor.close()
         vhostLoadCursor.close()
         vhostExistsCursor.close()
     if csv2mysql == 1:
         if csv2mysql_log >= 1:
-            print(bcolors.HEADER + 'Starting Csv2mysql Access Logs processing - %s seconds' % (time() - start_time) + bcolors.ENDC)
+            print(fg.HEADER + style.NORMAL + "Starting Csv2mysql Access Logs processing - %s seconds" % round((time() - start_time),4) + style.END)
         csv2mysqlExistsCursor = conn.cursor()
         csv2mysqlInsertCursor = conn.cursor()
         csv2mysqlLoadCursor = conn.cursor()
@@ -508,13 +554,13 @@ def processLogs():
                 csv2mysqlExistsCursor.execute( csv2mysqlExistsSQL )
             except:
                 processError += 1
-                print(bcolors.ERROR + "ERROR - Function apache_logs.importFileExists(csv2mysql_log) failed")
+                print(bg.RED + style.BRIGHT + 'ERROR - Function apache_logs.importFileExists(csv2mysql_log) failed' + style.END)
                 showWarnings = conn.show_warnings()
                 print(showWarnings)
                 importClientCursor.callproc("errorLoad",["Function apache_logs.importFileExists(csv2mysql_log)",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
             csv2mysqlExistsTuple = csv2mysqlExistsCursor.fetchall()
             csv2mysqlExists = csv2mysqlExistsTuple[0][0]
-            if csv2mysqlExists == 0:
+            if csv2mysqlExists is None:
                 csv2mysqlFilesLoaded += 1
                 if csv2mysql_log >= 2:
                     print('Loading Csv2mysql Access Log - ' + csv2mysqlFile )
@@ -534,7 +580,7 @@ def processLogs():
                     csv2mysqlInsertCursor.execute( csv2mysqlInsertSQL )
                 except:
                     processError += 1
-                    print(bcolors.ERROR + "ERROR - Function apache_logs.importFileID(csv2mysql_log) failed" + bcolors.ENDC)
+                    print(bg.RED + style.BRIGHT + 'ERROR - Function apache_logs.importFileID(csv2mysql_log) failed' + style.END)
                     showWarnings = conn.show_warnings()
                     print(showWarnings)
                     importClientCursor.callproc("errorLoad",["Function apache_logs.importFileID(csv2mysql_log)",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
@@ -545,46 +591,48 @@ def processLogs():
                     csv2mysqlLoadCursor.execute( csv2mysqlLoadSQL )
                 except:
                     processError += 1
-                    print(bcolors.ERROR + "ERROR - LOAD DATA LOCAL INFILE INTO TABLE load_access_csv2mysql failed")
+                    print(bg.RED + style.BRIGHT + 'ERROR - LOAD DATA LOCAL INFILE INTO TABLE load_access_csv2mysql failed' + style.END)
                     showWarnings = conn.show_warnings()
                     print(showWarnings)
                     importClientCursor.callproc("errorLoad",["LOAD DATA LOCAL INFILE INTO TABLE load_access_csv2mysql",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
-            conn.commit()
+                conn.commit()
+            elif backup_days != 0:
+                copy_backup_file(csv2mysqlFile, csv2mysqlExists)
         if csv2mysql_process >= 1 and csv2mysqlDataLoaded == 1:
             csv2mysqlParseCalled += 1
             if csv2mysql_log >= 1:
-                print('-Started Parsing Csv2mysql Access Logs Stored Procedure - %s seconds' % (time() - start_time))
+                print('*','Started Parsing Csv2mysql Access Logs Stored Procedure - %s seconds' % round((time() - start_time),4) + style.END)
             try:
                 csv2mysqlLoadCursor.callproc("process_access_parse",["csv2mysql",str(importLoadID)])
             except:
                 processError += 1
-                print(bcolors.ERROR + "ERROR - Stored Procedure process_access_parse(csv2mysql) failed")
+                print(bg.RED + style.BRIGHT + 'ERROR - Stored Procedure process_access_parse(csv2mysql) failed' + style.END)
                 showWarnings = conn.show_warnings()
                 print(showWarnings)
                 importClientCursor.callproc("errorLoad",["Stored Procedure process_access_parse(csv2mysql)",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
             conn.commit()
             if csv2mysql_log >= 1:
-                print('-Completed Parsing Csv2mysql Access Logs Stored Procedure - %s seconds' % (time() - start_time))
+                print('*','Completed Parsing Csv2mysql Access Logs Stored Procedure - %s seconds' % round((time() - start_time),4) + style.END)
             # Processing loaded data
             if csv2mysql_process >= 2:
                 csv2mysqlImportCalled += 1
                 if csv2mysql_log >= 1:
-                    print('--Started Importing Csv2mysql Access Logs Stored Procedure - %s seconds' % (time() - start_time))
+                    print('*','*','Started Importing Csv2mysql Access Logs Stored Procedure - %s seconds' % round((time() - start_time),4) + style.END)
                 csv2mysqlProcedureCursor = conn.cursor()
                 try:
                     csv2mysqlProcedureCursor.callproc("process_access_import",["csv2mysql",str(importLoadID)])
                 except:
                     processError += 1
-                    print(bcolors.ERROR + "ERROR - Stored Procedure process_access_import(csv2mysql) failed" + bcolors.ENDC)
+                    print(bg.RED + style.BRIGHT + 'ERROR - Stored Procedure process_access_import(csv2mysql) failed' + style.END)
                     showWarnings = conn.show_warnings()
                     print(showWarnings)
                     importClientCursor.callproc("errorLoad",["Stored Procedure process_access_import(csv2mysql)",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
                 conn.commit()
                 csv2mysqlProcedureCursor.close()
                 if csv2mysql_log >= 1:
-                    print('--Completed Importing Csv2mysql Access Logs Stored Procedure - %s seconds' % (time() - start_time))
+                    print('*','*','Completed Importing Csv2mysql Access Logs Stored Procedure - %s seconds' % round((time() - start_time),4) + style.END)
         if csv2mysql_log >= 1:
-            print('Completed Csv2mysql Access Logs processing - %s seconds' % (time() - start_time))
+            print(fg.MAGENTA + style.DIM + 'Completed Csv2mysql Access Logs processing. Loaded '+ str(csv2mysqlFilesLoaded) + ' files - %s seconds' % round((time() - start_time),4) + style.END)
         csv2mysqlExistsCursor.close()
         csv2mysqlInsertCursor.close()
         csv2mysqlLoadCursor.close()
@@ -597,14 +645,14 @@ def processLogs():
     # In some cases, ALL processes above and below will be executed in a single "Import Load" execution. Therefore, the encapsulation of all processes in a single module.
     if useragent == 1:
         if useragent_log >= 1:
-            print(bcolors.HEADER + 'Starting User Agent Information Parsing Process. Checking access_log_useragent TABLE for records to parse - %s seconds' % (time() - start_time) + bcolors.ENDC)
+            print(fg.HEADER + style.NORMAL + 'Starting User Agent Information Parsing Process. Checking access_log_useragent TABLE for records to parse - %s seconds' % round((time() - start_time),4) + style.END)
         selectUserAgentCursor = conn.cursor()
         updateUserAgentCursor = conn.cursor()
         try:
             selectUserAgentCursor.execute("SELECT id, name FROM access_log_useragent WHERE ua_browser IS NULL")
         except:
             processError += 1
-            print(bcolors.ERROR + "ERROR - SELECT id, name FROM access_log_useragent WHERE ua_browser IS NULL failed" + bcolors.ENDC)
+            print(bg.RED + style.BRIGHT + 'ERROR - SELECT id, name FROM access_log_useragent WHERE ua_browser IS NULL failed' + style.END)
             showWarnings = conn.show_warnings()
             print(showWarnings)
             importClientCursor.callproc("errorLoad",["SELECT id, name FROM access_log_useragent WHERE ua_browser",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
@@ -614,7 +662,7 @@ def processLogs():
             recID = str(userAgent[0])
             ua = parse(userAgent[1])
             if useragent_log >= 2:
-                print(bcolors.GREEN + 'Parsing User Agent information - record: ' + str(recID) + ' - data: ' + str(ua) + bcolors.ENDC)
+                print(fg.CYAN + style.DIM + 'Parsing information - User Agent: ' + str(ua) + ' - record: ' + str(recID) + style.END)
             strua = str(ua)
             strua = strua.replace('"', ' in.') # must replace " in string for error occurs
             br = str(ua.browser)  # returns Browser(family=u'Mobile Safari', version=(5, 1), version_string='5.1')
@@ -657,34 +705,31 @@ def processLogs():
                 updateUserAgentCursor.execute(updateSql)
             except:
                 processError += 1
-                print(bcolors.ERROR + "ERROR - UPDATE access_log_useragent SET Statement failed" + bcolors.ENDC)
+                print(bg.RED + style.BRIGHT + 'ERROR - UPDATE access_log_useragent SET Statement failed' + style.END)
                 showWarnings = conn.show_warnings()
                 print(showWarnings)
                 importClientCursor.callproc("errorLoad",["UPDATE access_log_useragent SET Statement",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
         conn.commit()
         selectUserAgentCursor.close()
         updateUserAgentCursor.close()        
-        if useragent_log >= 1:
-            if userAgentRecordsParsed > 0:
-                print('-Completed User Agent data parsing '+ str(userAgentRecordsParsed) + ' records - %s seconds' % (time() - start_time))
         if useragent_process >= 1 and userAgentRecordsParsed > 0:
             if useragent_log >= 1:
-                print('--Started Normalizing User Agent data Stored Procedure - %s seconds' % (time() - start_time))
+                print('*','*','Started Normalizing User Agent data Stored Procedure - %s seconds' % round((time() - start_time),4) + style.END)
             normalizeUserAgentCursor = conn.cursor()
             try:
                 normalizeUserAgentCursor.callproc("normalize_useragent",["Python Processed",str(importLoadID)])
                 userAgentNormalizeCalled = 1
             except:
                 processError += 1
-                print(bcolors.ERROR + "ERROR - Stored Procedure normalize_useragent(Python Processed) failed" + bcolors.ENDC)
+                print(bg.RED + style.BRIGHT + 'ERROR - Stored Procedure normalize_useragent(Python Processed) failed' + style.END)
                 showWarnings = conn.show_warnings()
                 print(showWarnings)
                 importClientCursor.callproc("errorLoad",["Stored Procedure normalize_useragent(Python Processed)",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
             normalizeUserAgentCursor.close()
             if useragent_log >= 1:
-                print('--Completed Normalizing User Agent data Stored Procedure - %s seconds' % (time() - start_time))
+                print('*','*','Completed Normalizing User Agent data Stored Procedure - %s seconds' % round((time() - start_time),4) + style.END)
         if useragent_log >= 1:
-            print('Completed User Agent data processing - %s seconds' % (time() - start_time))
+            print(fg.MAGENTA + style.DIM + 'Completed User Agent data processing. Parsed ' + str(userAgentRecordsParsed) + ' records - %s seconds' % round((time() - start_time),4) + style.END)
     geoip2_city_file_exists = True
     geoip2_asn_file_exists = True
     if geoip2 == 1:
@@ -693,23 +738,23 @@ def processLogs():
         if not path.exists(geoip2_city_file):
             processError += 1
             geoip2_city_file_exists = False
-            print(bcolors.ERROR + 'ERROR - IP geolocation CITY database: '+ geoip2_city_file + ' not found.' + bcolors.ENDC)
+            print(bg.RED + style.BRIGHT, 'ERROR - IP geolocation CITY database: ' + geoip2_city_file + ' not found.' + style.END)
             importClientCursor.callproc("errorLoad",["IP geolocation CITY database not found",'1234',geoip2_city_file,str(importLoadID)])
         if not path.exists(geoip2_asn_file):
             processError += 1
             geoip2_asn_file_exists = False
-            print(bcolors.ERROR + 'ERROR - IP geolocation ASN database: ' + geoip2_asn_file + ' not found.' + bcolors.ENDC)
+            print(bg.RED + style.BRIGHT, 'ERROR - IP geolocation ASN database: ' + geoip2_asn_file + ' not found.' + style.END)
             importClientCursor.callproc("errorLoad",["IP geolocation ASN database not found",'1234',geoip2_asn_file,str(importLoadID)])
     if geoip2 == 1 and geoip2_city_file_exists and geoip2_asn_file_exists:
         if geoip2_log >= 1:
-            print(bcolors.HEADER + 'Starting IP Address Information Retrieval process. Checking log_client TABLE for records to update - %s seconds' % (time() - start_time) + bcolors.ENDC)
+            print(fg.HEADER + style.NORMAL + 'Starting IP Address Information Retrieval process. Checking log_client TABLE for records to update - %s seconds' % round((time() - start_time),4) + style.END)
         selectGeoIP2Cursor = conn.cursor()
         updateGeoIP2Cursor = conn.cursor()
         try:
             selectGeoIP2Cursor.execute("SELECT id, name FROM log_client WHERE country_code IS NULL")
         except:
             processError += 1
-            print(bcolors.ERROR + "ERROR - SELECT id, name FROM log_client WHERE ua_browser IS NULL failed" + bcolors.ENDC)
+            print(bg.RED + style.BRIGHT + 'ERROR - SELECT id, name FROM log_client WHERE ua_browser IS NULL failed' + style.END)
             showWarnings = conn.show_warnings()
             print(showWarnings)
             importClientCursor.callproc("errorLoad",["SELECT id, name FROM log_client WHERE country_code IS NULL",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
@@ -717,13 +762,13 @@ def processLogs():
             cityReader = database.Reader(geoip2_city_file)
         except Exception as e:
             processError += 1
-            print(bcolors.ERROR + "ERROR - cityReader = geoip2.database.Reader failed" + bcolors.ENDC, e)
+            print(bg.RED + style.BRIGHT + 'ERROR - cityReader = geoip2.database.Reader failed' + style.END, e)
             importClientCursor.callproc("errorLoad",["cityReader = geoip2.database.Reader failed", '1111', e, str(importLoadID)])
         try:
             asnReader = database.Reader(geoip2_asn_file)
         except Exception as e:
             processError += 1
-            print(bcolors.ERROR + "ERROR - cityReader = geoip2.database.Reader failed" + bcolors.ENDC, e)
+            print(bg.RED + style.BRIGHT + 'ERROR - cityReader = geoip2.database.Reader failed' + style.END, e)
             importClientCursor.callproc("errorLoad",["cityReader = geoip2.database.Reader failed", '1111', e, str(importLoadID)])
         for x in range(selectGeoIP2Cursor.rowcount):
             ipAddressRecordsParsed += 1
@@ -739,7 +784,7 @@ def processLogs():
             organization = ''
             network = ''
             if geoip2_log >= 2:
-                print(bcolors.GREEN + 'Retrieving IP information - record: ' + str(recID) + ' - IP Address: ' + ipAddress + bcolors.ENDC)
+                print(fg.CYAN + style.DIM + 'Retrieving information - IP Address: ' + ipAddress + ' - record: ' + str(recID) + style.END)
             try:
                 cityData = cityReader.city(ipAddress)
                 if cityData.country.iso_code is not None:
@@ -760,7 +805,7 @@ def processLogs():
                     longitude = cityData.location.longitude
             except:
                 processError += 1
-                print(bcolors.ERROR + "ERROR - cityReader.city(" + ipAddress + ")" + bcolors.ENDC)
+                print(bg.RED + style.BRIGHT + 'ERROR - cityReader.city(' + ipAddress + ')' + style.END)
                 importClientCursor.callproc("errorLoad",["cityReader.city() failed", '1234', ipAddress, str(importLoadID)])
             try:
                 asnData = asnReader.asn(ipAddress)
@@ -771,7 +816,7 @@ def processLogs():
                     network = asnData.network
             except:
                 processError += 1
-                print(bcolors.ERROR + "ERROR - asnReader.asn(" + ipAddress + ")" + bcolors.ENDC)
+                print(bg.RED + style.BRIGHT + 'ERROR - asnReader.asn(' + ipAddress + ')' + style.END)
                 importClientCursor.callproc("errorLoad",["asnReader.asn() failed", '1234', ipAddress, str(importLoadID)])
             updateSql = ('UPDATE log_client SET country_code="'+ country_code + 
                        '", country="' + country + 
@@ -786,34 +831,31 @@ def processLogs():
                 updateGeoIP2Cursor.execute(updateSql)
             except:
               processError += 1
-              print(bcolors.ERROR + "ERROR - UPDATE log_client SET Statement failed" + bcolors.ENDC)
+              print(bg.RED + style.BRIGHT + 'ERROR - UPDATE log_client SET Statement failed' + style.END)
               showWarnings = conn.show_warnings()
               print(showWarnings)
               importClientCursor.callproc("errorLoad",["UPDATE log_client SET Statement",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
         conn.commit()
         selectGeoIP2Cursor.close()
         updateGeoIP2Cursor.close()        
-        if geoip2_log >= 1:
-          if ipAddressRecordsParsed > 0:
-              print('-Completed IP Address Information updating '+ str(ipAddressRecordsParsed) + ' records - %s seconds' % (time() - start_time))
         if geoip2_process >= 1 and ipAddressRecordsParsed > 0:
             if geoip2_log >= 1:
-                print('--Started Normalizing IP Address data Stored Procedure - %s seconds' % (time() - start_time))
+                print('*','*','Started Normalizing IP Address data Stored Procedure - %s seconds' % round((time() - start_time),4) + style.END)
             normalizeGeoIP2Cursor = conn.cursor()
             try:
                 normalizeGeoIP2Cursor.callproc("normalize_client",["Python Processed",str(importLoadID)])
                 ipAddressNormalizeCalled = 1
             except:
                 processError += 1
-                print(bcolors.ERROR + "ERROR - Stored Procedure normalize_client(Python Processed) failed" + bcolors.ENDC)
+                print(bg.RED + style.BRIGHT + 'ERROR - Stored Procedure normalize_client(Python Processed) failed' + style.END)
                 showWarnings = conn.show_warnings()
                 print(showWarnings)
                 importClientCursor.callproc("errorLoad",["Stored Procedure normalize_client(Python Processed)",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
             normalizeGeoIP2Cursor.close()
             if geoip2_log >= 1:
-                print('--Completed Normalizing IP Address data Stored Procedure - %s seconds' % (time() - start_time))
+                print('*','*','Completed Normalizing IP Address data Stored Procedure - %s seconds' % round((time() - start_time),4) + style.END)
         if geoip2_log >= 1:
-            print('Completed IP Address data processing - %s seconds' % (time() - start_time))
+            print(fg.MAGENTA + style.DIM + 'Completed IP Address data processing. Updated '+ str(ipAddressRecordsParsed) + ' records - %s seconds' % round((time() - start_time),4) + style.END, end='\n\n')
     processSeconds = round(time() - start_time, 4)
     loadUpdateSQL = ('UPDATE import_load SET errorFilesFound=' + str(errorFilesFound) + 
                   ', errorFilesLoaded=' + str(errorFilesLoaded) + 
@@ -843,7 +885,7 @@ def processLogs():
         importLoadCursor.execute(loadUpdateSQL)
     except:
         processError += 1
-        print(bcolors.ERROR + "ERROR - UPDATE import_load SET Statement failed" + bcolors.ENDC)
+        print(bg.RED + style.BRIGHT + 'ERROR - UPDATE import_load SET Statement failed' + style.END)
         showWarnings = conn.show_warnings()
         print(showWarnings)
         importClientCursor.callproc("errorLoad",["UPDATE import_load SET Statement",str(showWarnings[0][1]),showWarnings[0][2],str(importLoadID)])
@@ -851,7 +893,45 @@ def processLogs():
     importLoadCursor.close()
     importClientCursor.close()
     conn.close()
-    print(bcolors.WARNING + 'ProcessLogs complete: ' + str(datetime.now()) + ' - %s seconds' % (time() - start_time) + bcolors.ENDC)
+    print(fg.GREEN + style.BRIGHT + 'Apache Log File Counts and Process Metrics for ImportLoadID:' + str(importLoadID) + ' | ClientID:' + str(importClientID) + ' | DeviceID:' + str(importDeviceID) + style.END, end='\n')
+    log_headers = ["Log Formats", "Files Found", "Files Loaded", "Records Parsed", "Records Imported"]
+    log_processes = [ 
+    ["Error Logs", errorFilesFound, errorFilesLoaded, bool(errorParseCalled), bool(errorImportCalled)], 
+    ["Combined Access",combinedFilesFound, combinedFilesLoaded, bool(combinedParseCalled), bool(combinedImportCalled)], 
+    ["Vhost Access", vhostFilesFound, vhostFilesLoaded, bool(vhostParseCalled), bool(vhostImportCalled)], 
+    ["Csv2mysql Access", csv2mysqlFilesFound, csv2mysqlFilesLoaded, bool(csv2mysqlParseCalled), bool(csv2mysqlImportCalled)] 
+    ]
+    # Print table headers
+    print("Process".ljust(10), end = "")
+    for col in log_headers:
+        print(col.ljust(20), end="")
+    print()
+    # Print table rows
+    for i, row in enumerate(log_processes, start = 1):
+        print(str(i).ljust(10), end = "")                      
+        for col in row:
+            print(str(col).ljust(20), end = "")
+        print()
+    print(fg.LIGHT_GREEN + style.NORMAL + 'Each Import Load execution inserts record into apache_logs.import_file TABLE storing values.' + style.END, end='\n\n')
+    print(fg.GREEN + style.BRIGHT + 'Summary of Apache Log Data Enhancement and Process Metrics' + style.END, end='\n')
+    data_headers = ["Enhancement", "Records Processed", "Data Normalized"]
+    data_enhancements = [ 
+    ["User Agent data", userAgentRecordsParsed, bool(userAgentNormalizeCalled)], 
+    ["IP Address data", ipAddressRecordsParsed, bool(ipAddressNormalizeCalled)] 
+    ]
+    # Print table headers
+    print("Process".ljust(10), end = "")
+    for col in data_headers:
+        print(col.ljust(20), end="")
+    print()
+    # Print table rows
+    for i, row in enumerate(data_enhancements, start = 1):
+        print(str(i).ljust(10), end = "")                      
+        for col in row:
+            print(str(col).ljust(20), end = "")
+        print()
+    print(fg.LIGHT_GREEN + style.NORMAL + 'Each Import Load execution inserts record into apache_logs.import_file TABLE storing values.' + style.END, end='\n\n')
+    print(fg.YELLOW + style.BRIGHT + 'ProcessLogs complete: ' + str(datetime.now()) + ' - %s seconds' % round((time() - start_time),4) + style.END)
 if __name__ == "__main__":
     print("logs2mysql.py run directly")
     processLogs()

@@ -1,6 +1,6 @@
 #### Database Schema ***apache_logs*** is designed for data analysis of Apache Logs from unlimited Domains & Servers
 ![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
-## Python handles File Processing & MySQL handles Data Processing
+## Python handles File Processing & MySQL or MariaDB handles Data Processing
 ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema ***apache_logs*** to automate importing Access & Error files, normalizing log data into database and generating a well-documented data lineage audit trail.
 
 Imports Access Logs in LogFormats - ***common***, ***combined*** and ***vhost_combined*** & additional ***csv2mysql*** 
@@ -15,9 +15,9 @@ Every log data record is traceable back to the computer, path, file, load proces
 Multiple Access and Error logs and formats can be loaded, parsed and imported along with User Agent parsing and IP Address Geolocation retrieval processes within a single "Import Load" execution. 
 
 A single "Import Load" execution can also be configured to only load logs to Server (single child process) leaving other processes to be executed within another "Import Load" on a centralized computer.
-#### Process Messages in Console - 4 LogFormats, 2 ErrorLogFormats & 6 MySQL Stored Procedures
+#### Process Messages in Console - 4 LogFormats, 2 ErrorLogFormats & 6 MySQL or MariaDB Stored Procedures
 ![Processing Messages Console](./assets/processing_messages_console.png)
-### Application runs on Windows, Linux and MacOS
+### Application runs on Windows, Linux and MacOS. Database runs on MySQL and MariaDB.
 This is a fast, reliable processing application with detailed logging and two stages of data parsing. 
 First stage is performed in `LOAD DATA LOCAL INFILE` statements. 
 Second stage is performed in `process_access_parse` and `process_error_parse` Stored Procedures.
@@ -32,7 +32,7 @@ Application runs with no need for user interaction. File deletion is not require
 On servers, run application in conjunction with [logrotate](https://github.com/logrotate/logrotate) using [configuration file directives](https://man7.org/linux/man-pages/man8/logrotate.8.html) - `dateext`, `rotate`, `olddir`, `nocompress`, `notifempty`, `maxage`.
 Set `WATCH_PATH` to same folder as `olddir` and configure logrotate to delete files.
 
-On centralized computers, environment variables - `FILE_ROTATE` and `FILE_OLDDIR` can be configured for file removal from `WATCH_PATH` to reduce `apache_logs.importFileExists` execution in `processLogs` when tens of thousands of files exist in `WATCH_PATH`.
+On centralized computers, environment variables - `BACKUP_DAYS` and `BACKUP_PATH` can be configured to remove files from `WATCH_PATH` to reduce `apache_logs.importFileExists` execution in `processLogs` when tens of thousands of files exist in `WATCH_PATH` subfolder structure. If `BACKUP_DAYS` is set to 0 files are never moved or deleted from `WATCH_PATH` subfolder structure. Setting `BACKUP_DAYS` to a positive number will copy files to `BACKUP_PATH` creating an identical subfolder structure as `WATCH_PATH` as files are copied. `BACKUP_DAYS` is number of days since file was initially added to `apache_logs.import_file` TABLE before file is moved to `BACKUP_PATH`. Once file is copied the file will be deleted from `WATCH_PATH`. Setting `BACKUP_DAYS` = -1 files are not copied to `BACKUP_PATH` before deleting files from `WATCH_PATH`. When `BACKUP_DAYS` is set to -1 files are deleted from `WATCH_PATH` next time `processLogs` is executed.
 
 Log-level variables can be set to display Process Messages in console or inserted into [PM2](https://github.com/Unitech/pm2) logs for every process step. 
 All import errors in Python `processLogs` (client) and MySQL Stored Procedures (server) are inserted into `apache_logs.import_error` TABLE.

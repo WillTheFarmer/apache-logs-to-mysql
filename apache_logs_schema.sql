@@ -10,9 +10,9 @@
 -- # See the License for the specific language governing permissions and
 -- # limitations under the License.
 -- #
--- # version 3.0.0 - 01/28/2025 - IP Geolocation integration, table & column renames, refinements - see changelog
+-- # version 3.2.0 - 02/01/2025 - MariaDB compatible and Log Rotation - see changelog
 -- #
--- # Copyright 2024 Will Raymond <farmfreshsoftware@gmail.com>
+-- # Copyright 2024-2025 Will Raymond <farmfreshsoftware@gmail.com>
 -- #
 -- # CHANGELOG.md in repository - https://github.com/WillTheFarmer/apache-logs-to-mysql
 -- #
@@ -2343,7 +2343,7 @@ CREATE TABLE `import_format` (
 
 LOCK TABLES `import_format` WRITE;
 /*!40000 ALTER TABLE `import_format` DISABLE KEYS */;
-INSERT INTO `import_format` VALUES (1,'common',NULL,'2025-01-27 14:53:52'),(2,'combined',NULL,'2025-01-27 14:53:52'),(3,'vhost',NULL,'2025-01-27 14:53:52'),(4,'csc2mysql',NULL,'2025-01-27 14:53:52'),(5,'error_default',NULL,'2025-01-27 14:53:52'),(6,'error_vhost',NULL,'2025-01-27 14:53:52');
+INSERT INTO `import_format` VALUES (1,'common',NULL,'2025-02-01 14:10:10'),(2,'combined',NULL,'2025-02-01 14:10:10'),(3,'vhost',NULL,'2025-02-01 14:10:10'),(4,'csc2mysql',NULL,'2025-02-01 14:10:10'),(5,'error_default',NULL,'2025-02-01 14:10:10'),(6,'error_vhost',NULL,'2025-02-01 14:10:10');
 /*!40000 ALTER TABLE `import_format` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -4896,6 +4896,8 @@ CREATE DEFINER=`root`@`localhost` FUNCTION `importFileCheck`(importfileid INTEGE
   ) RETURNS int
     READS SQL DATA
 BEGIN
+  -- replaced ER_SIGNAL_EXCEPTION with errno
+  DECLARE errno SMALLINT UNSIGNED DEFAULT 1644;
   DECLARE importFileName VARCHAR(300) DEFAULT null;
   DECLARE parseProcess_ID INTEGER DEFAULT null;
   DECLARE importProcess_ID INTEGER DEFAULT null;
@@ -4916,16 +4918,16 @@ BEGIN
     SIGNAL SQLSTATE
       '45000'
     SET
-      MESSAGE_TEXT = `ERROR - Import File is not found in import_file table.`,
-      MYSQL_ERRNO = ER_SIGNAL_EXCEPTION;
+      MESSAGE_TEXT = 'ERROR - Import File is not found in import_file table.',
+      MYSQL_ERRNO = errno;
   ELSEIF processid IS NULL THEN
   -- This is an error. This function is only called when import processing. ProcessID must be valid.
     SET processFile = 0;
     SIGNAL SQLSTATE
       '45000'
     SET
-      MESSAGE_TEXT = `ERROR - ProcessID required when import processing.`,
-      MYSQL_ERRNO = ER_SIGNAL_EXCEPTION;
+      MESSAGE_TEXT = 'ERROR - ProcessID required when import processing.',
+      MYSQL_ERRNO = errno;
   ELSEIF processType = 'parse' AND parseProcess_ID IS NULL THEN
   -- First time and first record in file being processed. This will happen one time for each file.
     UPDATE apache_logs.import_file SET parseprocessid = processid WHERE id = importFileID;
@@ -4935,8 +4937,8 @@ BEGIN
     SIGNAL SQLSTATE
       '45000'
     SET
-      MESSAGE_TEXT = `ERROR - Previous PARSE process found. File has already been PARSED.`,
-      MYSQL_ERRNO = ER_SIGNAL_EXCEPTION;
+      MESSAGE_TEXT = 'ERROR - Previous PARSE process found. File has already been PARSED.',
+      MYSQL_ERRNO = errno;
   ELSEIF processType = 'import' AND importProcess_ID IS NULL THEN
   -- First time and first record in file being processed. This will happen one time for each file.
     UPDATE apache_logs.import_file SET importprocessid = processid WHERE id = importFileID;
@@ -4946,8 +4948,8 @@ BEGIN
     SIGNAL SQLSTATE
       '45000'
     SET
-      MESSAGE_TEXT = `ERROR - Previous IMPORT process found. File has already been IMPORTED.`,
-      MYSQL_ERRNO = ER_SIGNAL_EXCEPTION;
+      MESSAGE_TEXT = 'ERROR - Previous IMPORT process found. File has already been IMPORTED.',
+      MYSQL_ERRNO = errno;
   END IF;
   RETURN processFile;
 END ;;
@@ -4974,6 +4976,8 @@ BEGIN
   DECLARE e1 INT UNSIGNED;
   DECLARE e2, e3 VARCHAR(128);
   DECLARE importFileID INTEGER DEFAULT null;
+  DECLARE importDate DATETIME DEFAULT null;
+  DECLARE importDays INTEGER DEFAULT null;
   DECLARE importDevice_ID INTEGER DEFAULT null;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION 
 	BEGIN
@@ -4983,12 +4987,17 @@ BEGIN
   IF NOT CONVERT(in_importdevice_id, UNSIGNED) = 0 THEN
 	  SET importDevice_ID = CONVERT(in_importdevice_id, UNSIGNED);
   END IF;
-  SELECT id
-    INTO importFileID
+  SELECT id,
+         added
+    INTO importFileID,
+         importDate
     FROM apache_logs.import_file
    WHERE name = in_importFile
      AND importdeviceid = importDevice_ID;
-  RETURN NOT ISNULL(importFileID);
+  IF NOT ISNULL(importFileID) THEN
+    SET importDays = datediff(now(), importDate);
+  END IF;
+  RETURN importDays;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -5128,12 +5137,13 @@ BEGIN
 	  	IF @error_count=1 THEN RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'importServerID called from importProcessID'; ELSE RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'importProcessID'; END IF;
 	  END;
   SET @error_count = 0;
+--    @@server_uuid
 	SELECT user(),
     @@hostname,
     @@version,
     @@version_compile_os,
     @@version_compile_machine,
-    @@server_uuid
+    UUID()
   INTO 
     db_user,
     db_host,
