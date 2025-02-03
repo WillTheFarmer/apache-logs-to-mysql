@@ -9,7 +9,7 @@ LogFormat defined below.
 Imports Error Logs in ***default*** ErrorLogFormat & ***additional*** ErrorLogFormat defined below performing data harmonization 
 on Apache Codes & Messages, System Codes & Messages, and Log Messages to create a unified, standardized dataset.
 
-All processing stages (child processes) are encapsulated within one "Import Load" (parent process) that captures process metrics, notifications and errors into MySQL import tables. 
+All processing stages (child processes) are encapsulated within one "Import Load" (parent process) that captures process metrics, notifications and errors into Database import tables. 
 Every log data record is traceable back to the computer, path, file, load process, parse process and import process the data originates from.
 
 Multiple Access and Error logs and formats can be loaded, parsed and imported along with User Agent parsing and IP Address Geolocation retrieval processes within a single "Import Load" execution. 
@@ -22,7 +22,7 @@ This is a fast, reliable processing application with detailed logging and two st
 First stage is performed in `LOAD DATA LOCAL INFILE` statements. 
 Second stage is performed in `process_access_parse` and `process_error_parse` Stored Procedures.
 
-Python handles polling of log file folders and executing MySQL Database LOAD DATA, Stored Procedures, Stored Functions and SQL Statements. Python drives the application but MySQL does all Data Manipulation & Processing.
+Python handles polling of log file folders and executing Database LOAD DATA, Stored Procedures, Stored Functions and SQL Statements. Python drives the application but MySQL or MariaDB does all Data Manipulation & Processing.
 
 Application determines what files have been processed using `apache_logs.import_file` TABLE. 
 Each imported file has record with name, path, size, created, modified attributes inserted during `processLogs`.
@@ -35,13 +35,13 @@ Set `WATCH_PATH` to same folder as `olddir` and configure logrotate to delete fi
 On centralized computers, environment variables - `BACKUP_DAYS` and `BACKUP_PATH` can be configured to remove files from `WATCH_PATH` to reduce `apache_logs.importFileExists` execution in `processLogs` when tens of thousands of files exist in `WATCH_PATH` subfolder structure. If `BACKUP_DAYS` is set to 0 files are never moved or deleted from `WATCH_PATH` subfolder structure. Setting `BACKUP_DAYS` to a positive number will copy files to `BACKUP_PATH` creating an identical subfolder structure as `WATCH_PATH` as files are copied. `BACKUP_DAYS` is number of days since file was initially added to `apache_logs.import_file` TABLE before file is moved to `BACKUP_PATH`. Once file is copied the file will be deleted from `WATCH_PATH`. Setting `BACKUP_DAYS` = -1 files are not copied to `BACKUP_PATH` before deleting files from `WATCH_PATH`. When `BACKUP_DAYS` is set to -1 files are deleted from `WATCH_PATH` next time `processLogs` is executed.
 
 Log-level variables can be set to display Process Messages in console or inserted into [PM2](https://github.com/Unitech/pm2) logs for every process step. 
-All import errors in Python `processLogs` (client) and MySQL Stored Procedures (server) are inserted into `apache_logs.import_error` TABLE.
+All import errors in Python `processLogs` (client) and Stored Procedures (server) are inserted into `apache_logs.import_error` TABLE.
 This is the only schema table that uses ENGINE=MYISAM to avoid TRANSACTION ROLLBACKS.
 
 Logging functionality, database design and table relationship constraints produce both physical and logical integrity. 
 This enables a complete audit trail providing ability to determine who, what, when and where each log record originated from.
 
-All folder paths, filename patterns, logging, processing, MySQL connection setting variables are in .env file for easy installation and maintenance.
+All folder paths, filename patterns, logging, processing, Database connection setting variables are in .env file for easy installation and maintenance.
 
 Python Client modules can run in [PM2](https://github.com/Unitech/pm2) daemon process manager for 24/7 online processing on multiple web servers feeding a single Server module simultaneous.
 ### Valuable Data Enrichment and Visual Enhancements
@@ -199,7 +199,7 @@ command line under '2. Python Steps' below. If that works you are all set.
 ## Installation Instructions
 Steps make installation quick and straightforward. Application will be ready to import Apache logs on completion.
 
-### 1. MySQL Steps
+### 1. Database Steps
 Before running `apache_logs_schema.sql` if User Account `root`@`localhost` does not exist on installation server open 
 file and perform a ***Find and Replace*** using a User Account with DBA Role on installation server. Copy below:
 ```
@@ -207,16 +207,16 @@ root`@`localhost`
 ```
 Rename above <sup>user</sup> to a <sup>user</sup> on your server. For example - `root`@`localhost` to `dbadmin`@`localhost`
 
-The easiest way to install is use MySQL Command Line Client. Login as User with DBA Role and execute the following:
+The easiest way to install is use Database Command Line Client. Login as User with DBA Role and execute the following:
 ```
 source yourpath/apache_logs_schema.sql
 ```
-MySQL server must be configured in `my.ini`, `mysqld.cnf` or `my.cnf` depending on platform with following: 
+Only MySQL server must be configured in `my.ini`, `mysqld.cnf` or `my.cnf` depending on platform with following: 
 ```
 [mysqld]
 local-infile=1
 ```
-After these 3 steps MySQL server is ready to go.
+After these 3 steps MySQL or MaraiDB server is ready to go.
 
 ### 2. Python Steps
 Install all modules (`requirements.txt` in repository):
@@ -230,8 +230,8 @@ python3 -m ensurepip --upgrade
 ```
 If issues with ***pip install*** occur use individual install commands included above.
 
-### 3. Create MySQL USER and GRANTS
-To minimize data exposure and breach risks create a MySQL USER for Python module with GRANTS to only schema objects and privileges 
+### 3. Create Database USER and GRANTS
+To minimize data exposure and breach risks create a Database USER for Python module with GRANTS to only schema objects and privileges 
 required to execute import processes. (`mysql_user_and_grants.sql` in repository)
 ![mysql_user_and_grants.sql in repository](./assets/mysql_user_and_grants.png)
 ### 4. Settings.env Variables
@@ -244,7 +244,7 @@ By default, load_dotenv() looks for standard setting file name `.env`. The file 
 load_dotenv() # Loads variables from .env into the environment
 ```
 ### 6. Run Application
-If MySQL steps are complete, Python modules are installed, MySQL server connection and log folder variables are updated, 
+If Database steps are complete, Python modules are installed, Database server connection and log folder variables are updated, 
 and file `settings.env` is renamed to `.env` application is ready to go.
 
 If log files exist in folders run `logs2mysql.py` and all files in all folders will be processed. Run `watch4logs.py` and 
@@ -274,7 +274,7 @@ Set environment variables `ERROR_PROCESS`,`COMBINED_PROCESS`, `VHOST_PROCESS`, `
 5 Stored Procedures are executed by Python Client module passing the `importloadid` value to process 
 ONLY files & records processed by current `processLogs function` execution. 
 
-MySQL Stored Procedures can be run from Command Line Client or GUI Database Tool separately.
+Database Stored Procedures can be run from Command Line Client or GUI Database Tool separately.
 Execute Stored Procedures with second parameter 'ALL' processes files & records based on `process_status` value. Files & records 
 can contain multiple `importloadid` values.
 ```
@@ -285,7 +285,7 @@ process_status=2 - process_error_import or process_access_import executed on rec
 ```
 Execute Stored Procedures with second parameter `importloadid` value as a STRING processes ONLY files & records related to that `importloadid`.
 
-Second parameter enables Python Client modules to run on multiple servers simultaneously uploading to a single MySQL Server `apache_logs` schema.
+Second parameter enables Python Client modules to run on multiple servers simultaneously uploading to a single Database Server `apache_logs` schema.
 
 `call_processes.sql` contains execution commands for each stored procedure. Comment area has helpful functionality explanation. (`call_processes.sql` in repository)
 ![call_processes.sql in repository](./assets/call_processes.png)
@@ -297,24 +297,24 @@ Log files imported from multiple domains require a ServerName value to properly 
 Database normalization is the process of organizing data in a relational database to improve data integrity and reduce redundancy. 
 Normalization ensures that data is organized in a way that makes sense for the data model and attributes, and that the database functions efficiently.
 
-MySQL `apache_logs` schema currently has 55 Tables, 908 Columns, 188 Indexes, 72 Views, 8 Stored Procedures and 90 Functions to process Apache Access log in 4 formats 
+Database `apache_logs` schema currently has 55 Tables, 908 Columns, 188 Indexes, 72 Views, 8 Stored Procedures and 90 Functions to process Apache Access log in 4 formats 
 & Apache Error log in 2 formats. Database normalization at work!
 
 Database normalization is a critical process in database design with objectives of optimizing data storage, improving data integrity, and reducing data anomalies.
 Organizing data into normalized tables greatly enhances efficiency and maintainability of a database system.
-### MySQL Access Log View by Browser - 1 of 72 schema views
+### Database Access Log View by Browser - 1 of 72 schema views
 Current schema views are Access and Error primary attribute tables created in normalization process with simple aggregate values. 
 These are primitive access and error data presentations of the log data warehouse. The complex data Slicing and Dicing is done in MySQL2ApacheLogs.
 
 ApacheLogs2MySQL is the 'EL' of the 'ELK' Stack. The Web interface 
 [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) in development is the 'K' of the 'ELK' Stack.
 
-MySQL View - apache_logs.access_ua_browser_family_list - data from LogFormat: combined & csv2mysql
+Database View - apache_logs.access_ua_browser_family_list - data from LogFormat: combined & csv2mysql
 ![view-access_ua_browser_family_list.png](./assets/access_ua_browser_list.png)
-### MySQL Access Log View by URI
-MySQL View - apache_logs.access_requri_list - data from LogFormat: combined & csv2mysql
+### Database Access Log View by URI
+Database View - apache_logs.access_requri_list - data from LogFormat: combined & csv2mysql
 ![view-access_requri_list](./assets/access_requri_list.png)
-### MySQL Error Log Views
+### Database Error Log Views
 Error logs consist of three different data formats for error types. 
 Application harmonizes the 3 formats into a single standardized format and normalizes primary attributes.
 Error log attribute is name of first column or first and second column.
