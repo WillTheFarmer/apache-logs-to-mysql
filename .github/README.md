@@ -1,7 +1,7 @@
 #### Database Schema ***apache_logs*** is designed for data analysis of Apache Logs from unlimited Domains & Servers
 ![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
 ### Python handles File Processing & MySQL or MariaDB handles Data Processing
-ApacheLogs2MySQL consists of two Python Modules & one MySQL Schema ***apache_logs*** to automate importing Access & Error files, normalizing log data into database and generating a well-documented data lineage audit trail.
+ApacheLogs2MySQL consists of two Python Modules & one Database Schema ***apache_logs*** to automate importing Access & Error files, normalizing log data into database and generating a well-documented data lineage audit trail.
 
 Imports Access Logs in LogFormats - ***common***, ***combined*** and ***vhost_combined*** & additional ***csv2mysql*** 
 LogFormat defined below.
@@ -46,16 +46,16 @@ All folder paths, filename patterns, logging, processing, MySQL connection setti
 Python Client modules can run in [PM2](https://github.com/Unitech/pm2) daemon process manager for 24/7 online processing on multiple web servers feeding a single Server module simultaneous.
 ### Valuable Data Enrichment and Visual Enhancements
 ***IP Geolocation data*** integration using [MaxMind GeoIP2](https://pypi.org/project/geoip2/) Python API provides IP country, subdivision, city, system organization, 
-network and coordinates information stored and normalized into 6 MySQL schema tables.
+network and coordinates information stored and normalized into 6 Database Schema tables.
 
 Application requires two GeoLite Databases - ***City*** & ***ASN***. GeoLite databases are subsets of the commercial databases with reduced coverage and accuracy. Application tested with these databases: 
 1) GeoLite2 databases at [MaxMind](https://www.maxmind.com/en/geolite-free-ip-geolocation-data) available under MaxMind continues to incorporate Creative Commons into our GeoLite End User Agreement (EULA).
 
 2) DB-IP Lite databases at [DB-IP](https://db-ip.com/db/lite.php) available under Creative Commons Attribution 4.0 International License.
 
-***User-Agent data*** integration using [user-agents](https://pypi.org/project/user-agents/) provides browser, device and operating system information stored and normalized into 11 MySQL schema tables.
+***User-Agent data*** integration using [user-agents](https://pypi.org/project/user-agents/) provides browser, device and operating system information stored and normalized into 11 Database Schema tables.
 
-[MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) is a ***visualization tool*** for the MySQL Schema ***apache_logs*** currently under development. The Web interface consists of [Express](https://github.com/expressjs/express) web application frameworks with Drill Down Capability 
+[MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) is a ***visualization tool*** for the Database Schema ***apache_logs*** currently under development. The Web interface consists of [Express](https://github.com/expressjs/express) web application frameworks with Drill Down Capability 
 & [Apache ECharts](https://github.com/apache/echarts) frameworks for Data Visualization.
 ### Four Supported Access Log Formats
 Apache uses same Standard Access LogFormats (***common***, ***combined***, ***vhost_combined***) on all 3 platforms. Each LogFormat adds 2 Format Strings to the prior. 
