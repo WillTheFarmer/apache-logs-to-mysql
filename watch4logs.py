@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# version 3.2.0 - 02/01/2025 - MariaDB compatible and Log Rotation - see changelog
+# version 3.2.5 - 02/06/2025 - Log Generator Stress Test Improvements - see changelog
 #
 # Copyright 2024-2025 Will Raymond <farmfreshsoftware@gmail.com>
 #
@@ -41,7 +41,7 @@ class importLogs(FileSystemEventHandler):
     if event.event_type == 'created' and event.is_directory == False:
       setattr(importLogs, 'processFiles', 1)
       if watch_log >= 1:
-        print(fg.ALERT, "*files to process*" , fg.RESET)
+        print(fg.ALERT, "*file to process*" , fg.RESET)
 
 if __name__ == "__main__":
   event_handler = importLogs()

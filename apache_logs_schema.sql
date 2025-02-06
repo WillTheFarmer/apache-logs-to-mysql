@@ -10,7 +10,7 @@
 -- # See the License for the specific language governing permissions and
 -- # limitations under the License.
 -- #
--- # version 3.2.0 - 02/01/2025 - MariaDB compatible and Log Rotation - see changelog
+-- # version 3.2.5 - 02/06/2025 - Log Generator Stress Test Improvements - see changelog
 -- #
 -- # Copyright 2024-2025 Will Raymond <farmfreshsoftware@gmail.com>
 -- #
@@ -701,6 +701,7 @@ CREATE TABLE `access_log_useragent` (
   KEY `F_useragent_ua_os` (`uaosid`),
   KEY `F_useragent_ua_os_family` (`uaosfamilyid`),
   KEY `F_useragent_ua_os_version` (`uaosversionid`),
+  KEY `I_access_log_useragent_ua` (`ua`),
   CONSTRAINT `F_useragent_ua` FOREIGN KEY (`uaid`) REFERENCES `access_log_ua` (`id`),
   CONSTRAINT `F_useragent_ua_browser` FOREIGN KEY (`uabrowserid`) REFERENCES `access_log_ua_browser` (`id`),
   CONSTRAINT `F_useragent_ua_browser_family` FOREIGN KEY (`uabrowserfamilyid`) REFERENCES `access_log_ua_browser_family` (`id`),
@@ -2343,7 +2344,7 @@ CREATE TABLE `import_format` (
 
 LOCK TABLES `import_format` WRITE;
 /*!40000 ALTER TABLE `import_format` DISABLE KEYS */;
-INSERT INTO `import_format` VALUES (1,'common',NULL,'2025-02-01 14:10:10'),(2,'combined',NULL,'2025-02-01 14:10:10'),(3,'vhost',NULL,'2025-02-01 14:10:10'),(4,'csc2mysql',NULL,'2025-02-01 14:10:10'),(5,'error_default',NULL,'2025-02-01 14:10:10'),(6,'error_vhost',NULL,'2025-02-01 14:10:10');
+INSERT INTO `import_format` VALUES (1,'common',NULL,'2025-02-06 01:56:10'),(2,'combined',NULL,'2025-02-06 01:56:10'),(3,'vhost',NULL,'2025-02-06 01:56:10'),(4,'csc2mysql',NULL,'2025-02-06 01:56:10'),(5,'error_default',NULL,'2025-02-06 01:56:10'),(6,'error_vhost',NULL,'2025-02-06 01:56:10');
 /*!40000 ALTER TABLE `import_format` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2359,25 +2360,35 @@ CREATE TABLE `import_load` (
   `importclientid` int NOT NULL,
   `errorFilesFound` int DEFAULT NULL,
   `errorFilesLoaded` int DEFAULT NULL,
+  `errorRecordsLoaded` int DEFAULT NULL,
   `errorParseCalled` tinyint DEFAULT NULL,
   `errorImportCalled` tinyint DEFAULT NULL,
+  `errorSeconds` int DEFAULT NULL,
   `combinedFilesFound` int DEFAULT NULL,
   `combinedFilesLoaded` int DEFAULT NULL,
+  `combinedRecordsLoaded` int DEFAULT NULL,
   `combinedParseCalled` tinyint DEFAULT NULL,
   `combinedImportCalled` tinyint DEFAULT NULL,
+  `combinedSeconds` int DEFAULT NULL,
   `vhostFilesFound` int DEFAULT NULL,
   `vhostFilesLoaded` int DEFAULT NULL,
+  `vhostRecordsLoaded` int DEFAULT NULL,
   `vhostParseCalled` tinyint DEFAULT NULL,
   `vhostImportCalled` tinyint DEFAULT NULL,
+  `vhostSeconds` int DEFAULT NULL,
   `csv2mysqlFilesFound` int DEFAULT NULL,
   `csv2mysqlFilesLoaded` int DEFAULT NULL,
+  `csv2mysqlRecordsLoaded` int DEFAULT NULL,
   `csv2mysqlParseCalled` tinyint DEFAULT NULL,
   `csv2mysqlImportCalled` tinyint DEFAULT NULL,
+  `csv2mysqlSeconds` int DEFAULT NULL,
   `userAgentRecordsParsed` int DEFAULT NULL,
   `userAgentNormalizeCalled` tinyint DEFAULT NULL,
+  `userAgentSeconds` int DEFAULT NULL,
   `ipAddressRecordsParsed` int DEFAULT NULL,
   `ipAddressNormalizeCalled` tinyint DEFAULT NULL,
-  `errorOccurred` tinyint DEFAULT NULL,
+  `ipAddressSeconds` int DEFAULT NULL,
+  `errorOccurred` int DEFAULT NULL,
   `processSeconds` int DEFAULT NULL,
   `started` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `completed` datetime DEFAULT NULL,
@@ -2413,7 +2424,7 @@ CREATE TABLE `import_process` (
   `records` int DEFAULT NULL,
   `files` int DEFAULT NULL,
   `loads` int DEFAULT NULL,
-  `errorOccurred` tinyint DEFAULT NULL,
+  `errorOccurred` int DEFAULT NULL,
   `processSeconds` int DEFAULT NULL,
   `started` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `completed` datetime DEFAULT NULL,
@@ -2687,6 +2698,7 @@ CREATE TABLE `log_client` (
   KEY `F_log_client_network` (`networkid`),
   KEY `F_log_client_organization` (`organizationid`),
   KEY `F_log_client_subdivision` (`subdivisionid`),
+  KEY `I_log_client_country_code` (`country_code`),
   CONSTRAINT `F_log_client_city` FOREIGN KEY (`cityid`) REFERENCES `log_client_city` (`id`),
   CONSTRAINT `F_log_client_coordinate` FOREIGN KEY (`coordinateid`) REFERENCES `log_client_coordinate` (`id`),
   CONSTRAINT `F_log_client_country` FOREIGN KEY (`countryid`) REFERENCES `log_client_country` (`id`),
@@ -6637,8 +6649,8 @@ INNER JOIN apache_logs.import_file f
   	IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
 	  	FETCH csv2mysqlStatus INTO 
 		  	client, 
-			  remoteUser, 
   			remoteLogName, 
+			  remoteUser, 
 	  		logTime, 
 		  	bytesReceived, 
 			  bytesSent, 
@@ -6665,8 +6677,8 @@ INNER JOIN apache_logs.import_file f
 	  ELSEIF in_processName = 'csv2mysql' THEN
 		  FETCH csv2mysqlLoadID INTO 
   			client, 
-	  		remoteUser, 
 		  	remoteLogName, 
+	  		remoteUser, 
 			  logTime, 
   			bytesReceived, 
 	  		bytesSent, 
@@ -6693,8 +6705,8 @@ INNER JOIN apache_logs.import_file f
   	ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
 	  	FETCH vhostStatus INTO 
 		  	client, 
-  			remoteUser, 
 	  		remoteLogName, 
+  			remoteUser, 
 		  	logTime, 
 			  reqBytes, 
   			reqStatus, 
@@ -6713,8 +6725,8 @@ INNER JOIN apache_logs.import_file f
   	ELSEIF in_processName = 'vhost' THEN
 	  	FETCH vhostLoadID INTO 
 		  	client, 
-			  remoteUser, 
   			remoteLogName, 
+			  remoteUser, 
 	  		logTime, 
 		  	reqBytes, 
 			  reqStatus, 
@@ -6733,8 +6745,8 @@ INNER JOIN apache_logs.import_file f
 	  ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
 		  FETCH combinedStatus INTO 
   			client, 
-	  		remoteUser, 
 		  	remoteLogName, 
+	  		remoteUser, 
 			  logTime, 
   			reqBytes, 
 	  		reqStatus, 
@@ -6753,8 +6765,8 @@ INNER JOIN apache_logs.import_file f
 	  ELSE
 		  FETCH combinedLoadID INTO 
   			client, 
-	  		remoteUser, 
 		  	remoteLogName, 
+	  		remoteUser, 
 			  logTime, 
   			reqBytes, 
 	  		reqStatus, 

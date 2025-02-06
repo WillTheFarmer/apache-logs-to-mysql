@@ -11,6 +11,7 @@
 - version 2.1.6 - 01/09/2025 - repository name change - ApacheLogs2MySQL to apache-logs-to-mysql
 - version 3.0.0 - 01/28/2025 - IP Geolocation integration, several table & column renames, many process refinements
 - version 3.2.0 - 02/01/2025 - MariaDB compatible and Log Rotation
+- version 3.2.5 - 02/06/2025 - Log Generator Stress Test Improvements
 - [1.0.1] apache_logs.error_systemCodeID corrected line - INTO logsystemCode to INTO logsystemCodeID
 - [1.0.1] remove debugging - SELECT statement from apache_logs.process_access_import, process_error_import & normalize_useragent.
 - [1.0.1] remove whitespace and commented out old code on all stored programs
@@ -109,3 +110,9 @@
 - [3.2.0] modify Store Function `apache_logs`.`importProcessID` for compatibility with MariaDB.
 - [3.2.0] add Python function `def copy_backup_file(log_path_file, log_days)` to reuse log file copy and delete functionality,
 - [3.2.0] add log summary to end of Python `processLogs` in `logs2mysql.py` to provide more process information to PM2 logs. 
+- [3.2.5] modify `process_access_import` to correct `remoteLogName` and `remoteUser` column processing. Values were switched in tables stored. Running log generator stress tests flushed this out.
+- [3.2.5] modify `logs2mysql.py` to add timing variables for all child processes to display in logs and store to `import_load` TABLE.  
+- [3.2.5] modify TABLE `import_load` added six columns for process execution durations in seconds.
+- [3.2.5] modify `logs2mysql.py` reworked all process message logging verbiage to provide child process summary information at each phase. Running log generator stress tests flushed this out.
+- [3.2.5] modify `logs2mysql.py` reduced number of cursor objects created by reusing only two cursor objects. Reduced all variables for import_file TABLE processing using same variables for all.
+- [3.2.5] modify TABLES `access_log_useragent` and `log_client` added indexes for use in `logs2mysql.py` processing.

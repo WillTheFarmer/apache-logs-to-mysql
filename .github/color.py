@@ -1,4 +1,4 @@
-# Terminal color definitions
+# Terminal color definitions - 02/06/2025
 class fg:
     BLACK       = '\033[30m'
     RED         = '\033[31m'
@@ -24,7 +24,6 @@ class fg:
     LIGHT_CYAN  = "\033[1;36m"
     LIGHT_WHITE = "\033[1;37m"
     RESET       = '\033[39m'
-
 class bg:
     BLACK   = '\033[40m'
     RED     = '\033[41m'
@@ -35,7 +34,6 @@ class bg:
     CYAN    = '\033[46m'
     WHITE   = '\033[47m'
     RESET   = '\033[49m'
-
 class style:
     BRIGHT    = '\033[1m'
     DIM       = '\033[2m'
