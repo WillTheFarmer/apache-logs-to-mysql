@@ -17,7 +17,7 @@ Multiple Access and Error logs and formats can be loaded, parsed and imported al
 A single "Import Load" execution can also be configured to only load logs to Server (single child process) leaving other processes to be executed within another "Import Load" on a centralized computer.
 ### Process Messages in Console - 4 LogFormats, 2 ErrorLogFormats & 6 Stored Procedures can be processed in each Import Load execution
 ![Processing Messages Console](./assets/processing_messages_console.png)
-### Application runs on Windows, Linux and MacOS. Database runs on MySQL and MariaDB.
+### Application runs on Windows, Linux & MacOS. Database runs on MySQL & MariaDB.
 This is a fast, reliable processing application with detailed logging and two stages of data parsing. 
 First stage is performed in `LOAD DATA LOCAL INFILE` statements. 
 Second stage is performed in `process_access_parse` and `process_error_parse` Stored Procedures.
