@@ -185,8 +185,8 @@ UPDATE apache_logs.import_file SET server_name='farmfreshsoftware.com', server_p
 UPDATE apache_logs.import_file SET server_name='farmwork.app', server_port=443 WHERE server_name IS NULL AND name LIKE '%farmwork%';
 UPDATE apache_logs.import_file SET server_name='ip255-255-255-255.us-east.com', server_port=443 WHERE server_name IS NULL AND name LIKE '%error%';
 ```
-## Required Python Modules
-Python module links & install command lines for each platform. Single quotes around 'PyMySQL[rsa]' module are required on macOS. The simplest installation option is run the command line under 1. Python Steps below.
+## Required Python Packages
+Python module links & install command lines for each package. Single quotes around 'PyMySQL[rsa]' package are required on macOS. The simplest installation option is run the command line under 1. Python Steps below.
 |Python Package|Installation Command|GitHub Repository|
 |--------------|---------------|------------|
 |[PyMySQL](https://pypi.org/project/PyMySQL/)|python -m pip install PyMySQL[rsa]|[PyMySQL/PyMySQL](https://github.com/PyMySQL/PyMySQL)|
@@ -198,7 +198,7 @@ Python module links & install command lines for each platform. Single quotes aro
 ## Installation Instructions
 Steps make installation quick and straightforward. Application will be ready to import Apache logs on completion.
 
-### 1. Python Steps
+### 1. Python Packages Step
 Install all modules (`requirements.txt` in repository):
 ```
 pip install -r requirements.txt
@@ -221,10 +221,12 @@ Only MySQL server must be configured in `my.ini`, `mysqld.cnf` or `my.cnf` depen
 local-infile=1
 ```
 ### 3. Create Database USER & GRANTS
-To minimize data exposure and breach risks create a Database USER for Python module with GRANTS to only schema objects and privileges required to execute import processes. Replace host from `%` to hostname of database such as `localhost` to only allow USER access from single location. (`mysql_user_and_grants.sql` in repository)
+To minimize data exposure and breach risks create a Database USER for Python module with GRANTS to only schema objects and privileges required to execute import processes. Replace hostname from `%` to hostname of database such as `localhost` to only allow USER access from single location. (`mysql_user_and_grants.sql` in repository)
 ![mysql_user_and_grants.sql in repository](./assets/mysql_user_and_grants.png)
 ### 4. Settings.env Variables
-settings.env with default settings for Windows. Use Back Slashes `\` on Windows due to subfolder searches return them in path results. Both back and front slashes work properly. Make sure correct logFormats are in correct logFormat folders. Application does not detect logFormats. Data will not import properly if folder settings are not correct. (`settings.env` in repository)
+settings.env with default settings for Windows. Use backslash `\` on Windows platform. Subfolder searches return backslashes in path results. Backslash `\` for Windows and forward slash `/` for Linux and MacOS. 
+
+Make sure logFormats are in correct logFormat folders. Application does not detect logFormats. Data will not import properly if folder settings are not correct. (`settings.env` in repository)
 ![settings.env in repository](./assets/settings.png)
 ### 5. Rename settings.env file to .env
 By default, load_dotenv() looks for standard setting file name `.env`. The file is loaded in both `logs2mysql.py` and `watch4files.py` with following line:
