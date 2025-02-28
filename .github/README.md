@@ -186,7 +186,7 @@ UPDATE apache_logs.import_file SET server_name='farmwork.app', server_port=443 W
 UPDATE apache_logs.import_file SET server_name='ip255-255-255-255.us-east.com', server_port=443 WHERE server_name IS NULL AND name LIKE '%error%';
 ```
 ## Required Python Packages
-Python module links & install command lines for each package. Single quotes around 'PyMySQL[rsa]' package are required on macOS. The simplest installation option is run the command line under 1. Python Steps below.
+Single quotes around 'PyMySQL[rsa]' package are required on macOS.
 |Python Package|Installation Command|GitHub Repository|
 |--------------|---------------|------------|
 |[PyMySQL](https://pypi.org/project/PyMySQL/)|python -m pip install PyMySQL[rsa]|[PyMySQL/PyMySQL](https://github.com/PyMySQL/PyMySQL)|
@@ -198,12 +198,12 @@ Python module links & install command lines for each package. Single quotes arou
 ## Installation Instructions
 Steps make installation quick and straightforward. Application will be ready to import Apache logs on completion.
 
-### 1. Python Packages Step
-Install all modules (`requirements.txt` in repository):
+### 1. Python Packages
+Install all required packages (`requirements.txt` in repository):
 ```
 pip install -r requirements.txt
 ```
-### 2. Database Steps
+### 2. Database
 Before running `apache_logs_schema.sql` if User Account `root`@`localhost` does not exist on installation server open 
 file and perform a ***Find and Replace*** using a User Account with DBA Role on installation server. Copy below:
 ```
