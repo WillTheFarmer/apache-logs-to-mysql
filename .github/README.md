@@ -1,6 +1,6 @@
-#### Database Schema ***apache_logs*** is designed for data analysis of Apache Logs from unlimited Domains & Servers
+# Database Schema ***apache_logs*** is designed for log data analysis 
 ![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
-### Python handles File Processing & MySQL or MariaDB handles Data Processing
+## Python handles File Processing & MySQL or MariaDB handles Data Processing
 ApacheLogs2MySQL consists of two Python Modules & one Database Schema ***apache_logs*** to automate importing Access & Error files, normalizing log data into database and generating a well-documented data lineage audit trail.
 
 Imports Access Logs in LogFormats - ***common***, ***combined*** and ***vhost_combined*** & additional ***csv2mysql*** 
@@ -15,7 +15,7 @@ Every log data record is traceable back to the computer, path, file, load proces
 Multiple Access and Error logs and formats can be loaded, parsed and imported along with User Agent parsing and IP Address Geolocation retrieval processes within a single "Import Load" execution. 
 
 A single "Import Load" execution can also be configured to only load logs to Server (single child process) leaving other processes to be executed within another "Import Load" on a centralized computer.
-#### Process Messages in Console - 4 LogFormats, 2 ErrorLogFormats & 6 Stored Procedures
+### Process Messages in Console - 4 LogFormats, 2 ErrorLogFormats & 6 Stored Procedures
 ![Processing Messages Console](./assets/processing_messages_console.png)
 ### Application runs on Windows, Linux and MacOS. Database runs on MySQL and MariaDB.
 This is a fast, reliable processing application with detailed logging and two stages of data parsing. 
@@ -186,20 +186,25 @@ UPDATE apache_logs.import_file SET server_name='farmwork.app', server_port=443 W
 UPDATE apache_logs.import_file SET server_name='ip255-255-255-255.us-east.com', server_port=443 WHERE server_name IS NULL AND name LIKE '%error%';
 ```
 ## Required Python Modules
-Python module links & install command lines for each platform. Single quotes around module name are required on macOS. The simplest installation option is run the 
-command line under '2. Python Steps' below. If that works you are all set.
-|Python Package|Windows 10 & 11|Ubuntu 24.04|macOS 15.0.1 Darwin 24.0.0|GitHub Repository|
-|--------------|---------------|------------|--------------------------|-----------------|
-|[PyMySQL](https://pypi.org/project/PyMySQL/)|python -m pip install PyMySQL[rsa]|sudo apt-get install python3-pymysql|python3 -m pip install 'PyMySQL[rsa]'|[PyMySQL/PyMySQL](https://github.com/PyMySQL/PyMySQL)|
-|[user-agents](https://pypi.org/project/user-agents/)|pip install pyyaml ua-parser user-agents|sudo apt-get install python3-user-agents|python3 -m pip install user-agents|[selwin/python-user-agents](https://github.com/selwin/python-user-agents)|
-|[watchdog](https://pypi.org/project/watchdog/)|pip install watchdog|sudo apt-get install python3-watchdog|python3 -m pip install watchdog|[gorakhargosh/watchdog](https://github.com/gorakhargosh/watchdog/tree/master)|
-|[python-dotenv](https://pypi.org/project/python-dotenv/)|pip install python-dotenv|sudo apt-get install python3-dotenv|python3 -m pip install python-dotenv|[theskumar/python-dotenv](https://github.com/theskumar/python-dotenv)|
-|[geoip2](https://pypi.org/project/geoip2/)|pip install geoip2|sudo apt-get install python3-geoip2|python3 -m pip install python-geoip2|[maxmind/GeoIP2-python](https://github.com/maxmind/GeoIP2-python)|
+Python module links & install command lines for each platform. Single quotes around 'PyMySQL[rsa]' module are required on macOS. The simplest installation option is run the 
+command line under '1. Python Steps' below.
+|Python Package|Installation Command|GitHub Repository|
+|--------------|---------------|------------|
+|[PyMySQL](https://pypi.org/project/PyMySQL/)|python -m pip install PyMySQL[rsa]|[PyMySQL/PyMySQL](https://github.com/PyMySQL/PyMySQL)|
+|[user-agents](https://pypi.org/project/user-agents/)|python -m pip install pyyaml ua-parser user-agents|[selwin/python-user-agents](https://github.com/selwin/python-user-agents)|
+|[watchdog](https://pypi.org/project/watchdog/)|python -m pip install watchdog|[gorakhargosh/watchdog](https://github.com/gorakhargosh/watchdog/tree/master)|
+|[python-dotenv](https://pypi.org/project/python-dotenv/)|python -m pip install python-dotenv|[theskumar/python-dotenv](https://github.com/theskumar/python-dotenv)|
+|[geoip2](https://pypi.org/project/geoip2/)|python -m pip install geoip2|[maxmind/GeoIP2-python](https://github.com/maxmind/GeoIP2-python)|
 
 ## Installation Instructions
 Steps make installation quick and straightforward. Application will be ready to import Apache logs on completion.
 
-### 1. Database Steps
+### 1. Python Steps
+Install all modules (`requirements.txt` in repository):
+```
+pip install -r requirements.txt
+```
+### 2. Database Steps
 Before running `apache_logs_schema.sql` if User Account `root`@`localhost` does not exist on installation server open 
 file and perform a ***Find and Replace*** using a User Account with DBA Role on installation server. Copy below:
 ```
@@ -216,27 +221,11 @@ Only MySQL server must be configured in `my.ini`, `mysqld.cnf` or `my.cnf` depen
 [mysqld]
 local-infile=1
 ```
-After these 3 steps MySQL or MaraiDB server is ready to go.
-
-### 2. Python Steps
-Install all modules (`requirements.txt` in repository):
-```
-pip install -r requirements.txt
-```
-macOS platform may require installation of pip.
-```
-xcode-select --install
-python3 -m ensurepip --upgrade 
-```
-If issues with ***pip install*** occur use individual install commands included above.
-
 ### 3. Create Database USER and GRANTS
-To minimize data exposure and breach risks create a Database USER for Python module with GRANTS to only schema objects and privileges 
-required to execute import processes. (`mysql_user_and_grants.sql` in repository)
+To minimize data exposure and breach risks create a Database USER for Python module with GRANTS to only schema objects and privileges required to execute import processes. (`mysql_user_and_grants.sql` in repository)
 ![mysql_user_and_grants.sql in repository](./assets/mysql_user_and_grants.png)
 ### 4. Settings.env Variables
-settings.env with default settings for Windows. Make sure correct logFormats are in correct logFormat folders. Application does not
-detect logFormats. Data will not import properly if folder settings are not correct. (`settings.env` in repository)
+settings.env with default settings for Windows. Use Back Slashes `\` on Windows due to subfolder searches return them in path results. Both back and front slashes work properly. Make sure correct logFormats are in correct logFormat folders. Application does not detect logFormats. Data will not import properly if folder settings are not correct. (`settings.env` in repository)
 ![settings.env in repository](./assets/settings.png)
 ### 5. Rename settings.env file to .env
 By default, load_dotenv() looks for standard setting file name `.env`. The file is loaded in both `logs2mysql.py` and `watch4files.py` with following line:
@@ -244,25 +233,17 @@ By default, load_dotenv() looks for standard setting file name `.env`. The file 
 load_dotenv() # Loads variables from .env into the environment
 ```
 ### 6. Run Application
-If Database steps are complete, Python modules are installed, Database server connection and log folder variables are updated, 
-and file `settings.env` is renamed to `.env` application is ready to go.
-
 If log files exist in folders run `logs2mysql.py` and all files in all folders will be processed. Run `watch4logs.py` and 
 drop a file or files into folder and `logs2mysql.py` will be executed. 
 If folders are empty or contain files when a file is drop into folder any unprocessed files in folders will be processed.
 
 Run import process directly:
 ```
-python logs2mysql.py
+python3 logs2mysql.py
 ```
 Run polling module:
 ```
-python watch4logs.py
-```
-Once existing logs are processed & a better understanding of application is acquired use [PM2](https://github.com/Unitech/pm2) to run application 24/7 watching for files to process.
-Run polling module from PM2:
-```
-pm2 start watch4logs.py
+python3 watch4logs.py
 ```
 ## Execute Stored Procedures using Command Line
 Set environment variables `ERROR_PROCESS`,`COMBINED_PROCESS`, `VHOST_PROCESS`, `CSV2MYSQL_PROCESS` and `USERAGENT_PROCESS`= 0:
@@ -304,10 +285,7 @@ Database normalization is a critical process in database design with objectives 
 Organizing data into normalized tables greatly enhances efficiency and maintainability of a database system.
 ### Database Access Log View by Browser - 1 of 72 schema views
 Current schema views are Access and Error primary attribute tables created in normalization process with simple aggregate values. 
-These are primitive access and error data presentations of the log data warehouse. The complex data Slicing and Dicing is done in MySQL2ApacheLogs.
-
-ApacheLogs2MySQL is the 'EL' of the 'ELK' Stack. The Web interface 
-[MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) in development is the 'K' of the 'ELK' Stack.
+These are primitive access and error data presentations of the log data warehouse. The complex data Slicing and Dicing is done in [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts).
 
 Database View - apache_logs.access_ua_browser_family_list - data from LogFormat: combined & csv2mysql
 ![view-access_ua_browser_family_list.png](./assets/access_ua_browser_list.png)
