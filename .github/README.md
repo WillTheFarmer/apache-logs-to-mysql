@@ -1,6 +1,6 @@
 # Database Schema designed for Apache log data analysis 
 ![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
-## Python handles File Processing & MySQL or MariaDB handles Data Processing
+## Python handles File Processing & Database handles Data Processing
 ApacheLogs2MySQL consists of two Python Modules & one Database Schema ***apache_logs*** to automate importing Access & Error files, normalizing log data into database and generating a well-documented data lineage audit trail.
 
 Imports Access Logs in LogFormats - ***common***, ***combined*** and ***vhost_combined*** & additional ***csv2mysql*** 
@@ -186,8 +186,7 @@ UPDATE apache_logs.import_file SET server_name='farmwork.app', server_port=443 W
 UPDATE apache_logs.import_file SET server_name='ip255-255-255-255.us-east.com', server_port=443 WHERE server_name IS NULL AND name LIKE '%error%';
 ```
 ## Required Python Modules
-Python module links & install command lines for each platform. Single quotes around 'PyMySQL[rsa]' module are required on macOS. The simplest installation option is run the 
-command line under '1. Python Steps' below.
+Python module links & install command lines for each platform. Single quotes around 'PyMySQL[rsa]' module are required on macOS. The simplest installation option is run the command line under 1. Python Steps below.
 |Python Package|Installation Command|GitHub Repository|
 |--------------|---------------|------------|
 |[PyMySQL](https://pypi.org/project/PyMySQL/)|python -m pip install PyMySQL[rsa]|[PyMySQL/PyMySQL](https://github.com/PyMySQL/PyMySQL)|
