@@ -57,7 +57,7 @@ Application requires two GeoLite Databases - ***City*** & ***ASN***. GeoLite dat
 
 [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) is a ***visualization tool*** for the Database Schema ***apache_logs*** currently under development. The Web interface consists of [Express](https://github.com/expressjs/express) web application frameworks with Drill Down Capability 
 & [Apache ECharts](https://github.com/apache/echarts) frameworks for Data Visualization.
-### Four Supported Access Log Formats
+## Four Supported Access Log Formats
 Apache uses same Standard Access LogFormats (***common***, ***combined***, ***vhost_combined***) on all 3 platforms. Each LogFormat adds 2 Format Strings to the prior. 
 Format String descriptions are listed below each LogFormat. Information from: https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#logformat 
 ```
@@ -116,7 +116,7 @@ LogFormat "%v,%p,%h,%l,%u,%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\"
 |%{User-Agent}i|The User-Agent HTTP request header. This is the identifying information that the client browser reports about itself.|
 |%{VARNAME}C|ADDED - The contents of cookie VARNAME in request sent to server. Only version 0 cookies are fully supported. Format String is optional.|
 |%L|ADDED - The request log ID from the error log (or '-' if nothing has been logged to the error log for this request). Look for the matching error log line to see what request| caused what error.
-### Two supported Error Log Formats
+## Two supported Error Log Formats
 Application processes Error Logs with ***default format*** for threaded MPMs (Multi-Processing Modules). If running Apache 2.4 on any platform 
 and ErrorLogFormat is not defined in config files this is the Error Log format.
 Information from: https://httpd.apache.org/docs/2.4/mod/core.html#errorlogformat
