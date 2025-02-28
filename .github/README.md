@@ -15,9 +15,9 @@ Every log data record is traceable back to the computer, path, file, load proces
 Multiple Access and Error logs and formats can be loaded, parsed and imported along with User Agent parsing and IP Address Geolocation retrieval processes within a single "Import Load" execution. 
 
 A single "Import Load" execution can also be configured to only load logs to Server (single child process) leaving other processes to be executed within another "Import Load" on a centralized computer.
-### Process Messages in Console - 4 LogFormats, 2 ErrorLogFormats & 6 Stored Procedures can be processed in each Import Load execution
+### Process Messages in Console - process 4 LogFormats, 2 ErrorLogFormats & 6 Stored Procedures in a single Import Load execution
 ![Processing Messages Console](./assets/processing_messages_console.png)
-### Application runs on Windows, Linux & MacOS. Database runs on MySQL & MariaDB.
+### Application runs on Windows, Linux & MacOS - Database runs on MySQL & MariaDB
 This is a fast, reliable processing application with detailed logging and two stages of data parsing. 
 First stage is performed in `LOAD DATA LOCAL INFILE` statements. 
 Second stage is performed in `process_access_parse` and `process_error_parse` Stored Procedures.
@@ -44,7 +44,7 @@ This enables a complete audit trail providing ability to determine who, what, wh
 All folder paths, filename patterns, logging, processing, Database connection setting variables are in .env file for easy installation and maintenance.
 
 Python Client modules can run in [PM2](https://github.com/Unitech/pm2) daemon process manager for 24/7 online processing on multiple web servers feeding a single Server module simultaneous.
-### Valuable Data Enrichment and Visual Enhancements
+### Valuable Data Enrichment & Visual Enhancements
 ***IP Geolocation data*** integration using [MaxMind GeoIP2](https://pypi.org/project/geoip2/) Python API provides IP country, subdivision, city, system organization, 
 network and coordinates information stored and normalized into 6 Database Schema tables.
 
@@ -220,8 +220,8 @@ Only MySQL server must be configured in `my.ini`, `mysqld.cnf` or `my.cnf` depen
 [mysqld]
 local-infile=1
 ```
-### 3. Create Database USER and GRANTS
-To minimize data exposure and breach risks create a Database USER for Python module with GRANTS to only schema objects and privileges required to execute import processes. (`mysql_user_and_grants.sql` in repository)
+### 3. Create Database USER & GRANTS
+To minimize data exposure and breach risks create a Database USER for Python module with GRANTS to only schema objects and privileges required to execute import processes. Replace host from `%` to hostname of database such as `localhost` to only allow USER access from single location. (`mysql_user_and_grants.sql` in repository)
 ![mysql_user_and_grants.sql in repository](./assets/mysql_user_and_grants.png)
 ### 4. Settings.env Variables
 settings.env with default settings for Windows. Use Back Slashes `\` on Windows due to subfolder searches return them in path results. Both back and front slashes work properly. Make sure correct logFormats are in correct logFormat folders. Application does not detect logFormats. Data will not import properly if folder settings are not correct. (`settings.env` in repository)
