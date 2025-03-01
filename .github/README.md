@@ -158,10 +158,7 @@ In order to consolidate logs from multiple domains `%v - canonical ServerName` i
 
 Listed are different methods to associate ServerName and ServerPort to all Access and Error logs.
 
-1) Set `ERRORLOG_SERVER`, `ERRORLOG_SERVERPORT`, `COMBINED_SERVER`, `COMBINED_SERVERPORT` variables in .env file and uncomment `os.getenv` 
-lines at top of `logs2mysql.py`. By default, variables are defined and set to an empty string. 
-Below is screenshot of `logs2mysql.py` with commented `os.getenv` code. `server_name` and `server_port` COLUMNS of `load_error_default` and `load_access_combined` 
-TABLES will be SET during Python `LOAD DATA LOCAL INFILE` execution.
+1) Set `ERRORLOG_SERVER`, `ERRORLOG_SERVERPORT`, `COMBINED_SERVER`, `COMBINED_SERVERPORT` variables in .env file and uncomment `getenv` lines at top of `logs2mysql.py`. The bottom option in image will SET  `server_name` and `server_port` COLUMNS of `load_error_default` and `load_access_combined` TABLES during Python `LOAD DATA LOCAL INFILE` execution.
 
 ![load_settings_variables.png](./assets/load_settings_variables.png)
 
