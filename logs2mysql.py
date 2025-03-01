@@ -35,7 +35,6 @@ from socket import gethostname
 from pymysql import connect
 from glob import glob
 import geoip2.database
-# import geoip2.errors
 import ipaddress
 from dotenv import load_dotenv
 from user_agents import parse
@@ -55,20 +54,22 @@ mysql_user = getenv('MYSQL_USER')
 mysql_password = getenv('MYSQL_PASSWORD')
 mysql_schema = getenv('MYSQL_SCHEMA')
 watch_path = getenv('WATCH_PATH')
+backup_days = int(getenv('BACKUP_DAYS'))
+backup_path = getenv('BACKUP_PATH')
 errorlog = int(getenv('ERROR'))
 errorlog_path = getenv('ERROR_PATH')
 errorlog_recursive = bool(int(getenv('ERROR_RECURSIVE')))
 errorlog_log = int(getenv('ERROR_LOG'))
 errorlog_process = int(getenv('ERROR_PROCESS'))
-errorlog_server = getenv('ERROR_SERVER')
-errorlog_serverport = int(getenv('ERROR_SERVERPORT'))
+errorlog_server = '' # getenv('ERROR_SERVER')
+errorlog_serverport = '' # int(getenv('ERROR_SERVERPORT'))
 combined = int(getenv('COMBINED'))
 combined_path = getenv('COMBINED_PATH')
 combined_recursive = bool(int(getenv('COMBINED_RECURSIVE')))
 combined_log = int(getenv('COMBINED_LOG'))
 combined_process = int(getenv('COMBINED_PROCESS'))
-combined_server = getenv('COMBINED_SERVER')
-combined_serverport = int(getenv('COMBINED_SERVERPORT'))
+combined_server = '' # getenv('COMBINED_SERVER')
+combined_serverport = '' # int(getenv('COMBINED_SERVERPORT'))
 vhost = int(getenv('VHOST'))
 vhost_path = getenv('VHOST_PATH')
 vhost_recursive = bool(int(getenv('VHOST_RECURSIVE')))
@@ -87,9 +88,6 @@ geoip_log = int(getenv('GEOIP_LOG'))
 geoip_city = getenv('GEOIP_CITY')
 geoip_asn = getenv('GEOIP_ASN')
 geoip_process = int(getenv('GEOIP_PROCESS'))
-backup_days = int(getenv('BACKUP_DAYS'))
-backup_path = getenv('BACKUP_PATH')
-watch_path = getenv('WATCH_PATH')
 # Database connection parameters
 db_params = {
     'host': mysql_host,
