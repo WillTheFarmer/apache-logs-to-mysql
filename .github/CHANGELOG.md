@@ -13,6 +13,7 @@
 - version 3.2.0 - 02/01/2025 - MariaDB compatible and Log Rotation
 - version 3.2.5 - 02/06/2025 - Log Generator Stress Test Improvements
 - version 3.2.6 - 02/14/2025 - consolidation of 25 source code scripts refined for MySQL & MariaDB
+- version 3.2.7 - 02/28/2025 - added error message Exception details, resolved backslash & forward slash issues, schema script improvements - see changelog
 - [1.0.1] apache_logs.error_systemCodeID corrected line - INTO logsystemCode to INTO logsystemCodeID
 - [1.0.1] remove debugging - SELECT statement from apache_logs.process_access_import, process_error_import & normalize_useragent.
 - [1.0.1] remove whitespace and commented out old code on all stored programs
@@ -121,3 +122,7 @@
 - [3.2.6] repository had MySQL Workbench generated script that added CHARSET and COLLAT. The raw source code scripts did not specify CHARSET or COLLATE. Raw source code scripts worked fine on MySQL and MariaDB testing.
 - [3.2.6] MySQL 9.1 default is CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci. MariaDB 11.6 default is CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci. COLLATE=utf8mb4_0900_ai_ci does not exist in MariaDB causing script errors.
 - [3.2.6] The solution that works for both MySQL and MariaDB is only specify CHARSET=utf8mb4. If CHARACTER SET charset_name is specified without COLLATE, character set charset_name and its default collation are used.
+- [3.2.7] add except Exception as e: to all previous except: statements. e is printed with error message to console and logged to `import_error` TABLE.
+- [3.2.7] fixed MacOS and Linux platforms issue with double seperators in paths stored in `import_file` TABLE. This was a result of fixing the double separator on Windows platform. Issue now fixed on all 3 platforms.
+- [3.2.7] modify `apache_logs_schema.sql` generation script to comment out DROP statements and add comment to start of each merged file. 
+- [3.2.7] add two indexes for companion Web Interface - mysql-to-apache-echarts which is due to be released mid-March.

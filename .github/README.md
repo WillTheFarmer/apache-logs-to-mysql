@@ -221,7 +221,7 @@ Only MySQL server must be configured in `my.ini`, `mysqld.cnf` or `my.cnf` depen
 local-infile=1
 ```
 ### 3. Create Database USER & GRANTS
-To minimize data exposure and breach risks create a Database USER for Python module with GRANTS to only schema objects and privileges required to execute import processes. Replace hostname from `%` to hostname of database such as `localhost` to only allow USER access from single location. (`mysql_user_and_grants.sql` in repository)
+To minimize data exposure and breach risks create a Database USER for Python module with GRANTS to only schema objects and privileges required to execute import processes. Replace hostname from `localhost` to hostname of installed database if different. (`mysql_user_and_grants.sql` in repository)
 ![mysql_user_and_grants.sql in repository](./assets/mysql_user_and_grants.png)
 ### 4. Settings.env Variables
 settings.env with default settings for Windows. Use backslash `\` on Windows platform. Subfolder searches return backslashes in path results. Backslash `\` for Windows and forward slash `/` for Linux and MacOS. 
