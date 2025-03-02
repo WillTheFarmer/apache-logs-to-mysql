@@ -15,7 +15,7 @@ Every log data record is traceable back to the computer, path, file, load proces
 Multiple Access and Error logs and formats can be loaded, parsed and imported along with User Agent parsing and IP Address Geolocation retrieval processes within a single "Import Load" execution. 
 
 A single "Import Load" execution can also be configured to only load logs to Server (single child process) leaving other processes to be executed within another "Import Load" on a centralized computer.
-### Process Messages in Console - process 4 LogFormats, 2 ErrorLogFormats & 6 Stored Procedures in a single Import Load execution
+### Process Messages in Console - 4 LogFormats, 2 ErrorLogFormats & 6 Stored Procedures can be processed in a single Import Load execution
 ![Processing Messages Console](./assets/processing_messages_console.png)
 ### Application runs on Windows, Linux & MacOS - Database runs on MySQL & MariaDB
 This is a fast, reliable processing application with detailed logging and two stages of data parsing. 
@@ -158,7 +158,7 @@ In order to consolidate logs from multiple domains `%v - canonical ServerName` i
 
 Options to associate ServerName and ServerPort to Access and Error logs are:
 
-1) Set `ERRORLOG_SERVER`, `ERRORLOG_SERVERPORT`, `COMBINED_SERVER`, `COMBINED_SERVERPORT` variables in .env file and uncomment `getenv` lines at top of `logs2mysql.py`. The bottom option in image will SET  `server_name` and `server_port` COLUMNS of `load_error_default` and `load_access_combined` TABLES during Python `LOAD DATA LOCAL INFILE` execution.
+1) Image shows three configurations. Top (1) is default and Bottom (3) will SET  `server_name` and `server_port` COLUMNS of `load_error_default` and `load_access_combined` TABLES during Python `LOAD DATA LOCAL INFILE` execution.
 
 ![load_settings_variables.png](./assets/load_settings_variables.png)
 
