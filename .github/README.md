@@ -158,7 +158,7 @@ In order to consolidate logs from multiple domains `%v - canonical ServerName` i
 
 Options to associate ServerName and ServerPort to Access and Error logs are:
 
-1) Image shows three configurations. Top (1) is default and Bottom (3) will SET  `server_name` and `server_port` COLUMNS of `load_error_default` and `load_access_combined` TABLES during Python `LOAD DATA LOCAL INFILE` execution.
+1) Image shows three configurations. Top (A) is default and Bottom (C) will SET  `server_name` and `server_port` COLUMNS of `load_error_default` and `load_access_combined` TABLES during Python `LOAD DATA LOCAL INFILE` execution.
 
 ![load_settings_variables.png](./assets/load_settings_variables.png)
 
