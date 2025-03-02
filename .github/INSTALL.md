@@ -25,7 +25,7 @@ local-infile=1
 ### 3. Create Database USER and GRANTS
 To minimize data exposure and breach risks create a Database USER for Python module with GRANTS to only schema objects and privileges required to execute import processes. Replace hostname from `%` to hostname of database such as `localhost` to only allow USER access from single location. (`mysql_user_and_grants.sql` in repository)
 ### 4. Settings.env steps
-settings.env with default settings for Windows. Use backslash `\` on Windows platform. Subfolder searches return backslashes in path results.
+settings.env with default settings for Ubuntu. Use backslash `\` for Windows and forward slash `/` for Linux and MacOS.
 ```
 MYSQL_HOST=localhost
 MYSQL_PORT=3306
