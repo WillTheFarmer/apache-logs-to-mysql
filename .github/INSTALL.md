@@ -28,39 +28,39 @@ To minimize data exposure and breach risks create a Database USER for Python mod
 settings.env with default settings for Windows. Use backslash `\` on Windows platform. Subfolder searches return backslashes in path results.
 ```
 MYSQL_HOST=localhost
-MYSQL_PORT=3606
+MYSQL_PORT=3306
 MYSQL_USER=apache_upload
 MYSQL_PASSWORD=password
 MYSQL_SCHEMA=apache_logs
 WATCH_LOG=2
-WATCH_PATH=C:\Users\farmf\Documents\apacheLogs\
+WATCH_PATH=/home/will/apacheLogs/
 WATCH_RECURSIVE=1
 WATCH_INTERVAL=15
 BACKUP_DAYS=0
-BACKUP_PATH=C:\Users\farmf\Documents\apacheLogs_backup\
+BACKUP_PATH=/home/will/apacheLogs_backup/
 ERROR=1
 ERROR_PROCESS=2
 ERROR_LOG=2
-ERROR_PATH=C:\Users\farmf\Documents\ApacheLogs\**\*error*.*
+ERROR_PATH=/home/will/apacheLogs/**/*error*.*
 ERROR_RECURSIVE=1
 ERROR_SERVER=mydomain.com
 ERROR_SERVERPORT=443
 COMBINED=1
 COMBINED_PROCESS=2
 COMBINED_LOG=2
-COMBINED_PATH=C:\Users\farmf\Documents\ApacheLogs\combined\**\*access*.*
+COMBINED_PATH=/home/will/apacheLogs/combined/**/*access*.*
 COMBINED_RECURSIVE=1
 COMBINED_SERVER=mydomain.com
 COMBINED_SERVERPORT=443
 VHOST=1
 VHOST_PROCESS=2
 VHOST_LOG=2
-VHOST_PATH=C:\Users\farmf\Documents\ApacheLogs\vhost\**\*access*.*
+VHOST_PATH=/home/will/apacheLogs/vhost/**/*access*.*
 VHOST_RECURSIVE=1
 CSV2MYSQL=1
 CSV2MYSQL_PROCESS=2
 CSV2MYSQL_LOG=2
-CSV2MYSQL_PATH=C:\Users\farmf\Documents\ApacheLogs\csv2mysql\**\*access*.*
+CSV2MYSQL_PATH=/home/will/apacheLogs/csv2mysql/**/*access*.*
 CSV2MYSQL_RECURSIVE=1
 USERAGENT=1
 USERAGENT_PROCESS=1
@@ -68,10 +68,10 @@ USERAGENT_LOG=2
 GEOIP=1
 GEOIP_PROCESS=1
 GEOIP_LOG=2
-GEOIP_CITY=C:\Users\farmf\Downloads\maxmind\GeoLite2-City.mmdb
-GEOIP_ASN=C:\Users\farmf\Downloads\maxmind\GeoLite2-ASN.mmdb
-# GEOIP_CITY=C:\Users\farmf\Downloads\dbip\dbip-city-lite.mmdb
-# GEOIP_ASN=C:\Users\farmf\Downloads\dbip\dbip-asn-lite.mmdb
+GEOIP_CITY=/usr/share/GeoIP/maxmind/GeoLite2-City.mmdb
+GEOIP_ASN=/usr/share/GeoIP/maxmind/GeoLite2-ASN.mmdb
+# GEOIP_CITY=/usr/share/GeoIP/dbip/dbip-city-lite.mmdb
+# GEOIP_ASN=/usr/share/GeoIP/dbip/dbip-asn-lite.mmdb
 ```
 ### 5. Rename settings.env file to .env
 By default, load_dotenv() looks for standard setting file name `.env`.
