@@ -226,7 +226,7 @@ settings.env with default settings for Windows. Use backslash `\` for Windows an
 Make sure logFormats are in correct logFormat folders. Application does not detect logFormats and data will not import properly. (`settings.env` in repository)
 ![settings.env in repository](./assets/settings.png)
 ### 5. Rename settings.env file to .env
-By default, load_dotenv() looks for standard setting file name `.env` and loaded in both `logs2mysql.py` and `watch4files.py` with following line:
+By default, load_dotenv() looks for standard setting file name `.env` and file is loaded in both `logs2mysql.py` and `watch4files.py` with following line:
 ```
 load_dotenv() # Loads variables from .env into the environment
 ```
