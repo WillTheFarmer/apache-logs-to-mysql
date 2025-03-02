@@ -1,4 +1,4 @@
-## Support requests are best submitted via **GitHub Issues** and will be addressed ASAP!
+### Support requests are best submitted via **GitHub Issues** and will be addressed ASAP!
 
 ### Please include Apache Logformat or ErrorLogFormat if a missing or malformed data issue.
 

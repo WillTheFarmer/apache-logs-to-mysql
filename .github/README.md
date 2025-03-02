@@ -221,12 +221,12 @@ local-infile=1
 To minimize data exposure and breach risks create a Database USER for Python module with GRANTS to only schema objects and privileges required to execute import processes. Replace hostname from `localhost` to hostname of installed database if different. (`mysql_user_and_grants.sql` in repository)
 ![mysql_user_and_grants.sql in repository](./assets/mysql_user_and_grants.png)
 ### 4. Settings.env Variables
-settings.env with default settings for Windows. Use backslash `\` on Windows platform. Subfolder searches return backslashes in path results. Backslash `\` for Windows and forward slash `/` for Linux and MacOS. 
+settings.env with default settings for Windows. Use backslash `\` for Windows and forward slash `/` for Linux and MacOS. 
 
-Make sure logFormats are in correct logFormat folders. Application does not detect logFormats. Data will not import properly if folder settings are not correct. (`settings.env` in repository)
+Make sure logFormats are in correct logFormat folders. Application does not detect logFormats and data will not import properly. (`settings.env` in repository)
 ![settings.env in repository](./assets/settings.png)
 ### 5. Rename settings.env file to .env
-By default, load_dotenv() looks for standard setting file name `.env`. The file is loaded in both `logs2mysql.py` and `watch4files.py` with following line:
+By default, load_dotenv() looks for standard setting file name `.env` and loaded in both `logs2mysql.py` and `watch4files.py` with following line:
 ```
 load_dotenv() # Loads variables from .env into the environment
 ```

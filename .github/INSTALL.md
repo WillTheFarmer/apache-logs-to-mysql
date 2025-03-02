@@ -1,12 +1,12 @@
 ## Installation Instructions
 The steps are important to make installation painless.
 
-### 1. Python Packages Step
+### 1. Python Packages
 Install all modules (`requirements.txt` in repository):
 ```
 pip install -r requirements.txt
 ```
-### 2. Database Steps
+### 2. Database
 Before running `apache_logs_schema.sql` if `root`@`localhost` does not exist open file and do a ***Find and Replace*** of User Account with a User Account with DBA Role on installation server. Copy below:
 ```
 `root`@`localhost`
