@@ -286,7 +286,7 @@ Second parameter enables Python Client modules to run on multiple servers simult
 
 `call_processes.sql` contains execution commands for each stored procedure. Comment area has functionality explanation. (`call_processes.sql` in repository)
 ![call_processes.sql in repository](./assets/call_processes.png)
-## Verify ServerNames using Command Line
+## Verify ServerNames from Command Line
 `check_domain_columns.sql` contains SQL SELECT and UPDATE statements to check, validate and update Domain data.
 Log files imported from multiple domains require a ServerName value to properly filter and report data. (`check_domain_columns.sql` in repository)
 ![check_domain_columns.sql in repository](./assets/check_domain_columns.png)
