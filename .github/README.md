@@ -243,30 +243,48 @@ Run polling module:
 ```
 python3 watch4logs.py
 ```
-## Execute Stored Procedures using Command Line
-Set environment variables `ERROR_PROCESS`,`COMBINED_PROCESS`, `VHOST_PROCESS`, `CSV2MYSQL_PROCESS` and `USERAGENT_PROCESS`= 0:
+## How Python Client module CALLS Stored Procedures
+Python Client module CALLS Stored Procedures passing the SECOND PARAMETER = `importloadid` which processes ONLY files & records imported by current `processLogs function` execution.
 
-no Stored Procedures are executed by Python Client module. Only LOAD DATA statements are executed inserting raw log data into LOAD TABLES.
+Listed below shows what Store Procedures are called based on environment settings. 
 
-Set environment variables `ERROR_PROCESS`,`COMBINED_PROCESS`, `VHOST_PROCESS`, `CSV2MYSQL_PROCESS` and `USERAGENT_PROCESS`= 2: 
+1. Set environment variables `ERROR_PROCESS`,`COMBINED_PROCESS`, `VHOST_PROCESS`, `CSV2MYSQL_PROCESS`, `USERAGENT_PROCESS` and `GEOIP_PROCESS` = 0:
 
-5 Stored Procedures are executed by Python Client module passing the `importloadid` value to process 
-ONLY files & records processed by current `processLogs function` execution. 
+    no Stored Procedures are executed by Python Client module. Only LOAD DATA statements are executed inserting raw log data into LOAD TABLES.
 
-Database Stored Procedures can be run from Command Line Client or GUI Database Tool separately.
-Execute Stored Procedures with second parameter 'ALL' processes files & records based on `process_status` value. Files & records 
-can contain multiple `importloadid` values.
-```
-COLUMN process_status in LOAD DATA tables - load_access_combined, load_access_csv2mysql, load_access_vhost, load_error_default
-process_status=0 - LOAD DATA tables loaded with raw log data
-process_status=1 - process_error_parse or process_access_parse executed on record
-process_status=2 - process_error_import or process_access_import executed on record
-```
+2. Set environment variables `ERROR_PROCESS`,`COMBINED_PROCESS`, `VHOST_PROCESS`, `CSV2MYSQL_PROCESS` = 1 and `USERAGENT_PROCESS` and `GEOIP_PROCESS` = 0: 
+
+    Python Client module CALLS 2 Stored Procedures - `process_error_parse` and `process_access_parse`.  `process_access_parse` is CALLED 3 times with a different FIRST PARAMETER.
+
+3. Set environment variables `ERROR_PROCESS`,`COMBINED_PROCESS`, `VHOST_PROCESS`, `CSV2MYSQL_PROCESS` = 2 and `USERAGENT_PROCESS` and `GEOIP_PROCESS` = 0: 
+
+    Python Client module CALLS 4 Stored Procedures  - `process_access_parse`, `process_access_import`, `process_error_parse`, `process_error_import`. `process_access_parse` and `process_access_import` are CALLED 3 times each with a different FIRST PARAMETER.
+
+4. Set environment variables `ERROR_PROCESS`,`COMBINED_PROCESS`, `VHOST_PROCESS`, `CSV2MYSQL_PROCESS` = 0 and `USERAGENT_PROCESS` and `GEOIP_PROCESS` = 1: 
+
+    Python Client module executes SELECT on `access_log_useragent` TABLE for records not normalized. If records exist CALLS Stored Procedures `normalize_useragent`
+
+    Python Client module executes SELECT on `log_client` TABLE for records not normalized. If records exist CALLS Stored Procedures `normalize_client`
+
+5. Set environment variables `ERROR_PROCESS`,`COMBINED_PROCESS`, `VHOST_PROCESS`, `CSV2MYSQL_PROCESS` = 2 and `USERAGENT_PROCESS` and `GEOIP_PROCESS` = 1: 
+
+    Python Client module CALLS all 6 Stored Procedures.
+
+## Execute Stored Procedures from Command Line
+#### COLUMN process_status in LOAD DATA tables - load_access_combined, load_access_csv2mysql, load_access_vhost, load_error_default
+1. process_status=0 - LOAD DATA tables loaded with raw log data
+2. process_status=1 - process_error_parse or process_access_parse executed on record
+3. process_status=2 - process_error_import or process_access_import executed on record
+
+The `process_status` COLUMN of the LOAD DATA tables determine files & records processed stage. The files & records process stages can contain multiple `importloadid` values.
+
+Execute Stored Procedures with a SECOND PARAMETER = 'ALL' processes files & records based on `process_status` value. 
+
 Execute Stored Procedures with second parameter `importloadid` value as a STRING processes ONLY files & records related to that `importloadid`.
 
 Second parameter enables Python Client modules to run on multiple servers simultaneously uploading to a single Database Server `apache_logs` schema.
 
-`call_processes.sql` contains execution commands for each stored procedure. Comment area has helpful functionality explanation. (`call_processes.sql` in repository)
+`call_processes.sql` contains execution commands for each stored procedure. Comment area has functionality explanation. (`call_processes.sql` in repository)
 ![call_processes.sql in repository](./assets/call_processes.png)
 ## Verify ServerNames using Command Line
 `check_domain_columns.sql` contains SQL SELECT and UPDATE statements to check, validate and update Domain data.
