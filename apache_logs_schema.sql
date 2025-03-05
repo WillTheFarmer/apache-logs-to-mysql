@@ -10,25 +10,24 @@
 -- # See the License for the specific language governing permissions and
 -- # limitations under the License.
 -- #
--- # version 3.2.7 - 02/28/2025 - added error message Exception details, resolved backslash & forward slash issues, schema script improvements - see changelog
+-- # version 3.2.8 - 03/05/2025 - revamped 4 process_*, importProcessID, importServerID Procedures - see changelog
 -- #
 -- # Copyright 2024-2025 Will Raymond <farmfreshsoftware@gmail.com>
 -- #
 -- # CHANGELOG.md in repository - https://github.com/WillTheFarmer/apache-logs-to-mysql
 -- #
--- file: apache_logs_schema.sql 
--- synopsis: Data Definition (DDL) and Data Manipulation (DML) for MySQL and MariaDB schema apache_logs for ApacheLogs2MySQL application
+-- file: apache_logs_schema.sql - requires minimum versions MariaDB 10.5.26 and MySQL 8.0.41
+-- synopsis: Data Definition (DDL) & Data Manipulation (DML) for MySQL & MariaDB schema apache_logs for ApacheLogs2MySQL
 -- author: Will Raymond <farmfreshsoftware@gmail.com>
--- # Script generated from 24 files of database object groups designed to run independently during development hence the commented DROP statements. -- # comment at start each file
+-- # Script generated from 24 files of database object groups designed to run independently -- # comments at start each file
 -- drop schema --------------------------------------------------------
 DROP SCHEMA IF EXISTS `apache_logs`;
 -- create schema --------------------------------------------------------
 CREATE SCHEMA IF NOT EXISTS `apache_logs`;
 USE `apache_logs`;
-
 -- # Tables associated with Access Logs below
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `load_access_csv2mysql`;
+DROP TABLE IF EXISTS `load_access_csv2mysql`;
 -- create table ---------------------------------------------------------
 -- LogFormat "%v,%p,%h,%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\",\"%q\",\"%{Referer}i\",\"%{User-Agent}i\",\"%{farmwork.app}C\"" csv2mysql
 CREATE TABLE `load_access_csv2mysql` (
@@ -60,7 +59,7 @@ CREATE TABLE `load_access_csv2mysql` (
     id INT AUTO_INCREMENT PRIMARY KEY
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Used for LOAD DATA command for LogFormat csv2mysql to bring text files into MySQL and start the process.';
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `load_access_combined`;
+DROP TABLE IF EXISTS `load_access_combined`;
 -- create table ---------------------------------------------------------
 -- LogFormat "%h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" combined
 -- LogFormat "%h %l %u %t \"%r\" %>s %O" common
@@ -88,7 +87,7 @@ CREATE TABLE `load_access_combined` (
     id INT AUTO_INCREMENT PRIMARY KEY
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Used for LOAD DATA command for LogFormat combined and common to bring text files into MySQL and start the process.';
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `load_access_vhost`;
+DROP TABLE IF EXISTS `load_access_vhost`;
 -- create table ---------------------------------------------------------
 -- LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" vhost_combined
 CREATE TABLE `load_access_vhost` (
@@ -116,7 +115,7 @@ CREATE TABLE `load_access_vhost` (
     id INT AUTO_INCREMENT PRIMARY KEY
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Used for LOAD DATA command for LogFormat vhost to bring text files into MySQL and start the process.';
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `access_log_reqstatus`;
+DROP TABLE IF EXISTS `access_log_reqstatus`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `access_log_reqstatus` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -124,7 +123,7 @@ CREATE TABLE `access_log_reqstatus` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `access_log_reqprotocol`;
+DROP TABLE IF EXISTS `access_log_reqprotocol`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `access_log_reqprotocol` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -132,7 +131,7 @@ CREATE TABLE `access_log_reqprotocol` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `access_log_reqmethod`;
+DROP TABLE IF EXISTS `access_log_reqmethod`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `access_log_reqmethod` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -140,7 +139,7 @@ CREATE TABLE `access_log_reqmethod` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `access_log_requri`;
+DROP TABLE IF EXISTS `access_log_requri`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `access_log_requri` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -148,7 +147,7 @@ CREATE TABLE `access_log_requri` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `access_log_reqquery`;
+DROP TABLE IF EXISTS `access_log_reqquery`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `access_log_reqquery` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -156,7 +155,7 @@ CREATE TABLE `access_log_reqquery` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `access_log_remotelogname`;
+DROP TABLE IF EXISTS `access_log_remotelogname`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `access_log_remotelogname` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -164,7 +163,7 @@ CREATE TABLE `access_log_remotelogname` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `access_log_remoteuser`;
+DROP TABLE IF EXISTS `access_log_remoteuser`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `access_log_remoteuser` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -172,7 +171,7 @@ CREATE TABLE `access_log_remoteuser` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `access_log_useragent`;
+DROP TABLE IF EXISTS `access_log_useragent`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `access_log_useragent` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -202,7 +201,7 @@ CREATE TABLE `access_log_useragent` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `access_log_ua`;
+DROP TABLE IF EXISTS `access_log_ua`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `access_log_ua` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -210,7 +209,7 @@ CREATE TABLE `access_log_ua` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `access_log_ua_browser`;
+DROP TABLE IF EXISTS `access_log_ua_browser`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `access_log_ua_browser` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -218,7 +217,7 @@ CREATE TABLE `access_log_ua_browser` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `access_log_ua_browser_family`;
+DROP TABLE IF EXISTS `access_log_ua_browser_family`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `access_log_ua_browser_family` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -226,7 +225,7 @@ CREATE TABLE `access_log_ua_browser_family` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `access_log_ua_browser_version`;
+DROP TABLE IF EXISTS `access_log_ua_browser_version`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `access_log_ua_browser_version` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -234,7 +233,7 @@ CREATE TABLE `access_log_ua_browser_version` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `access_log_ua_device`;
+DROP TABLE IF EXISTS `access_log_ua_device`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `access_log_ua_device` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -242,7 +241,7 @@ CREATE TABLE `access_log_ua_device` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `access_log_ua_device_family`;
+DROP TABLE IF EXISTS `access_log_ua_device_family`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `access_log_ua_device_family` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -250,7 +249,7 @@ CREATE TABLE `access_log_ua_device_family` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `access_log_ua_device_brand`;
+DROP TABLE IF EXISTS `access_log_ua_device_brand`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `access_log_ua_device_brand` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -258,7 +257,7 @@ CREATE TABLE `access_log_ua_device_brand` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `access_log_ua_device_model`;
+DROP TABLE IF EXISTS `access_log_ua_device_model`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `access_log_ua_device_model` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -266,7 +265,7 @@ CREATE TABLE `access_log_ua_device_model` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `access_log_ua_os`;
+DROP TABLE IF EXISTS `access_log_ua_os`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `access_log_ua_os` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -274,7 +273,7 @@ CREATE TABLE `access_log_ua_os` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `access_log_ua_os_family`;
+DROP TABLE IF EXISTS `access_log_ua_os_family`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `access_log_ua_os_family` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -282,7 +281,7 @@ CREATE TABLE `access_log_ua_os_family` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `access_log_ua_os_version`;
+DROP TABLE IF EXISTS `access_log_ua_os_version`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `access_log_ua_os_version` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -290,7 +289,7 @@ CREATE TABLE `access_log_ua_os_version` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `access_log_cookie`;
+DROP TABLE IF EXISTS `access_log_cookie`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `access_log_cookie` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -298,7 +297,7 @@ CREATE TABLE `access_log_cookie` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `access_log`;
+DROP TABLE IF EXISTS `access_log`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `access_log` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -328,10 +327,9 @@ CREATE TABLE `access_log` (
     importfileid INT NOT NULL,
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Table is core table for access logs and contains foreign keys to relate to log attribute tables.';
-
 -- # Tables associated with Error Logs below
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `load_error_default`;
+DROP TABLE IF EXISTS `load_error_default`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `load_error_default` (
     log_time VARCHAR(50) DEFAULT NULL,
@@ -362,7 +360,7 @@ CREATE TABLE `load_error_default` (
     id INT AUTO_INCREMENT PRIMARY KEY
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Table used for LOAD DATA command to bring text files into MySQL and start the process.';
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `error_log_module`;
+DROP TABLE IF EXISTS `error_log_module`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `error_log_module` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -370,7 +368,7 @@ CREATE TABLE `error_log_module` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `error_log_level`;
+DROP TABLE IF EXISTS `error_log_level`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `error_log_level` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -378,7 +376,7 @@ CREATE TABLE `error_log_level` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `error_log_processid`;
+DROP TABLE IF EXISTS `error_log_processid`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `error_log_processid` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -386,7 +384,7 @@ CREATE TABLE `error_log_processid` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `error_log_threadid`;
+DROP TABLE IF EXISTS `error_log_threadid`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `error_log_threadid` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -394,7 +392,7 @@ CREATE TABLE `error_log_threadid` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `error_log_apachecode`;
+DROP TABLE IF EXISTS `error_log_apachecode`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `error_log_apachecode` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -402,7 +400,7 @@ CREATE TABLE `error_log_apachecode` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `error_log_apachemessage`;
+DROP TABLE IF EXISTS `error_log_apachemessage`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `error_log_apachemessage` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -410,7 +408,7 @@ CREATE TABLE `error_log_apachemessage` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `error_log_systemcode`;
+DROP TABLE IF EXISTS `error_log_systemcode`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `error_log_systemcode` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -418,7 +416,7 @@ CREATE TABLE `error_log_systemcode` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `error_log_systemmessage`;
+DROP TABLE IF EXISTS `error_log_systemmessage`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `error_log_systemmessage` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -426,7 +424,7 @@ CREATE TABLE `error_log_systemmessage` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `error_log_message`;
+DROP TABLE IF EXISTS `error_log_message`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `error_log_message` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -434,7 +432,7 @@ CREATE TABLE `error_log_message` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `error_log`;
+DROP TABLE IF EXISTS `error_log`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `error_log` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -457,10 +455,9 @@ CREATE TABLE `error_log` (
     importfileid INT NOT NULL,
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 -- # Tables associated with Import Process below
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `import_device`;
+DROP TABLE IF EXISTS `import_device`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `import_device` (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -472,7 +469,7 @@ CREATE TABLE `import_device` (
   added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Table tracks unique Windows, Linux and Mac devices loading logs to server application.';
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `import_client`;
+DROP TABLE IF EXISTS `import_client`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `import_client` (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -485,7 +482,7 @@ CREATE TABLE `import_client` (
   added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Table tracks network, OS release, logon and IP address information. It is important to know who is loading logs.';
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `import_load`;
+DROP TABLE IF EXISTS `import_load`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `import_load` (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -527,7 +524,7 @@ CREATE TABLE `import_load` (
   comments VARCHAR(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Table has record for every time the Python processLogs is executed. The has totals for each type and file formats were imported.';
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `import_server`;
+DROP TABLE IF EXISTS `import_server`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `import_server` (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -536,11 +533,11 @@ CREATE TABLE `import_server` (
   dbversion VARCHAR(55) NOT NULL,
   dbsystem VARCHAR(55) NOT NULL,
   dbmachine VARCHAR(55) NOT NULL,
-  serveruuid VARCHAR(75) NOT NULL,
+  dbcomment VARCHAR(75) NOT NULL,
   added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Table for keeping track of log processing servers and login information.';
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `import_process`;
+DROP TABLE IF EXISTS `import_process`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `import_process` (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -558,7 +555,7 @@ CREATE TABLE `import_process` (
   comments VARCHAR(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Table has record for every MySQL Stored Procedure import execution. If completed column is NULL the process failed. Look in import_error table for error details.';
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `import_file`;
+DROP TABLE IF EXISTS `import_file`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `import_file` (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -576,7 +573,7 @@ CREATE TABLE `import_file` (
   added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Table contains all access and error log files loaded and processed. Created, modified and size of each file at time of loading is captured for auditability. Each file processed by Server Application must exist in this table.';
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `import_format`;
+DROP TABLE IF EXISTS `import_format`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `import_format` (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -585,7 +582,7 @@ CREATE TABLE `import_format` (
   added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Table contains import file formats imported by application. These values are inserted in schema DDL script. This table is only added for reporting purposes.';
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `import_error`;
+DROP TABLE IF EXISTS `import_error`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `import_error` (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -600,10 +597,9 @@ CREATE TABLE `import_error` (
   comments VARCHAR(350) NULL,
   added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COMMENT='Application Error log. Any errors that occur in MySQL processes will be here. This is a MyISAM engine table to avoid TRANSACTION ROLLBACKS. Always look in this table for problems!';
-
 -- # Tables associated with both Access and Error Logs below
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `log_referer`;
+DROP TABLE IF EXISTS `log_referer`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `log_referer` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -611,7 +607,7 @@ CREATE TABLE `log_referer` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Table is used by Access and Error logs.';
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `log_server`;
+DROP TABLE IF EXISTS `log_server`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `log_server` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -619,7 +615,7 @@ CREATE TABLE `log_server` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Table is used by Access and Error logs.';
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `log_serverport`;
+DROP TABLE IF EXISTS `log_serverport`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `log_serverport` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -627,7 +623,7 @@ CREATE TABLE `log_serverport` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Table is used by Access and Error logs.';
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `log_client`;
+DROP TABLE IF EXISTS `log_client`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `log_client` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -649,7 +645,7 @@ CREATE TABLE `log_client` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Table is used by Access and Error logs.';
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `log_client_city`;
+DROP TABLE IF EXISTS `log_client_city`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `log_client_city` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -657,7 +653,7 @@ CREATE TABLE `log_client_city` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Table is used by Access and Error logs.';
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `log_client_coordinate`;
+DROP TABLE IF EXISTS `log_client_coordinate`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `log_client_coordinate` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -666,7 +662,7 @@ CREATE TABLE `log_client_coordinate` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Table is used by Access and Error logs.';
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `log_client_country`;
+DROP TABLE IF EXISTS `log_client_country`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `log_client_country` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -675,7 +671,7 @@ CREATE TABLE `log_client_country` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Table is used by Access and Error logs.';
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `log_client_network`;
+DROP TABLE IF EXISTS `log_client_network`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `log_client_network` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -683,7 +679,7 @@ CREATE TABLE `log_client_network` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Table is used by Access and Error logs.';
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `log_client_organization`;
+DROP TABLE IF EXISTS `log_client_organization`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `log_client_organization` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -691,7 +687,7 @@ CREATE TABLE `log_client_organization` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Table is used by Access and Error logs.';
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `log_client_subdivision`;
+DROP TABLE IF EXISTS `log_client_subdivision`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `log_client_subdivision` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -699,7 +695,7 @@ CREATE TABLE `log_client_subdivision` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Table is used by Access and Error logs.';
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `log_clientport`;
+DROP TABLE IF EXISTS `log_clientport`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `log_clientport` (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -707,17 +703,16 @@ CREATE TABLE `log_clientport` (
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Table is used by Access and Error logs.';
 -- drop table -----------------------------------------------------------
--- DROP TABLE IF EXISTS `log_requestlogid`;
+DROP TABLE IF EXISTS `log_requestlogid`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `log_requestlogid` (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Table is used by Access and Error logs.';
-
 -- # Functions associated with Access Log Normalization below
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_reqProtocolID`;
+DROP FUNCTION IF EXISTS `access_reqProtocolID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_reqProtocolID`
@@ -739,7 +734,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_reqMethodID`;
+DROP FUNCTION IF EXISTS `access_reqMethodID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_reqMethodID`
@@ -761,7 +756,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_reqStatusID`;
+DROP FUNCTION IF EXISTS `access_reqStatusID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_reqStatusID`
@@ -783,7 +778,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_reqUriID`;
+DROP FUNCTION IF EXISTS `access_reqUriID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_reqUriID`
@@ -805,7 +800,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_reqQueryID`;
+DROP FUNCTION IF EXISTS `access_reqQueryID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_reqQueryID`
@@ -827,7 +822,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_remoteLogNameID`;
+DROP FUNCTION IF EXISTS `access_remoteLogNameID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_remoteLogNameID`
@@ -849,7 +844,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_remoteUserID`;
+DROP FUNCTION IF EXISTS `access_remoteUserID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_remoteUserID`
@@ -871,7 +866,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_userAgentID`;
+DROP FUNCTION IF EXISTS `access_userAgentID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_userAgentID`
@@ -893,7 +888,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_uaID`;
+DROP FUNCTION IF EXISTS `access_uaID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_uaID`
@@ -915,7 +910,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_uaBrowserID`;
+DROP FUNCTION IF EXISTS `access_uaBrowserID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_uaBrowserID`
@@ -937,7 +932,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_uaBrowserFamilyID`;
+DROP FUNCTION IF EXISTS `access_uaBrowserFamilyID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_uaBrowserFamilyID`
@@ -959,7 +954,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_uaBrowserVersionID`;
+DROP FUNCTION IF EXISTS `access_uaBrowserVersionID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_uaBrowserVersionID`
@@ -981,7 +976,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_uaOsID`;
+DROP FUNCTION IF EXISTS `access_uaOsID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_uaOsID`
@@ -1003,7 +998,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_uaOsFamilyID`;
+DROP FUNCTION IF EXISTS `access_uaOsFamilyID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_uaOsFamilyID`
@@ -1025,7 +1020,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_uaOsVersionID`;
+DROP FUNCTION IF EXISTS `access_uaOsVersionID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_uaOsVersionID`
@@ -1047,7 +1042,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_uaDeviceID`;
+DROP FUNCTION IF EXISTS `access_uaDeviceID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_uaDeviceID`
@@ -1069,7 +1064,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_uaDeviceFamilyID`;
+DROP FUNCTION IF EXISTS `access_uaDeviceFamilyID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_uaDeviceFamilyID`
@@ -1091,7 +1086,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_uaDeviceBrandID`;
+DROP FUNCTION IF EXISTS `access_uaDeviceBrandID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_uaDeviceBrandID`
@@ -1113,7 +1108,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_uaDeviceModelID`;
+DROP FUNCTION IF EXISTS `access_uaDeviceModelID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_uaDeviceModelID`
@@ -1135,7 +1130,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_cookieID`;
+DROP FUNCTION IF EXISTS `access_cookieID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_cookieID`
@@ -1156,10 +1151,9 @@ BEGIN
     RETURN cookie_ID;
 END //
 DELIMITER ;
-
 -- # Functions associated with Access Log Attributes - Return Values below
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_reqProtocol`;
+DROP FUNCTION IF EXISTS `access_reqProtocol`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_reqProtocol`
@@ -1177,7 +1171,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_reqMethod`;
+DROP FUNCTION IF EXISTS `access_reqMethod`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_reqMethod`
@@ -1195,7 +1189,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_reqStatus`;
+DROP FUNCTION IF EXISTS `access_reqStatus`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_reqStatus`
@@ -1213,7 +1207,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_reqUri`;
+DROP FUNCTION IF EXISTS `access_reqUri`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_reqUri`
@@ -1231,7 +1225,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_reqQuery`;
+DROP FUNCTION IF EXISTS `access_reqQuery`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_reqQuery`
@@ -1249,7 +1243,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_remoteLogName`;
+DROP FUNCTION IF EXISTS `access_remoteLogName`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_remoteLogName`
@@ -1267,7 +1261,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_remoteUser`;
+DROP FUNCTION IF EXISTS `access_remoteUser`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_remoteUser`
@@ -1285,7 +1279,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_userAgent`;
+DROP FUNCTION IF EXISTS `access_userAgent`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_userAgent`
@@ -1303,7 +1297,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_ua`;
+DROP FUNCTION IF EXISTS `access_ua`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_ua`
@@ -1321,7 +1315,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_uaBrowser`;
+DROP FUNCTION IF EXISTS `access_uaBrowser`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_uaBrowser`
@@ -1339,7 +1333,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_uaBrowserFamily`;
+DROP FUNCTION IF EXISTS `access_uaBrowserFamily`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_uaBrowserFamily`
@@ -1357,7 +1351,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_uaBrowserVersion`;
+DROP FUNCTION IF EXISTS `access_uaBrowserVersion`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_uaBrowserVersion`
@@ -1375,7 +1369,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_uaOs`;
+DROP FUNCTION IF EXISTS `access_uaOs`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_uaOs`
@@ -1393,7 +1387,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_uaOsFamily`;
+DROP FUNCTION IF EXISTS `access_uaOsFamily`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_uaOsFamily`
@@ -1411,7 +1405,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_uaOsVersion`;
+DROP FUNCTION IF EXISTS `access_uaOsVersion`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_uaOsVersion`
@@ -1429,7 +1423,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_uaDevice`;
+DROP FUNCTION IF EXISTS `access_uaDevice`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_uaDevice`
@@ -1447,7 +1441,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_uaDeviceFamily`;
+DROP FUNCTION IF EXISTS `access_uaDeviceFamily`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_uaDeviceFamily`
@@ -1465,7 +1459,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_uaDeviceBrand`;
+DROP FUNCTION IF EXISTS `access_uaDeviceBrand`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_uaDeviceBrand`
@@ -1483,7 +1477,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_uaDeviceModel`;
+DROP FUNCTION IF EXISTS `access_uaDeviceModel`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_uaDeviceModel`
@@ -1501,7 +1495,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `access_cookie`;
+DROP FUNCTION IF EXISTS `access_cookie`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_cookie`
@@ -1518,10 +1512,9 @@ BEGIN
     RETURN cookie;
 END //
 DELIMITER ;
-
 -- # Functions associated with Error Log Normalization below
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `error_logLevelID`;
+DROP FUNCTION IF EXISTS `error_logLevelID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` FUNCTION `error_logLevelID`
@@ -1543,7 +1536,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `error_moduleID`;
+DROP FUNCTION IF EXISTS `error_moduleID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` FUNCTION `error_moduleID`
@@ -1565,7 +1558,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `error_processID`;
+DROP FUNCTION IF EXISTS `error_processID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` FUNCTION `error_processID`
@@ -1587,7 +1580,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `error_threadID`;
+DROP FUNCTION IF EXISTS `error_threadID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` FUNCTION `error_threadID`
@@ -1609,7 +1602,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `error_apacheCodeID`;
+DROP FUNCTION IF EXISTS `error_apacheCodeID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` FUNCTION `error_apacheCodeID`
@@ -1631,7 +1624,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `error_apacheMessageID`;
+DROP FUNCTION IF EXISTS `error_apacheMessageID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` FUNCTION `error_apacheMessageID`
@@ -1653,7 +1646,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `error_systemCodeID`;
+DROP FUNCTION IF EXISTS `error_systemCodeID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` FUNCTION `error_systemCodeID`
@@ -1675,7 +1668,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `error_systemMessageID`;
+DROP FUNCTION IF EXISTS `error_systemMessageID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` FUNCTION `error_systemMessageID`
@@ -1697,7 +1690,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `error_logMessageID`;
+DROP FUNCTION IF EXISTS `error_logMessageID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` FUNCTION `error_logMessageID`
@@ -1718,10 +1711,9 @@ BEGIN
   RETURN messageID;
 END //
 DELIMITER ;
-
 -- # Functions associated with Error Log Attributes - Return Values below
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `error_logLevel`;
+DROP FUNCTION IF EXISTS `error_logLevel`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` FUNCTION `error_logLevel`
@@ -1739,7 +1731,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `error_module`;
+DROP FUNCTION IF EXISTS `error_module`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` FUNCTION `error_module`
@@ -1757,7 +1749,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `error_process`;
+DROP FUNCTION IF EXISTS `error_process`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` FUNCTION `error_process`
@@ -1775,7 +1767,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `error_thread`;
+DROP FUNCTION IF EXISTS `error_thread`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` FUNCTION `error_thread`
@@ -1793,7 +1785,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `error_apacheCode`;
+DROP FUNCTION IF EXISTS `error_apacheCode`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` FUNCTION `error_apacheCode`
@@ -1811,7 +1803,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `error_apacheMessage`;
+DROP FUNCTION IF EXISTS `error_apacheMessage`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` FUNCTION `error_apacheMessage`
@@ -1829,7 +1821,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `error_systemCode`;
+DROP FUNCTION IF EXISTS `error_systemCode`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` FUNCTION `error_systemCode`
@@ -1847,7 +1839,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `error_systemMessage`;
+DROP FUNCTION IF EXISTS `error_systemMessage`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` FUNCTION `error_systemMessage`
@@ -1865,7 +1857,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `error_logMessage`;
+DROP FUNCTION IF EXISTS `error_logMessage`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` FUNCTION `error_logMessage`
@@ -1882,10 +1874,9 @@ BEGIN
   RETURN logMessage;
 END //
 DELIMITER ;
-
 -- # Functions associated with both Access and Error Log Views below
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `log_refererID`;
+DROP FUNCTION IF EXISTS `log_refererID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `log_refererID`
@@ -1907,7 +1898,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `log_serverID`;
+DROP FUNCTION IF EXISTS `log_serverID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `log_serverID`
@@ -1929,7 +1920,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `log_serverPortID`;
+DROP FUNCTION IF EXISTS `log_serverPortID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `log_serverPortID`
@@ -1951,7 +1942,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `log_clientID`;
+DROP FUNCTION IF EXISTS `log_clientID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `log_clientID`
@@ -1973,7 +1964,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `log_clientCountryID`;
+DROP FUNCTION IF EXISTS `log_clientCountryID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `log_clientCountryID`
@@ -1998,7 +1989,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `log_clientSubdivisionID`;
+DROP FUNCTION IF EXISTS `log_clientSubdivisionID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `log_clientSubdivisionID`
@@ -2020,7 +2011,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `log_clientCityID`;
+DROP FUNCTION IF EXISTS `log_clientCityID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `log_clientCityID`
@@ -2042,7 +2033,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `log_clientCoordinateID`;
+DROP FUNCTION IF EXISTS `log_clientCoordinateID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `log_clientCoordinateID`
@@ -2067,7 +2058,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `log_clientOrganizationID`;
+DROP FUNCTION IF EXISTS `log_clientOrganizationID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `log_clientOrganizationID`
@@ -2089,7 +2080,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `log_clientNetworkID`;
+DROP FUNCTION IF EXISTS `log_clientNetworkID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `log_clientNetworkID`
@@ -2111,7 +2102,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `log_clientPortID`;
+DROP FUNCTION IF EXISTS `log_clientPortID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `log_clientPortID`
@@ -2133,7 +2124,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `log_requestLogID`;
+DROP FUNCTION IF EXISTS `log_requestLogID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `log_requestLogID`
@@ -2155,7 +2146,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `clientID_logs`;
+DROP FUNCTION IF EXISTS `clientID_logs`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `clientID_logs`
@@ -2181,7 +2172,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `clientPortID_logs`;
+DROP FUNCTION IF EXISTS `clientPortID_logs`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `clientPortID_logs`
@@ -2207,7 +2198,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `refererID_logs`;
+DROP FUNCTION IF EXISTS `refererID_logs`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `refererID_logs`
@@ -2233,7 +2224,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `requestLogID_logs`;
+DROP FUNCTION IF EXISTS `requestLogID_logs`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `requestLogID_logs`
@@ -2259,7 +2250,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `serverID_logs`;
+DROP FUNCTION IF EXISTS `serverID_logs`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `serverID_logs`
@@ -2285,7 +2276,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `serverPortID_logs`;
+DROP FUNCTION IF EXISTS `serverPortID_logs`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `serverPortID_logs`
@@ -2310,10 +2301,9 @@ BEGIN
   RETURN logCount;
 END //
 DELIMITER ;
-
 -- # Functions associated with both Access and Error Attributes - Return Values below
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `log_referer`;
+DROP FUNCTION IF EXISTS `log_referer`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `log_referer`
@@ -2331,7 +2321,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `log_server`;
+DROP FUNCTION IF EXISTS `log_server`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `log_server`
@@ -2349,7 +2339,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `log_serverPort`;
+DROP FUNCTION IF EXISTS `log_serverPort`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `log_serverPort`
@@ -2367,7 +2357,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `log_client`;
+DROP FUNCTION IF EXISTS `log_client`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `log_client`
@@ -2385,7 +2375,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `log_clientPort`;
+DROP FUNCTION IF EXISTS `log_clientPort`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `log_clientPort`
@@ -2403,7 +2393,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `log_requestLog`;
+DROP FUNCTION IF EXISTS `log_requestLog`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `log_requestLog`
@@ -2420,10 +2410,9 @@ BEGIN
   RETURN requestLog;
 END //
 DELIMITER ;
-
 -- # Functions associated with Import Processes below
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `importDeviceID`;
+DROP FUNCTION IF EXISTS `importDeviceID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` FUNCTION `importDeviceID`
@@ -2471,7 +2460,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `importClientID`;
+DROP FUNCTION IF EXISTS `importClientID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` FUNCTION `importClientID`
@@ -2527,7 +2516,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `importLoadID`;
+DROP FUNCTION IF EXISTS `importLoadID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` FUNCTION `importLoadID`
@@ -2553,7 +2542,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `importFileExists`;
+DROP FUNCTION IF EXISTS `importFileExists`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` FUNCTION `importFileExists`
@@ -2591,7 +2580,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `importFileID`;
+DROP FUNCTION IF EXISTS `importFileID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` FUNCTION `importFileID`
@@ -2654,7 +2643,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `importServerID`;
+DROP FUNCTION IF EXISTS `importServerID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` FUNCTION `importServerID`
@@ -2663,7 +2652,7 @@ CREATE DEFINER=`root`@`localhost` FUNCTION `importServerID`
    in_version VARCHAR(55),
    in_system VARCHAR(55),
    in_machine VARCHAR(55),
-	 in_server VARCHAR(75)
+	 in_comment VARCHAR(75)
   )
   RETURNS INTEGER
   READS SQL DATA
@@ -2682,7 +2671,7 @@ BEGIN
      AND dbversion = in_version
      AND dbsystem = in_system
      AND dbmachine = in_machine
-     AND serveruuid = in_server;
+     AND dbcomment = in_comment;
   IF importServer_ID IS NULL THEN
     INSERT INTO apache_logs.import_server 
       (dbuser,
@@ -2690,21 +2679,21 @@ BEGIN
        dbversion,
        dbsystem,
        dbmachine,
-       serveruuid)
+       dbcomment)
     VALUES
       (in_user,
        in_host,
        in_version,
        in_system,
        in_machine,
-       in_server);
+       in_comment);
     SET importServer_ID = LAST_INSERT_ID();
   END IF;
   RETURN importServer_ID;
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `importProcessID`;
+DROP FUNCTION IF EXISTS `importProcessID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` FUNCTION `importProcessID`
@@ -2718,30 +2707,42 @@ BEGIN
   DECLARE importServer_ID INTEGER DEFAULT NULL;
   DECLARE db_user VARCHAR(255) DEFAULT NULL;
   DECLARE db_host VARCHAR(255) DEFAULT NULL;
-  DECLARE db_version VARCHAR(255) DEFAULT NULL;
-  DECLARE db_system VARCHAR(255) DEFAULT NULL;
-  DECLARE db_machine VARCHAR(255) DEFAULT NULL;
-  DECLARE db_server VARCHAR(255) DEFAULT NULL;
+  DECLARE db_version VARCHAR(55) DEFAULT NULL;
+  DECLARE db_system VARCHAR(55) DEFAULT NULL;
+  DECLARE db_machine VARCHAR(55) DEFAULT NULL;
+  DECLARE db_comment VARCHAR(75) DEFAULT NULL;
+  -- DECLARE db_server VARCHAR(75) DEFAULT NULL;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION
   	BEGIN
 	  	IF @error_count=1 THEN RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'importServerID called from importProcessID'; ELSE RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'importProcessID'; END IF;
 	  END;
   SET @error_count = 0;
---    @@server_uuid
+-- 03/04/2025 - @@server_uuid and UUID() - these 2 are not the same - changed in version 3.2.0 on 02/01/2025 release - since then records are added to import_server TABLE as different servers
+-- UUUID() - unique per execution. everytime called the value is different. My fault thinking it was the same functionality as @server_uid. Changed and never tested due to workig on another project at time.
+-- @@server_uuid - Introduced MySQL 5.7 - the server generates a true UUID in addition to the server_id value supplied by the user. This is available as the global, read-only server_uuid system variable.
+-- @@server_uid - Introduced MariaDB 10.5.26 - Automatically calculated server unique id hash. Added to the error log to allow one to verify if error reports are from the same server. continued on next line.
+-- UID is a base64-encoded SHA1 hash of the MAC address of one of the interfaces, and the tcp port that the server is listening on.
 	SELECT user(),
     @@hostname,
     @@version,
     @@version_compile_os,
     @@version_compile_machine,
-    UUID()
+    @@version_comment
   INTO 
     db_user,
     db_host,
     db_version,
     db_system,
     db_machine,
-    db_server;
-	SET importServer_ID = importServerID(db_user, db_host, db_version, db_system, db_machine, db_server);
+    db_comment;
+-- this does not work due to MariaDB ERRORS on script execution on @@server_uuid. scraping server_uuid and server_uid. renamed import_table TABLE column uuidserver to comment.    
+--  IF LOCATE('mysql', db_comment) THEN
+--    SELECT @@server_uuid INTO db_server;
+--  ELSE
+--    SELECT @@server_uid INTO db_server;
+--  END IF;
+--	SET importServer_ID = importServerID(db_user, db_host, db_version, db_system, db_machine, db_server, db_comment);
+	SET importServer_ID = importServerID(db_user, db_host, db_version, db_system, db_machine, db_comment);
 	INSERT INTO apache_logs.import_process
       (type,
        name,
@@ -2755,7 +2756,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP FUNCTION IF EXISTS `importFileCheck`;
+DROP FUNCTION IF EXISTS `importFileCheck`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` FUNCTION `importFileCheck`
@@ -2824,10 +2825,9 @@ BEGIN
   RETURN processFile;
 END //
 DELIMITER ;
-
 -- # Procedures associated with Import Processes below
 -- drop function -----------------------------------------------------------
--- DROP PROCEDURE IF EXISTS `errorProcess`;
+DROP PROCEDURE IF EXISTS `errorProcess`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` PROCEDURE `errorProcess`
@@ -2861,7 +2861,7 @@ BEGIN
 END //
 DELIMITER ;
 -- drop function -----------------------------------------------------------
--- DROP PROCEDURE IF EXISTS `errorLoad`;
+DROP PROCEDURE IF EXISTS `errorLoad`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` PROCEDURE `errorLoad`
@@ -2892,10 +2892,9 @@ BEGIN
       'logs2mysql.py');
 END //
 DELIMITER ;
-
 -- # Views associated with Access Log below
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_requri_list`;
+DROP VIEW IF EXISTS `access_requri_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -2919,7 +2918,7 @@ VIEW `access_requri_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_reqquery_list`;
+DROP VIEW IF EXISTS `access_reqquery_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -2943,7 +2942,7 @@ VIEW `access_reqquery_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_reqstatus_list`;
+DROP VIEW IF EXISTS `access_reqstatus_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -2967,7 +2966,7 @@ VIEW `access_reqstatus_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_referer_list`;
+DROP VIEW IF EXISTS `access_referer_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -2991,7 +2990,7 @@ VIEW `access_referer_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_reqprotocol_list`;
+DROP VIEW IF EXISTS `access_reqprotocol_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3015,7 +3014,7 @@ VIEW `access_reqprotocol_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_reqmethod_list`;
+DROP VIEW IF EXISTS `access_reqmethod_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3039,7 +3038,7 @@ VIEW `access_reqmethod_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_client_list`;
+DROP VIEW IF EXISTS `access_client_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3063,7 +3062,7 @@ VIEW `access_client_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_remotelogname_list`;
+DROP VIEW IF EXISTS `access_remotelogname_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3088,7 +3087,7 @@ VIEW `access_remotelogname_list` AS
 
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_remoteuser_list`;
+DROP VIEW IF EXISTS `access_remoteuser_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3112,7 +3111,7 @@ VIEW `access_remoteuser_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_cookie_list`;
+DROP VIEW IF EXISTS `access_cookie_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3136,7 +3135,7 @@ VIEW `access_cookie_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_server_list`;
+DROP VIEW IF EXISTS `access_server_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3160,7 +3159,7 @@ VIEW `access_server_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_serverport_list`;
+DROP VIEW IF EXISTS `access_serverport_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3184,7 +3183,7 @@ VIEW `access_serverport_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_server_serverport_list`;
+DROP VIEW IF EXISTS `access_server_serverport_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3213,7 +3212,7 @@ VIEW `access_server_serverport_list` AS
 	          `sp`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_useragent_list`;
+DROP VIEW IF EXISTS `access_useragent_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3237,7 +3236,7 @@ VIEW `access_useragent_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_useragent_pretty_list`;
+DROP VIEW IF EXISTS `access_useragent_pretty_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3261,7 +3260,7 @@ VIEW `access_useragent_pretty_list` AS
    ORDER BY `ln`.`ua`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_useragent_os_browser_device_list`;
+DROP VIEW IF EXISTS `access_useragent_os_browser_device_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3291,7 +3290,7 @@ VIEW `access_useragent_os_browser_device_list` AS
             `ln`.`ua_device_family`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_useragent_browser_list`;
+DROP VIEW IF EXISTS `access_useragent_browser_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3315,7 +3314,7 @@ VIEW `access_useragent_browser_list` AS
    ORDER BY `ln`.`ua_browser`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_useragent_browser_family_list`;
+DROP VIEW IF EXISTS `access_useragent_browser_family_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3339,7 +3338,7 @@ VIEW `access_useragent_browser_family_list` AS
    ORDER BY `ln`.`ua_browser_family`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_useragent_browser_version_list`;
+DROP VIEW IF EXISTS `access_useragent_browser_version_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3363,7 +3362,7 @@ VIEW `access_useragent_browser_version_list` AS
    ORDER BY `ln`.`ua_browser_version`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_useragent_device_list`;
+DROP VIEW IF EXISTS `access_useragent_device_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3387,7 +3386,7 @@ VIEW `access_useragent_device_list` AS
    ORDER BY `ln`.`ua_device`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_useragent_device_brand_list`;
+DROP VIEW IF EXISTS `access_useragent_device_brand_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3411,7 +3410,7 @@ VIEW `access_useragent_device_brand_list` AS
    ORDER BY `ln`.`ua_device_brand`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_useragent_device_family_list`;
+DROP VIEW IF EXISTS `access_useragent_device_family_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3435,7 +3434,7 @@ VIEW `access_useragent_device_family_list` AS
    ORDER BY `ln`.`ua_device_family`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_useragent_device_model_list`;
+DROP VIEW IF EXISTS `access_useragent_device_model_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3459,7 +3458,7 @@ VIEW `access_useragent_device_model_list` AS
    ORDER BY `ln`.`ua_device_model`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_useragent_os_list`;
+DROP VIEW IF EXISTS `access_useragent_os_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3483,7 +3482,7 @@ VIEW `access_useragent_os_list` AS
    ORDER BY `ln`.`ua_os`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_useragent_os_family_list`;
+DROP VIEW IF EXISTS `access_useragent_os_family_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3507,7 +3506,7 @@ VIEW `access_useragent_os_family_list` AS
    ORDER BY `ln`.`ua_os_family`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_useragent_os_version_list`;
+DROP VIEW IF EXISTS `access_useragent_os_version_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3531,7 +3530,7 @@ VIEW `access_useragent_os_version_list` AS
    ORDER BY `ln`.`ua_os_version`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_ua_list`;
+DROP VIEW IF EXISTS `access_ua_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3557,7 +3556,7 @@ VIEW `access_ua_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_ua_browser_list`;
+DROP VIEW IF EXISTS `access_ua_browser_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3583,7 +3582,7 @@ VIEW `access_ua_browser_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_ua_browser_family_list`;
+DROP VIEW IF EXISTS `access_ua_browser_family_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3609,7 +3608,7 @@ VIEW `access_ua_browser_family_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_ua_browser_version_list`;
+DROP VIEW IF EXISTS `access_ua_browser_version_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3635,7 +3634,7 @@ VIEW `access_ua_browser_version_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_ua_device_list`;
+DROP VIEW IF EXISTS `access_ua_device_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3661,7 +3660,7 @@ VIEW `access_ua_device_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_ua_device_brand_list`;
+DROP VIEW IF EXISTS `access_ua_device_brand_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3687,7 +3686,7 @@ VIEW `access_ua_device_brand_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_ua_device_family_list`;
+DROP VIEW IF EXISTS `access_ua_device_family_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3713,7 +3712,7 @@ VIEW `access_ua_device_family_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_ua_device_model_list`;
+DROP VIEW IF EXISTS `access_ua_device_model_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3739,7 +3738,7 @@ VIEW `access_ua_device_model_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_ua_os_list`;
+DROP VIEW IF EXISTS `access_ua_os_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3765,7 +3764,7 @@ VIEW `access_ua_os_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_ua_os_family_list`;
+DROP VIEW IF EXISTS `access_ua_os_family_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3791,7 +3790,7 @@ VIEW `access_ua_os_family_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_ua_os_version_list`;
+DROP VIEW IF EXISTS `access_ua_os_version_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3817,7 +3816,7 @@ VIEW `access_ua_os_version_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_importfile_list`;
+DROP VIEW IF EXISTS `access_importfile_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3841,7 +3840,7 @@ VIEW `access_importfile_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_period_year_list`;
+DROP VIEW IF EXISTS `access_period_year_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3863,7 +3862,7 @@ VIEW `access_period_year_list` AS
    ORDER BY 'Year'; 
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_period_month_list`;
+DROP VIEW IF EXISTS `access_period_month_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3888,7 +3887,7 @@ VIEW `access_period_month_list` AS
             'Month'; 
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_period_week_list`;
+DROP VIEW IF EXISTS `access_period_week_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3916,7 +3915,7 @@ VIEW `access_period_week_list` AS
             'Week'; 
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_period_day_list`;
+DROP VIEW IF EXISTS `access_period_day_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3944,7 +3943,7 @@ VIEW `access_period_day_list` AS
             'Day'; 
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `access_period_hour_list`;
+DROP VIEW IF EXISTS `access_period_hour_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3972,11 +3971,11 @@ VIEW `access_period_hour_list` AS
    ORDER BY 'Year',
             'Month',
             'Day',
-            'Hour'; 
-
+            'Hour';
+   
 -- # Views associated with Error Log tables below
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `error_level_list`;
+DROP VIEW IF EXISTS `error_level_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -3992,7 +3991,7 @@ VIEW `error_level_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `error_module_list`;
+DROP VIEW IF EXISTS `error_module_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4008,7 +4007,7 @@ VIEW `error_module_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `error_processid_list`;
+DROP VIEW IF EXISTS `error_processid_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4024,7 +4023,7 @@ VIEW `error_processid_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `error_threadid_list`;
+DROP VIEW IF EXISTS `error_threadid_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4040,7 +4039,7 @@ VIEW `error_threadid_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `error_processid_threadid_list`;
+DROP VIEW IF EXISTS `error_processid_threadid_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4061,7 +4060,7 @@ VIEW `error_processid_threadid_list` AS
             `tid`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `error_apacheCode_list`;
+DROP VIEW IF EXISTS `error_apacheCode_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4077,7 +4076,7 @@ VIEW `error_apacheCode_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `error_apacheMessage_list`;
+DROP VIEW IF EXISTS `error_apacheMessage_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4093,7 +4092,7 @@ VIEW `error_apacheMessage_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `error_systemCode_list`;
+DROP VIEW IF EXISTS `error_systemCode_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4110,7 +4109,7 @@ VIEW `error_systemCode_list` AS
 
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `error_systemMessage_list`;
+DROP VIEW IF EXISTS `error_systemMessage_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4126,7 +4125,7 @@ VIEW `error_systemMessage_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `error_message_list`;
+DROP VIEW IF EXISTS `error_message_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4142,7 +4141,7 @@ VIEW `error_message_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `error_client_list`;
+DROP VIEW IF EXISTS `error_client_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4158,7 +4157,7 @@ VIEW `error_client_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `error_clientport_list`;
+DROP VIEW IF EXISTS `error_clientport_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4174,7 +4173,7 @@ VIEW `error_client_port_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `error_client_clientport_list`;
+DROP VIEW IF EXISTS `error_client_clientport_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4195,7 +4194,7 @@ VIEW `error_client_clientport_list` AS
             `cp`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `error_referer_list`;
+DROP VIEW IF EXISTS `error_referer_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4211,7 +4210,7 @@ VIEW `error_referer_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `error_server_list`;
+DROP VIEW IF EXISTS `error_server_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4227,7 +4226,7 @@ VIEW `error_server_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `error_serverport_list`;
+DROP VIEW IF EXISTS `error_serverport_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4243,7 +4242,7 @@ VIEW `error_serverport_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `error_server_serverport_list`;
+DROP VIEW IF EXISTS `error_server_serverport_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4264,7 +4263,7 @@ VIEW `error_server_serverport_list` AS
 	          `sp`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `error_importfile_list`;
+DROP VIEW IF EXISTS `error_importfile_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4280,7 +4279,7 @@ VIEW `error_importfile_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `error_period_year_list`;
+DROP VIEW IF EXISTS `error_period_year_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4294,7 +4293,7 @@ VIEW `error_period_year_list` AS
    ORDER BY 'Year'; 
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `error_period_month_list`;
+DROP VIEW IF EXISTS `error_period_month_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4311,7 +4310,7 @@ VIEW `error_period_month_list` AS
            'Month'; 
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `error_period_week_list`;
+DROP VIEW IF EXISTS `error_period_week_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4331,7 +4330,7 @@ VIEW `error_period_week_list` AS
             'Week'; 
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `error_period_day_list`;
+DROP VIEW IF EXISTS `error_period_day_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4351,7 +4350,7 @@ VIEW `error_period_day_list` AS
             'Day'; 
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `error_period_hour_list`;
+DROP VIEW IF EXISTS `error_period_hour_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4371,11 +4370,11 @@ VIEW `error_period_hour_list` AS
    ORDER BY 'Year',
             'Month',
             'Day',
-            'Hour'; 
-
+            'Hour';
+     
 -- # Views associated with Log tables below
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `log_client_list`;
+DROP VIEW IF EXISTS `log_client_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4389,7 +4388,7 @@ SELECT `name` AS `Client Name`,
 ORDER BY `name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `log_clientport_list`;
+DROP VIEW IF EXISTS `log_clientport_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4403,7 +4402,7 @@ SELECT `name` AS `Client Port`,
 ORDER BY `name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `log_referer_list`;
+DROP VIEW IF EXISTS `log_referer_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4417,7 +4416,7 @@ SELECT `name` AS `Referer`,
 ORDER BY `name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `log_requestlog_list`;
+DROP VIEW IF EXISTS `log_requestlog_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4431,7 +4430,7 @@ SELECT `name` AS `Request Log`,
 ORDER BY `name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `log_server_list`;
+DROP VIEW IF EXISTS `log_server_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4445,7 +4444,7 @@ SELECT `name` AS `Server Name`,
 ORDER BY `name`;
 
 -- drop table -----------------------------------------------------------
--- DROP VIEW IF EXISTS `log_serverport_list`;
+DROP VIEW IF EXISTS `log_serverport_list`;
 -- create table ---------------------------------------------------------
 CREATE 
     ALGORITHM = UNDEFINED 
@@ -4458,21 +4457,20 @@ SELECT `name` AS `Server Port`,
   FROM `log_serverport`
 ORDER BY `name`;
 
-
 -- # Stored Procedure Access Log parsing performed on LOAD TABLE below
 -- drop procedure -----------------------------------------------------------
--- DROP PROCEDURE IF EXISTS `process_access_parse`;
+DROP PROCEDURE IF EXISTS `process_access_parse`;
 -- create procedure ---------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` PROCEDURE `process_access_parse` (
-    IN in_processName VARCHAR(100),
-    IN in_importLoadID VARCHAR(20)
+  IN in_processName VARCHAR(100),
+  IN in_importLoadID VARCHAR(20)
 )
 BEGIN
   -- standard variables for processes
-	DECLARE e1 INT UNSIGNED;
-	DECLARE e2, e3 VARCHAR(128);
-	DECLARE e4, e5 VARCHAR(64);
+  DECLARE e1 INT UNSIGNED;
+  DECLARE e2, e3 VARCHAR(128);
+  DECLARE e4, e5 VARCHAR(64);
   DECLARE done BOOL DEFAULT false;
   DECLARE importProcessID INTEGER DEFAULT NULL;
   DECLARE importLoad_ID INTEGER DEFAULT NULL;
@@ -4484,9 +4482,18 @@ BEGIN
   DECLARE loadsProcessed INTEGER DEFAULT 1;
   DECLARE processError INTEGER DEFAULT 0;
   -- declare cursor for csv2mysql format - All importloadIDs not processed
-	DECLARE csv2mysqlStatus CURSOR FOR 
-      SELECT l.id,
-             l.importfileid
+  DECLARE csv2mysqlStatus CURSOR FOR 
+      SELECT l.id
+        FROM apache_logs.load_access_csv2mysql l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+  INNER JOIN apache_logs.import_load il 
+          ON f.importloadid = il.id
+       WHERE il.completed IS NOT NULL 
+         AND l.process_status = 0 FOR UPDATE;
+  -- declare cursor for csv2mysql format - All importloadIDs not processed
+  DECLARE csv2mysqlStatusFile CURSOR FOR 
+      SELECT DISTINCT(l.importfileid)
         FROM apache_logs.load_access_csv2mysql l
   INNER JOIN apache_logs.import_file f 
           ON l.importfileid = f.id
@@ -4495,18 +4502,34 @@ BEGIN
        WHERE il.completed IS NOT NULL 
          AND l.process_status = 0;
   -- declare cursor for csv2mysql format - single importLoadID
-	DECLARE csv2mysqlLoadID CURSOR FOR 
-      SELECT l.id,
-             l.importfileid
+  DECLARE csv2mysqlLoadID CURSOR FOR 
+      SELECT l.id
+  	    FROM apache_logs.load_access_csv2mysql l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
+         AND l.process_status=0 FOR UPDATE;
+  -- declare cursor for csv2mysql format - single importLoadID
+  DECLARE csv2mysqlLoadIDFile CURSOR FOR 
+      SELECT DISTINCT(l.importfileid)
   	    FROM apache_logs.load_access_csv2mysql l
   INNER JOIN apache_logs.import_file f 
           ON l.importfileid = f.id
        WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
          AND l.process_status=0;
   -- declare cursor for combined format - All importloadIDs not processed
-	DECLARE vhostStatus CURSOR FOR 
-      SELECT l.id,
-             l.importfileid
+  DECLARE vhostStatus CURSOR FOR 
+      SELECT l.id
+  	    FROM apache_logs.load_access_vhost l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+  INNER JOIN apache_logs.import_load il 
+          ON f.importloadid = il.id
+       WHERE il.completed IS NOT NULL 
+         AND l.process_status = 0 FOR UPDATE;
+  -- declare cursor for combined format - All importloadIDs not processed
+  DECLARE vhostStatusFile CURSOR FOR 
+      SELECT DISTINCT(l.importfileid)
   	    FROM apache_logs.load_access_vhost l
   INNER JOIN apache_logs.import_file f 
           ON l.importfileid = f.id
@@ -4515,18 +4538,34 @@ BEGIN
        WHERE il.completed IS NOT NULL 
          AND l.process_status = 0;
   -- declare cursor for combined format - single importLoadID
-	DECLARE vhostLoadID CURSOR FOR 
-      SELECT l.id,
-             l.importfileid
+  DECLARE vhostLoadID CURSOR FOR 
+      SELECT l.id
+	      FROM apache_logs.load_access_vhost l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
+         AND l.process_status=0 FOR UPDATE;
+  -- declare cursor for combined format - single importLoadID
+  DECLARE vhostLoadIDFile CURSOR FOR 
+      SELECT DISTINCT(l.importfileid)
 	      FROM apache_logs.load_access_vhost l
   INNER JOIN apache_logs.import_file f 
           ON l.importfileid = f.id
        WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
          AND l.process_status=0;
   -- declare cursor for combined format - All importloadIDs not processed
-	DECLARE combinedStatus CURSOR FOR 
-      SELECT l.id,
-             l.importfileid
+  DECLARE combinedStatus CURSOR FOR 
+      SELECT l.id
+        FROM apache_logs.load_access_combined l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+  INNER JOIN apache_logs.import_load il 
+          ON f.importloadid = il.id
+       WHERE il.completed IS NOT NULL 
+         AND l.process_status = 0 FOR UPDATE;
+  -- declare cursor for combined format - All importloadIDs not processed
+  DECLARE combinedStatusFile CURSOR FOR 
+      SELECT DISTINCT(l.importfileid)
         FROM apache_logs.load_access_combined l
   INNER JOIN apache_logs.import_file f 
           ON l.importfileid = f.id
@@ -4534,8 +4573,24 @@ BEGIN
           ON f.importloadid = il.id
        WHERE il.completed IS NOT NULL 
          AND l.process_status = 0;
+  -- declare cursor for combined format - single importLoadID
+  DECLARE combinedLoadID CURSOR FOR 
+      SELECT l.id
+        FROM apache_logs.load_access_combined l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
+         AND l.process_status=0 FOR UPDATE;
+  -- declare cursor for combined format - single importLoadID
+  DECLARE combinedLoadIDFile CURSOR FOR 
+      SELECT DISTINCT(l.importfileid)
+        FROM apache_logs.load_access_combined l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
+         AND l.process_status=0;
   -- declare cursor for importformatid SET=2 in Python check if common format
-	DECLARE commonStatus CURSOR FOR 
+  DECLARE commonStatusFile CURSOR FOR 
       SELECT DISTINCT(l.importfileid)
         FROM apache_logs.load_access_combined l
   INNER JOIN apache_logs.import_file f 
@@ -4545,17 +4600,8 @@ BEGIN
        WHERE il.completed IS NOT NULL 
          AND l.process_status = 0
          AND l.log_useragent IS NULL;
-  -- declare cursor for combined format - single importLoadID
-	DECLARE combinedLoadID CURSOR FOR 
-      SELECT l.id,
-             l.importfileid
-        FROM apache_logs.load_access_combined l
-  INNER JOIN apache_logs.import_file f 
-          ON l.importfileid = f.id
-       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
-         AND l.process_status=0;
   -- declare cursor for importformatid SET=2 in Python check if common format
-	DECLARE commonLoadID CURSOR FOR 
+  DECLARE commonLoadIDFile CURSOR FOR 
       SELECT DISTINCT(l.importfileid)
         FROM apache_logs.load_access_combined l
   INNER JOIN apache_logs.import_file f 
@@ -4564,14 +4610,14 @@ BEGIN
          AND l.process_status = 0
          AND l.log_useragent IS NULL;
   -- declare NOT FOUND handler
-	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION 
     BEGIN
-			GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME; 
- 			CALL apache_logs.errorProcess('process_access_parse', e1, e2, e3, e4, e5, importLoad_ID, importProcessID);
+      GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME; 
+      CALL apache_logs.errorProcess('process_access_parse', e1, e2, e3, e4, e5, importLoad_ID, importProcessID);
       SET processError = processError + 1;
  			ROLLBACK;
-		END;
+    END;
   -- check parameters for valid values
   IF CONVERT(in_importLoadID, UNSIGNED) = 0 AND in_importLoadID != 'ALL' THEN
     SIGNAL SQLSTATE '22003' SET MESSAGE_TEXT = 'Invalid parameter value for in_importLoadID. Must be convert to number or be ALL';
@@ -4579,105 +4625,56 @@ BEGIN
   IF FIND_IN_SET(in_processName, "csv2mysql,vhost,combined") = 0 THEN
     SIGNAL SQLSTATE '22003' SET MESSAGE_TEXT = 'Invalid parameter value for in_processName. Must be csv2mysql, vhost OR combined';
   END IF;
-	IF NOT CONVERT(in_importLoadID, UNSIGNED) = 0 THEN
-		SET importLoad_ID = CONVERT(in_importLoadID, UNSIGNED);
-	END IF;
-	IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
-    SELECT COUNT(DISTINCT(l.importfileid))
-      INTO filesProcessed
-      FROM apache_logs.load_access_csv2mysql l
-INNER JOIN apache_logs.import_file f
-        ON l.importfileid = f.id
-INNER JOIN apache_logs.import_load il 
-        ON f.importloadid = il.id
-     WHERE il.completed IS NOT NULL 
-       AND l.process_status = 0;
-    SELECT COUNT(DISTINCT(f.importloadid))
-      INTO loadsProcessed
-      FROM apache_logs.load_access_csv2mysql l
-INNER JOIN apache_logs.import_file f 
-        ON l.importfileid = f.id
-INNER JOIN apache_logs.import_load il 
-        ON f.importloadid = il.id
-     WHERE il.completed IS NOT NULL 
-       AND l.process_status = 0;
-	ELSEIF in_processName = 'csv2mysql' THEN
-    SELECT COUNT(DISTINCT(l.importfileid))
-      INTO filesProcessed
-      FROM apache_logs.load_access_csv2mysql l
-INNER JOIN apache_logs.import_file f 
-        ON l.importfileid = f.id
-     WHERE f.importloadid = importLoad_ID
-       AND l.process_status = 0;
-	ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
-    SELECT COUNT(DISTINCT(l.importfileid))
-      INTO filesProcessed
-      FROM apache_logs.load_access_vhost l
-INNER JOIN apache_logs.import_file f 
-        ON l.importfileid = f.id
-INNER JOIN apache_logs.import_load il 
-        ON f.importloadid = il.id
-     WHERE il.completed IS NOT NULL 
-       AND l.process_status = 0;
-    SELECT COUNT(DISTINCT(f.importloadid))
-      INTO loadsProcessed
-      FROM apache_logs.load_access_vhost l
-INNER JOIN apache_logs.import_file f 
-        ON l.importfileid = f.id
-INNER JOIN apache_logs.import_load il 
-        ON f.importloadid = il.id
-     WHERE il.completed IS NOT NULL 
-       AND l.process_status = 0;
-	ELSEIF in_processName = 'vhost' THEN
-    SELECT COUNT(DISTINCT(l.importfileid))
-      INTO filesProcessed
-      FROM apache_logs.load_access_vhost l
-INNER JOIN apache_logs.import_file f 
-        ON l.importfileid = f.id
-     WHERE f.importloadid = importLoad_ID
-       AND l.process_status = 0;
-	ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
-    SELECT COUNT(DISTINCT(l.importfileid))
-      INTO filesProcessed
-      FROM apache_logs.load_access_combined l
-INNER JOIN apache_logs.import_file f 
-        ON l.importfileid = f.id
-INNER JOIN apache_logs.import_load il 
-        ON f.importloadid = il.id
-     WHERE il.completed IS NOT NULL 
-       AND l.process_status = 0;
-    SELECT COUNT(DISTINCT(f.importloadid))
-      INTO loadsProcessed
-      FROM apache_logs.load_access_combined l
-INNER JOIN apache_logs.import_file f 
-        ON l.importfileid = f.id
-INNER JOIN apache_logs.import_load il 
-        ON f.importloadid = il.id
-     WHERE il.completed IS NOT NULL 
-       AND l.process_status = 0;
-	ELSE
-    SELECT COUNT(DISTINCT(l.importfileid))
-      INTO filesProcessed
-      FROM apache_logs.load_access_combined l
-INNER JOIN apache_logs.import_file f 
-        ON l.importfileid = f.id
-     WHERE f.importloadid = importLoad_ID
-       AND l.process_status = 0;
-	END IF;	
+  IF NOT CONVERT(in_importLoadID, UNSIGNED) = 0 THEN
+    SET importLoad_ID = CONVERT(in_importLoadID, UNSIGNED);
+  END IF;
+  IF importLoad_ID IS NULL THEN
+  	IF in_processName = 'csv2mysql' THEN
+      SELECT COUNT(DISTINCT(f.importloadid))
+        INTO loadsProcessed
+        FROM apache_logs.load_access_csv2mysql l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+  INNER JOIN apache_logs.import_load il 
+          ON f.importloadid = il.id
+       WHERE il.completed IS NOT NULL 
+         AND l.process_status = 0;
+    ELSEIF in_processName = 'vhost' THEN
+      SELECT COUNT(DISTINCT(f.importloadid))
+        INTO loadsProcessed
+        FROM apache_logs.load_access_vhost l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+  INNER JOIN apache_logs.import_load il 
+          ON f.importloadid = il.id
+       WHERE il.completed IS NOT NULL 
+         AND l.process_status = 0;
+    ELSEIF in_processName = 'combined' THEN
+      SELECT COUNT(DISTINCT(f.importloadid))
+        INTO loadsProcessed
+        FROM apache_logs.load_access_combined l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+  INNER JOIN apache_logs.import_load il 
+          ON f.importloadid = il.id
+       WHERE il.completed IS NOT NULL 
+         AND l.process_status = 0;
+    END IF;
+  END IF;	
   SET importProcessID = apache_logs.importProcessID('access_parse', in_processName);
 	START TRANSACTION;
 	IF in_processName = 'combined' THEN 
     -- importformatid SET=2 in Python check if common format - 'Import File Format - 1=common,2=combined,3=vhost,4=csv2mysql,5=error_default,6=error_vhost'
     IF importLoad_ID IS NULL THEN
-      OPEN commonStatus;
+      OPEN commonStatusFile;
     ELSE
-      OPEN commonLoadID;
+      OPEN commonLoadIDFile;
 	  END IF;	
     set_commonformat: LOOP
       IF importLoad_ID IS NULL THEN
-        FETCH commonStatus INTO importFile_common_ID;
+        FETCH commonStatusFile INTO importFile_common_ID;
       ELSE
-        FETCH commonLoadID INTO importFile_common_ID;
+        FETCH commonLoadIDFile INTO importFile_common_ID;
       END IF;
       IF done = true THEN 
         LEAVE set_commonformat;
@@ -4685,14 +4682,66 @@ INNER JOIN apache_logs.import_file f
       UPDATE apache_logs.import_file 
          SET importformatid=1 
        WHERE id = importFile_common_ID;
-    END LOOP;
+    END LOOP set_commonformat;
     IF importLoad_ID IS NULL THEN
-      CLOSE commonStatus;
+      CLOSE commonStatusFile;
     ELSE
-      CLOSE commonLoadID;
+      CLOSE commonLoadIDFile;
 	  END IF;
     SET done = false;
 	END IF;	
+  -- process import_file TABLE first 
+  IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
+    OPEN csv2mysqlStatusFile;
+  ELSEIF in_processName = 'csv2mysql' THEN
+    OPEN csv2mysqlLoadIDFile;
+  ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
+    OPEN vhostStatusFile;
+	ELSEIF in_processName = 'vhost' THEN
+    OPEN vhostLoadIDFile;
+	ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
+    OPEN combinedStatusFile;
+	ELSE
+    OPEN combinedLoadIDFile;
+  END IF;	
+  process_parse_file: LOOP
+  	IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
+	  	FETCH csv2mysqlStatusFile INTO importFile_ID;
+	  ELSEIF in_processName = 'csv2mysql' THEN
+		  FETCH csv2mysqlLoadIDFile INTO importFile_ID;
+	  ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
+		  FETCH vhostStatusFile INTO importFile_ID;
+  	ELSEIF in_processName = 'vhost' THEN
+	  	FETCH vhostLoadIDFile INTO importFile_ID;
+	  ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
+  		FETCH combinedStatusFile INTO importFile_ID;
+	  ELSE
+		  FETCH combinedLoadIDFile INTO importFile_ID;
+    END IF;	
+    IF done = true THEN 
+      LEAVE process_parse_file;
+    END IF;
+    IF apache_logs.importFileCheck(importFile_ID, importProcessID, 'parse') = 0 THEN
+      ROLLBACK;
+      LEAVE process_parse_file;
+    END IF;
+    SET filesProcessed = filesProcessed + 1;
+  END LOOP process_parse_file;
+  IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
+		CLOSE csv2mysqlStatusFile;
+	ELSEIF in_processName = 'csv2mysql' THEN
+		CLOSE csv2mysqlLoadIDFile;
+	ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
+		CLOSE vhostStatusFile;
+	ELSEIF in_processName = 'vhost' THEN
+		CLOSE vhostLoadIDFile;
+	ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
+		CLOSE combinedStatusFile;
+	ELSE
+		CLOSE combinedLoadIDFile;
+	END IF;	
+  -- process records 
+  SET done = false;
   IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
     OPEN csv2mysqlStatus;
   ELSEIF in_processName = 'csv2mysql' THEN
@@ -4707,27 +4756,23 @@ INNER JOIN apache_logs.import_file f
     OPEN combinedLoadID;
   END IF;	
   process_parse: LOOP
-  	IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
-	  	FETCH csv2mysqlStatus INTO importRecordID, importFile_ID;
-	  ELSEIF in_processName = 'csv2mysql' THEN
-		  FETCH csv2mysqlLoadID INTO importRecordID, importFile_ID;
-	  ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
-		  FETCH vhostStatus INTO importRecordID, importFile_ID;
-  	ELSEIF in_processName = 'vhost' THEN
-	  	FETCH vhostLoadID INTO importRecordID, importFile_ID;
-	  ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
-  		FETCH combinedStatus INTO importRecordID, importFile_ID;
-	  ELSE
-		  FETCH combinedLoadID INTO importRecordID, importFile_ID;
-  END IF;	
-	IF done = true THEN 
-			LEAVE process_parse;
-		END IF;
-		IF apache_logs.importFileCheck(importFile_ID, importProcessID, 'parse') = 0 THEN
-			ROLLBACK;
-			LEAVE process_parse;
+    IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
+      FETCH csv2mysqlStatus INTO importRecordID;
+    ELSEIF in_processName = 'csv2mysql' THEN
+      FETCH csv2mysqlLoadID INTO importRecordID;
+    ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
+      FETCH vhostStatus INTO importRecordID;
+    ELSEIF in_processName = 'vhost' THEN
+      FETCH vhostLoadID INTO importRecordID;
+    ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
+      FETCH combinedStatus INTO importRecordID;
+    ELSE
+      FETCH combinedLoadID INTO importRecordID;
+    END IF;	
+    IF done = true THEN 
+      LEAVE process_parse;
     END IF;
-		SET recordsProcessed = recordsProcessed + 1;
+    SET recordsProcessed = recordsProcessed + 1;
     -- IF in_processName = 'csv2mysql' THEN
     -- by default, no parsing required for csv2mysql format 
     IF in_processName = 'vhost' THEN
@@ -4812,14 +4857,14 @@ INNER JOIN apache_logs.import_file f
       SET log_time = CONCAT(log_time_a, ' ', log_time_b) 
       WHERE id=importRecordID;
     END IF;
-		IF in_processName = 'csv2mysql' THEN
-			UPDATE apache_logs.load_access_csv2mysql SET process_status=1 WHERE id=importRecordID;
-		ELSEIF in_processName = 'vhost' THEN
-			UPDATE apache_logs.load_access_vhost SET process_status=1 WHERE id=importRecordID;
-		ELSE
-			UPDATE apache_logs.load_access_combined SET process_status=1 WHERE id=importRecordID;
-		END IF;	
-	END LOOP;
+    IF in_processName = 'csv2mysql' THEN
+      UPDATE apache_logs.load_access_csv2mysql SET process_status=1 WHERE id=importRecordID;
+    ELSEIF in_processName = 'vhost' THEN
+      UPDATE apache_logs.load_access_vhost SET process_status=1 WHERE id=importRecordID;
+    ELSE
+      UPDATE apache_logs.load_access_combined SET process_status=1 WHERE id=importRecordID;
+    END IF;	
+  END LOOP process_parse;
   -- to remove SQL calculating loadsProcessed when importLoad_ID is passed. Set=1 by default.
   IF importLoad_ID IS NOT NULL AND recordsProcessed=0 THEN
     SET loadsProcessed = 0;
@@ -4837,23 +4882,23 @@ INNER JOIN apache_logs.import_file f
   COMMIT;
   -- close the cursor
   IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
-		CLOSE csv2mysqlStatus;
-	ELSEIF in_processName = 'csv2mysql' THEN
-		CLOSE csv2mysqlLoadID;
-	ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
-		CLOSE vhostStatus;
-	ELSEIF in_processName = 'vhost' THEN
-		CLOSE vhostLoadID;
-	ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
-		CLOSE combinedStatus;
-	ELSE
-		CLOSE combinedLoadID;
-	END IF;	
+    CLOSE csv2mysqlStatus;
+  ELSEIF in_processName = 'csv2mysql' THEN
+    CLOSE csv2mysqlLoadID;
+  ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
+    CLOSE vhostStatus;
+  ELSEIF in_processName = 'vhost' THEN
+    CLOSE vhostLoadID;
+  ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
+    CLOSE combinedStatus;
+  ELSE
+    CLOSE combinedLoadID;
+  END IF;	
 END//
 DELIMITER ;
 -- # Stored Procedure Access Log import from LOAD TABLE and normalization below
 -- drop procedure -----------------------------------------------------------
--- DROP PROCEDURE IF EXISTS `process_access_import`;
+DROP PROCEDURE IF EXISTS `process_access_import`;
 -- create procedure ---------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` PROCEDURE `process_access_import` (
@@ -4862,9 +4907,9 @@ CREATE DEFINER = `root`@`localhost` PROCEDURE `process_access_import` (
 )
 BEGIN
   -- standard variables for processes
-	DECLARE e1 INT UNSIGNED;
-	DECLARE e2, e3 VARCHAR(128);
-	DECLARE e4, e5 VARCHAR(64);
+  DECLARE e1 INT UNSIGNED;
+  DECLARE e2, e3 VARCHAR(128);
+  DECLARE e4, e5 VARCHAR(64);
   DECLARE done BOOL DEFAULT false;
   DECLARE importProcessID INTEGER DEFAULT NULL;
   DECLARE importLoad_ID INTEGER DEFAULT NULL;
@@ -4875,79 +4920,84 @@ BEGIN
   DECLARE loadsProcessed INTEGER DEFAULT 1;
   DECLARE processError INTEGER DEFAULT 0;
   -- LOAD DATA staging table column variables
-	DECLARE logTime VARCHAR(50) DEFAULT NULL;
-	DECLARE logTimeConverted DATETIME DEFAULT now();
-	DECLARE remoteLogName VARCHAR(150) DEFAULT NULL;
-	DECLARE remoteUser VARCHAR(150) DEFAULT NULL;
-	DECLARE bytesReceived INTEGER DEFAULT 0;
-	DECLARE bytesSent INTEGER DEFAULT 0;
-	DECLARE bytesTransferred INTEGER DEFAULT 0;
-	DECLARE reqTimeMilli INTEGER DEFAULT 0;
-	DECLARE reqTimeMicro INTEGER DEFAULT 0;
-	DECLARE reqDelayMilli INTEGER DEFAULT 0;
-	DECLARE reqBytes INTEGER DEFAULT 0;
-	DECLARE reqStatus INTEGER DEFAULT 0;
-	DECLARE reqProtocol VARCHAR(30) DEFAULT NULL;
-	DECLARE reqMethod VARCHAR(50) DEFAULT NULL;
-	DECLARE reqUri VARCHAR(2000) DEFAULT NULL;
-	DECLARE reqQuery VARCHAR(2000) DEFAULT NULL;
-	DECLARE reqQueryConverted VARCHAR(2000) DEFAULT NULL;
-	DECLARE referer VARCHAR(1000) DEFAULT NULL;
-	DECLARE refererConverted VARCHAR(2000) DEFAULT NULL;
-	DECLARE userAgent VARCHAR(2000) DEFAULT NULL;
-	DECLARE logCookie VARCHAR(400) DEFAULT NULL;
-	DECLARE logCookieConverted VARCHAR(400) DEFAULT NULL;
-	DECLARE client VARCHAR(253) DEFAULT NULL;
-	DECLARE server VARCHAR(253) DEFAULT NULL;
-	DECLARE serverPort INTEGER DEFAULT NULL;
-	DECLARE serverFile VARCHAR(253) DEFAULT NULL;
-	DECLARE serverPortFile INTEGER DEFAULT NULL;
-	DECLARE requestLogID VARCHAR(50) DEFAULT NULL;
-	DECLARE importFile VARCHAR(300) DEFAULT NULL;
+  DECLARE logTime VARCHAR(50) DEFAULT NULL;
+  DECLARE logTimeConverted DATETIME DEFAULT now();
+  DECLARE remoteLogName VARCHAR(150) DEFAULT NULL;
+  DECLARE remoteUser VARCHAR(150) DEFAULT NULL;
+  DECLARE bytesReceived INTEGER DEFAULT 0;
+  DECLARE bytesSent INTEGER DEFAULT 0;
+  DECLARE bytesTransferred INTEGER DEFAULT 0;
+  DECLARE reqTimeMilli INTEGER DEFAULT 0;
+  DECLARE reqTimeMicro INTEGER DEFAULT 0;
+  DECLARE reqDelayMilli INTEGER DEFAULT 0;
+  DECLARE reqBytes INTEGER DEFAULT 0;
+  DECLARE reqStatus INTEGER DEFAULT 0;
+  DECLARE reqProtocol VARCHAR(30) DEFAULT NULL;
+  DECLARE reqMethod VARCHAR(50) DEFAULT NULL;
+  DECLARE reqUri VARCHAR(2000) DEFAULT NULL;
+  DECLARE reqQuery VARCHAR(2000) DEFAULT NULL;
+  DECLARE reqQueryConverted VARCHAR(2000) DEFAULT NULL;
+  DECLARE referer VARCHAR(1000) DEFAULT NULL;
+  DECLARE refererConverted VARCHAR(2000) DEFAULT NULL;
+  DECLARE userAgent VARCHAR(2000) DEFAULT NULL;
+  DECLARE logCookie VARCHAR(400) DEFAULT NULL;
+  DECLARE logCookieConverted VARCHAR(400) DEFAULT NULL;
+  DECLARE client VARCHAR(253) DEFAULT NULL;
+  DECLARE server VARCHAR(253) DEFAULT NULL;
+  DECLARE serverPort INTEGER DEFAULT NULL;
+  DECLARE serverFile VARCHAR(253) DEFAULT NULL;
+  DECLARE serverPortFile INTEGER DEFAULT NULL;
+  DECLARE requestLogID VARCHAR(50) DEFAULT NULL;
+  DECLARE importFile VARCHAR(300) DEFAULT NULL;
   -- Primary IDs for the normalized Attribute tables
-	DECLARE remoteLogName_Id, 
-		remoteUser_Id, 
-		reqStatus_Id, 
-		reqProtocol_Id, 
-		reqMethod_Id, 
-		reqUri_Id, 
-		reqQuery_Id, 
-		referer_Id, 
-		userAgent_Id, 
-		logCookie_Id, 
-		client_Id, 
-		server_Id, 
-		serverPort_Id, 
-		requestLog_Id 
-		INTEGER DEFAULT NULL;
+  DECLARE remoteLogName_Id, 
+          remoteUser_Id, 
+          reqStatus_Id, 
+          reqProtocol_Id, 
+          reqMethod_Id, 
+          reqUri_Id, 
+          reqQuery_Id, 
+          referer_Id, 
+          userAgent_Id, 
+          logCookie_Id, 
+          client_Id, 
+          server_Id, 
+          serverPort_Id, 
+          requestLog_Id INTEGER DEFAULT NULL;
   -- declare cursor for csv2mysql format - All importloadIDs not processed
-	DECLARE csv2mysqlStatus CURSOR FOR 
+  DECLARE csv2mysqlStatus CURSOR FOR 
       SELECT l.remote_host, 
- 		        l.remote_logname, 
-    	  	  l.remote_user, 
-		        l.log_time, 
-		        l.bytes_received, 
-      		  l.bytes_sent, 
-	      	  l.bytes_transferred, 
-		        l.reqtime_milli, 
-    		    l.reqtime_micro, 
-  	    	  l.reqdelay_milli, 
-	  	      l.req_bytes, 
-    		    l.req_status, 
-		        l.req_protocol, 
-  		      l.req_method, 
-    	  	  l.req_uri, 
-		        l.req_query, 
-		        l.log_referer, 
-      		  l.log_useragent,
-	      	  l.log_cookie,
-		        l.server_name, 
-    		    l.server_port, 
-            l.request_log_id, 
-		        l.importfileid,
- 	  	      f.server_name server_name_file, 
-     		    f.server_port server_port_file, 
-		        l.id 
+             l.remote_logname, 
+             l.remote_user, 
+             l.log_time, 
+             l.bytes_received, 
+             l.bytes_sent, 
+             l.bytes_transferred, 
+             l.reqtime_milli, 
+             l.reqtime_micro, 
+             l.reqdelay_milli, 
+             l.req_bytes, 
+             l.req_status, 
+             l.req_protocol, 
+             l.req_method, 
+             l.req_uri, 
+             l.req_query, 
+             l.log_referer, 
+             l.log_useragent,
+             l.log_cookie,
+             l.server_name, 
+             l.server_port, 
+             l.request_log_id, 
+             f.server_name server_name_file, 
+             f.server_port server_port_file, 
+             l.id 
+        FROM apache_logs.load_access_csv2mysql l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE l.process_status=1 FOR UPDATE;
+  -- declare cursor for csv2mysql format - All importloadIDs not processed
+	DECLARE csv2mysqlStatusFile CURSOR FOR 
+      SELECT l.importfileid
         FROM apache_logs.load_access_csv2mysql l
   INNER JOIN apache_logs.import_file f 
           ON l.importfileid = f.id
@@ -4955,31 +5005,38 @@ BEGIN
   -- declare cursor for csv2mysql format - single importLoadID
 	DECLARE csv2mysqlLoadID CURSOR FOR 
       SELECT l.remote_host, 
-      		  l.remote_logname, 
-	      	  l.remote_user, 
-  		      l.log_time, 
-	  	      l.bytes_received, 
-    	  	  l.bytes_sent, 
-	    	    l.bytes_transferred, 
-		        l.reqtime_milli, 
-    		    l.reqtime_micro, 
-  		      l.reqdelay_milli, 
-    	  	  l.req_bytes, 
-    		    l.req_status, 
-    		    l.req_protocol, 
-      		  l.req_method, 
-	      	  l.req_uri, 
-		        l.req_query, 
-    		    l.log_referer, 
-      		  l.log_useragent,
-	      	  l.log_cookie,
-    		    l.server_name, 
-    		    l.server_port, 
-            l.request_log_id, 
-		        l.importfileid,
- 	  	      f.server_name server_name_file, 
-     		    f.server_port server_port_file, 
-    		    l.id 
+             l.remote_logname, 
+             l.remote_user, 
+             l.log_time, 
+             l.bytes_received, 
+             l.bytes_sent, 
+             l.bytes_transferred, 
+             l.reqtime_milli, 
+             l.reqtime_micro, 
+             l.reqdelay_milli, 
+             l.req_bytes, 
+             l.req_status, 
+             l.req_protocol, 
+             l.req_method, 
+             l.req_uri, 
+             l.req_query, 
+             l.log_referer, 
+             l.log_useragent,
+             l.log_cookie,
+             l.server_name, 
+             l.server_port, 
+             l.request_log_id, 
+             f.server_name server_name_file, 
+             f.server_port server_port_file, 
+             l.id 
+  	    FROM apache_logs.load_access_csv2mysql l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
+         AND l.process_status=1 FOR UPDATE;
+  -- declare cursor for csv2mysql format - single importLoadID
+	DECLARE csv2mysqlLoadIDFile CURSOR FOR 
+      SELECT l.importfileid
   	    FROM apache_logs.load_access_csv2mysql l
   INNER JOIN apache_logs.import_file f 
           ON l.importfileid = f.id
@@ -4988,23 +5045,29 @@ BEGIN
   -- declare cursor for combined format - All importloadIDs not processed
 	DECLARE vhostStatus CURSOR FOR 
       SELECT l.remote_host, 
-    		    l.remote_logname, 
-		        l.remote_user, 
-      		  l.log_time, 
-	      	  l.req_bytes, 
-		        l.req_status, 
-    		    l.req_protocol, 
-  	    	  l.req_method, 
-	  	      l.req_uri, 
-    		    l.req_query, 
-		        l.log_referer, 
-  		      l.log_useragent,
-	  	      l.server_name, 
-    		    l.server_port, 
-  	    	  l.importfileid,
- 	  	      f.server_name server_name_file, 
-     		    f.server_port server_port_file, 
-	  	      l.id 
+             l.remote_logname, 
+             l.remote_user, 
+             l.log_time, 
+             l.req_bytes, 
+             l.req_status, 
+             l.req_protocol, 
+             l.req_method, 
+             l.req_uri, 
+             l.req_query, 
+             l.log_referer, 
+             l.log_useragent,
+             l.server_name, 
+             l.server_port, 
+             f.server_name server_name_file, 
+             f.server_port server_port_file, 
+             l.id 
+  	    FROM apache_logs.load_access_vhost l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE l.process_status=1 FOR UPDATE;
+  -- declare cursor for combined format - All importloadIDs not processed
+	DECLARE vhostStatusFile CURSOR FOR 
+      SELECT l.importfileid
   	    FROM apache_logs.load_access_vhost l
   INNER JOIN apache_logs.import_file f 
           ON l.importfileid = f.id
@@ -5012,23 +5075,30 @@ BEGIN
   -- declare cursor for combined format - single importLoadID
 	DECLARE vhostLoadID CURSOR FOR 
       SELECT l.remote_host, 
-    		    l.remote_logname, 
-		        l.remote_user, 
-      		  l.log_time, 
-	      	  l.req_bytes, 
-    		    l.req_status, 
-		        l.req_protocol, 
-  		      l.req_method, 
-    	  	  l.req_uri, 
-		        l.req_query, 
-		        l.log_referer, 
-      		  l.log_useragent,
-	      	  l.server_name, 
-		        l.server_port, 
-      		  l.importfileid,
- 	  	      f.server_name server_name_file, 
-     		    f.server_port server_port_file, 
-	      	  l.id 
+             l.remote_logname, 
+             l.remote_user, 
+             l.log_time, 
+             l.req_bytes, 
+             l.req_status, 
+             l.req_protocol, 
+             l.req_method, 
+             l.req_uri, 
+             l.req_query, 
+             l.log_referer, 
+             l.log_useragent,
+             l.server_name, 
+             l.server_port, 
+             f.server_name server_name_file, 
+             f.server_port server_port_file, 
+             l.id 
+	      FROM apache_logs.load_access_vhost l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
+         AND l.process_status=1 FOR UPDATE;
+  -- declare cursor for combined format - single importLoadID
+	DECLARE vhostLoadIDFile CURSOR FOR 
+      SELECT l.importfileid
 	      FROM apache_logs.load_access_vhost l
   INNER JOIN apache_logs.import_file f 
           ON l.importfileid = f.id
@@ -5037,23 +5107,29 @@ BEGIN
   -- declare cursor for combined format - All importloadIDs not processed
 	DECLARE combinedStatus CURSOR FOR 
       SELECT l.remote_host, 
-    		    l.remote_logname, 
-  	    	  l.remote_user, 
-    	  	  l.log_time, 
-    		    l.req_bytes, 
-    		    l.req_status, 
-  	    	  l.req_protocol, 
-    	  	  l.req_method, 
-		        l.req_uri, 
-		        l.req_query, 
-      		  l.log_referer, 
-    	  	  l.log_useragent,
-	  	      l.server_name, 
-    		    l.server_port, 
-    		    l.importfileid,
- 	  	      f.server_name server_name_file, 
-     		    f.server_port server_port_file, 
-		        l.id 
+             l.remote_logname, 
+             l.remote_user, 
+             l.log_time, 
+             l.req_bytes, 
+             l.req_status, 
+             l.req_protocol, 
+             l.req_method, 
+             l.req_uri, 
+             l.req_query, 
+             l.log_referer, 
+             l.log_useragent,
+             l.server_name, 
+             l.server_port, 
+             f.server_name server_name_file, 
+             f.server_port server_port_file, 
+             l.id 
+        FROM apache_logs.load_access_combined l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE l.process_status=1 FOR UPDATE;
+  -- declare cursor for combined format - All importloadIDs not processed
+	DECLARE combinedStatusFile CURSOR FOR 
+      SELECT l.importfileid
         FROM apache_logs.load_access_combined l
   INNER JOIN apache_logs.import_file f 
           ON l.importfileid = f.id
@@ -5061,23 +5137,30 @@ BEGIN
   -- declare cursor for combined format - single importLoadID
 	DECLARE combinedLoadID CURSOR FOR 
       SELECT l.remote_host, 
-    		    l.remote_logname, 
-  	    	  l.remote_user, 
-    	  	  l.log_time, 
-    		    l.req_bytes, 
-    		    l.req_status, 
-  	    	  l.req_protocol, 
-    	  	  l.req_method, 
-		        l.req_uri, 
-		        l.req_query, 
-      		  l.log_referer, 
-    	  	  l.log_useragent,
-	  	      l.server_name, 
-    		    l.server_port, 
-    		    l.importfileid,
- 	  	      f.server_name server_name_file, 
-     		    f.server_port server_port_file, 
-		        l.id 
+             l.remote_logname, 
+             l.remote_user, 
+             l.log_time, 
+             l.req_bytes, 
+             l.req_status, 
+             l.req_protocol, 
+             l.req_method, 
+             l.req_uri, 
+             l.req_query, 
+             l.log_referer, 
+             l.log_useragent,
+             l.server_name, 
+             l.server_port, 
+             f.server_name server_name_file, 
+             f.server_port server_port_file, 
+             l.id 
+        FROM apache_logs.load_access_combined l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
+         AND l.process_status=1 FOR UPDATE;
+  -- declare cursor for combined format - single importLoadID
+	DECLARE combinedLoadIDFile CURSOR FOR 
+      SELECT l.importfileid
         FROM apache_logs.load_access_combined l
   INNER JOIN apache_logs.import_file f 
           ON l.importfileid = f.id
@@ -5102,66 +5185,87 @@ BEGIN
 	IF NOT CONVERT(in_importLoadID, UNSIGNED) = 0 THEN
 		SET importLoad_ID = CONVERT(in_importLoadID, UNSIGNED);
 	END IF;
-	IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
-    SELECT COUNT(DISTINCT(l.importfileid))
-      INTO filesProcessed
-      FROM apache_logs.load_access_csv2mysql l
-     WHERE l.process_status = 1;
-    SELECT COUNT(DISTINCT(f.importloadid))
-      INTO loadsProcessed
-      FROM apache_logs.load_access_csv2mysql l
-INNER JOIN apache_logs.import_file f 
-        ON l.importfileid = f.id
-     WHERE l.process_status = 1;
-	ELSEIF in_processName = 'csv2mysql' THEN
-    SELECT COUNT(DISTINCT(l.importfileid))
-      INTO filesProcessed
-      FROM apache_logs.load_access_csv2mysql l
-INNER JOIN apache_logs.import_file f 
-        ON l.importfileid = f.id
-     WHERE l.process_status = 1
-       AND f.importloadid = importLoad_ID;
-	ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
-    SELECT COUNT(DISTINCT(l.importfileid))
-      INTO filesProcessed
-      FROM apache_logs.load_access_vhost l
-     WHERE l.process_status = 1;
-    SELECT COUNT(DISTINCT(f.importloadid))
-      INTO loadsProcessed
-      FROM apache_logs.load_access_vhost l
-INNER JOIN apache_logs.import_file f 
-        ON l.importfileid = f.id
-     WHERE l.process_status = 1;
-	ELSEIF in_processName = 'vhost' THEN
-    SELECT COUNT(DISTINCT(l.importfileid))
-      INTO filesProcessed
-      FROM apache_logs.load_access_vhost l
-INNER JOIN apache_logs.import_file f 
-        ON l.importfileid = f.id
-     WHERE l.process_status = 1
-       AND f.importloadid = importLoad_ID;
-	ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
-    SELECT COUNT(DISTINCT(l.importfileid))
-      INTO filesProcessed
-      FROM apache_logs.load_access_combined l
-     WHERE l.process_status = 1;
-    SELECT COUNT(DISTINCT(f.importloadid))
-      INTO loadsProcessed
-      FROM apache_logs.load_access_combined l
-INNER JOIN apache_logs.import_file f 
-        ON l.importfileid = f.id
-     WHERE l.process_status = 1;
-	ELSE
-    SELECT COUNT(DISTINCT(l.importfileid))
-      INTO filesProcessed
-      FROM apache_logs.load_access_combined l
-INNER JOIN apache_logs.import_file f 
-        ON l.importfileid = f.id
-     WHERE l.process_status = 1
-       AND f.importloadid = importLoad_ID;
-	END IF;	
+  IF importLoad_ID IS NULL THEN
+    IF in_processName = 'csv2mysql' THEN
+      SELECT COUNT(DISTINCT(f.importloadid))
+        INTO loadsProcessed
+        FROM apache_logs.load_access_csv2mysql l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE l.process_status = 1;
+      ELSEIF in_processName = 'vhost' THEN
+      SELECT COUNT(DISTINCT(f.importloadid))
+        INTO loadsProcessed
+        FROM apache_logs.load_access_vhost l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE l.process_status = 1;
+    ELSEIF in_processName = 'combined' THEN
+      SELECT COUNT(DISTINCT(f.importloadid))
+        INTO loadsProcessed
+        FROM apache_logs.load_access_combined l
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE l.process_status = 1;
+    END IF;	
+  END IF;	
   SET importProcessID = apache_logs.importProcessID('access_import', in_processName);
+
 	START TRANSACTION;
+-- process import_file TABLE first 
+-- open the cursor
+	IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
+		OPEN csv2mysqlStatusFile;
+	ELSEIF in_processName = 'csv2mysql' THEN
+		OPEN csv2mysqlLoadIDFile;
+	ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
+		OPEN vhostStatusFile;
+	ELSEIF in_processName = 'vhost' THEN
+		OPEN vhostLoadIDFile;
+	ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
+		OPEN combinedStatusFile;
+	ELSE
+		OPEN combinedLoadIDFile;
+	END IF;	
+  process_import_file: LOOP
+  	IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
+	  	FETCH csv2mysqlStatusFile INTO importFile_ID; 
+	  ELSEIF in_processName = 'csv2mysql' THEN
+		  FETCH csv2mysqlLoadIDFile INTO importFile_ID;
+  	ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
+	  	FETCH vhostStatusFile INTO importFile_ID; 
+  	ELSEIF in_processName = 'vhost' THEN
+	  	FETCH vhostLoadIDFile INTO importFile_ID; 
+	  ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
+		  FETCH combinedStatusFile INTO importFile_ID; 
+	  ELSE
+		  FETCH combinedLoadIDFile INTO importFile_ID; 
+  	END IF;	
+		IF done = true THEN 
+			LEAVE process_import_file;
+		END IF;
+		IF apache_logs.importFileCheck(importFile_ID, importProcessID, 'import') = 0 THEN
+			ROLLBACK;
+			LEAVE process_import_file;
+    END IF;
+		SET filesProcessed = filesProcessed + 1;
+	END LOOP process_import_file;
+  -- close the cursor
+  IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
+		CLOSE csv2mysqlStatusFile;
+	ELSEIF in_processName = 'csv2mysql' THEN
+		CLOSE csv2mysqlLoadIDFile;
+	ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
+		CLOSE vhostStatusFile;
+	ELSEIF in_processName = 'vhost' THEN
+		CLOSE vhostLoadIDFile;
+	ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
+		CLOSE combinedStatusFile;
+	ELSE
+		CLOSE combinedLoadIDFile;
+	END IF;	
+  -- process records 
+  SET done = false;
   -- open the cursor
 	IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
 		OPEN csv2mysqlStatus;
@@ -5177,152 +5281,142 @@ INNER JOIN apache_logs.import_file f
 		OPEN combinedLoadID;
 	END IF;	
   process_import: LOOP
-  	IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
-	  	FETCH csv2mysqlStatus INTO 
-		  	client, 
-  			remoteLogName, 
-			  remoteUser, 
-	  		logTime, 
-		  	bytesReceived, 
-			  bytesSent, 
-  			bytesTransferred, 
-	  		reqTimeMilli, 
-		  	reqTimeMicro, 
-	  		reqDelayMilli, 
-  			reqBytes, 
-		  	reqStatus, 
-			  reqProtocol, 
-  			reqMethod, 
-	  		reqUri, 
-		  	reqQuery, 
-			  referer, 
-  			userAgent,
-	  		logCookie,
-		  	server, 
-			  serverPort, 
-      	requestLogID, 
-  			importFile_ID,
-		  	serverFile, 
-			  serverPortFile, 
-        importRecordID; 
-	  ELSEIF in_processName = 'csv2mysql' THEN
-		  FETCH csv2mysqlLoadID INTO 
-  			client, 
-		  	remoteLogName, 
-	  		remoteUser, 
-			  logTime, 
-  			bytesReceived, 
-	  		bytesSent, 
-		  	bytesTransferred, 
-			  reqTimeMilli, 
-  			reqTimeMicro, 
-	  		reqDelayMilli, 
-		  	reqBytes, 
-			  reqStatus, 
-  			reqProtocol, 
-	  		reqMethod, 
-		  	reqUri, 
-			  reqQuery, 
-  			referer, 
-	  		userAgent,
-		  	logCookie,
-			  server, 
-  			serverPort, 
-      	requestLogID, 
-	  		importFile_ID,
-		  	serverFile, 
-			  serverPortFile, 
-        importRecordID; 
-  	ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
-	  	FETCH vhostStatus INTO 
-		  	client, 
-	  		remoteLogName, 
-  			remoteUser, 
-		  	logTime, 
-			  reqBytes, 
-  			reqStatus, 
-	  		reqProtocol, 
-		  	reqMethod, 
-			  reqUri, 
-  			reqQuery, 
-	  		referer, 
-		  	userAgent,
-			  server, 
-  			serverPort, 
-	  		importFile_ID,
-		  	serverFile, 
-			  serverPortFile, 
-        importRecordID; 
-  	ELSEIF in_processName = 'vhost' THEN
-	  	FETCH vhostLoadID INTO 
-		  	client, 
-  			remoteLogName, 
-			  remoteUser, 
-	  		logTime, 
-		  	reqBytes, 
-			  reqStatus, 
-  			reqProtocol, 
-	  		reqMethod, 
-		  	reqUri, 
-  			reqQuery, 
-	  		referer, 
-		  	userAgent,
-			  server, 
-  			serverPort, 
-	  		importFile_ID,
-		  	serverFile, 
-			  serverPortFile, 
-        importRecordID; 
-	  ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
-		  FETCH combinedStatus INTO 
-  			client, 
-		  	remoteLogName, 
-	  		remoteUser, 
-			  logTime, 
-  			reqBytes, 
-	  		reqStatus, 
-		  	reqProtocol, 
-			  reqMethod, 
-  			reqUri, 
-	  		reqQuery, 
-		  	referer, 
-			  userAgent,
-			  server, 
-  			serverPort, 
-  			importFile_ID,
-		  	serverFile, 
-			  serverPortFile, 
-        importRecordID; 
-	  ELSE
-		  FETCH combinedLoadID INTO 
-  			client, 
-		  	remoteLogName, 
-	  		remoteUser, 
-			  logTime, 
-  			reqBytes, 
-	  		reqStatus, 
-		  	reqProtocol, 
-			  reqMethod, 
-  			reqUri, 
-	  		reqQuery, 
-		  	referer, 
-  			userAgent,
-			  server, 
-  			serverPort, 
-	  		importFile_ID,
-		  	serverFile, 
-			  serverPortFile, 
-        importRecordID; 
-  	END IF;	
-		IF done = true THEN 
-			LEAVE process_import;
-		END IF;
-		IF apache_logs.importFileCheck(importFile_ID, importProcessID, 'import') = 0 THEN
-			ROLLBACK;
-			LEAVE process_import;
+    IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
+      FETCH csv2mysqlStatus INTO 
+            client, 
+            remoteLogName, 
+            remoteUser, 
+            logTime, 
+            bytesReceived, 
+            bytesSent, 
+            bytesTransferred, 
+            reqTimeMilli, 
+            reqTimeMicro, 
+            reqDelayMilli, 
+            reqBytes, 
+            reqStatus, 
+            reqProtocol, 
+            reqMethod, 
+            reqUri, 
+            reqQuery, 
+            referer, 
+            userAgent,
+            logCookie,
+            server, 
+            serverPort, 
+            requestLogID, 
+            serverFile, 
+            serverPortFile, 
+            importRecordID; 
+    ELSEIF in_processName = 'csv2mysql' THEN
+      FETCH csv2mysqlLoadID INTO 
+            client, 
+            remoteLogName, 
+            remoteUser, 
+            logTime, 
+            bytesReceived, 
+            bytesSent, 
+            bytesTransferred, 
+            reqTimeMilli, 
+            reqTimeMicro, 
+            reqDelayMilli, 
+            reqBytes, 
+            reqStatus, 
+            reqProtocol, 
+            reqMethod, 
+            reqUri, 
+            reqQuery, 
+            referer, 
+            userAgent,
+            logCookie,
+            server, 
+            serverPort, 
+            requestLogID, 
+            serverFile, 
+            serverPortFile, 
+            importRecordID; 
+    ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
+      FETCH vhostStatus INTO 
+            client, 
+            remoteLogName, 
+            remoteUser, 
+            logTime, 
+            reqBytes, 
+            reqStatus, 
+            reqProtocol, 
+            reqMethod, 
+            reqUri, 
+            reqQuery, 
+            referer, 
+            userAgent,
+            server, 
+            serverPort, 
+            serverFile, 
+            serverPortFile, 
+            importRecordID; 
+    ELSEIF in_processName = 'vhost' THEN
+      FETCH vhostLoadID INTO 
+            client, 
+            remoteLogName, 
+            remoteUser, 
+            logTime, 
+            reqBytes, 
+            reqStatus, 
+            reqProtocol, 
+            reqMethod, 
+            reqUri, 
+            reqQuery, 
+            referer, 
+            userAgent,
+            server, 
+            serverPort, 
+            serverFile, 
+            serverPortFile, 
+            importRecordID; 
+    ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
+      FETCH combinedStatus INTO 
+            client, 
+            remoteLogName, 
+            remoteUser, 
+            logTime, 
+            reqBytes, 
+            reqStatus, 
+            reqProtocol, 
+            reqMethod, 
+            reqUri, 
+            reqQuery, 
+            referer, 
+            userAgent,
+            server, 
+            serverPort, 
+            serverFile, 
+            serverPortFile, 
+            importRecordID; 
+    ELSE
+      FETCH combinedLoadID INTO 
+            client, 
+            remoteLogName, 
+            remoteUser, 
+            logTime, 
+            reqBytes, 
+            reqStatus, 
+            reqProtocol, 
+            reqMethod, 
+            reqUri, 
+            reqQuery, 
+            referer, 
+            userAgent,
+            server, 
+            serverPort, 
+            serverFile, 
+            serverPortFile, 
+            importRecordID; 
+    END IF;	
+    IF done = true THEN 
+      LEAVE process_import;
     END IF;
-		SET recordsProcessed = recordsProcessed + 1;
-	  SET remoteLogName_Id = null, 
+    SET recordsProcessed = recordsProcessed + 1;
+    SET remoteLogName_Id = null, 
 		    remoteUser_Id = null, 
 		    reqStatus_Id = null, 
     		reqProtocol_Id = null, 
@@ -5338,134 +5432,134 @@ INNER JOIN apache_logs.import_file f
         requestLog_Id = null;
     -- any customizing for business needs should be done here before normalization functions called.
     -- convert import staging columns - reqQuery, referer, log_time and log_cookie in import for audit purposes
-		IF LOCATE("?", reqQuery)>0 THEN
-			SET reqQueryConverted = SUBSTR(reqQuery, LOCATE("?", reqQuery)+1);
-		ELSE
-			SET reqQueryConverted = reqQuery;
-		END IF;
-		IF LOCATE("?", referer)>0 THEN
-			SET refererConverted = SUBSTR(referer,1,LOCATE("?", referer)-1);
-		ELSE
-			SET refererConverted = referer;
-		END IF;
-		IF LOCATE("[", logTime)>0 THEN
-			SET logTimeConverted = STR_TO_DATE(SUBSTR(logTime, 2, 20), '%d/%b/%Y:%H:%i:%s');
-		ELSE
-			SET logTimeConverted = STR_TO_DATE(SUBSTR(logTime, 1, 20), '%d/%b/%Y:%H:%i:%s');
-		END IF;
-		IF logCookie IS NULL OR logCookie = '-' THEN
-			SET logCookieConverted = NULL;
-		ELSEIF LOCATE('.', logCookie) > 0 THEN
-			SET logCookieConverted = SUBSTR(logCookie, 3, LOCATE('.', logCookie)-3);
+    IF LOCATE("?", reqQuery)>0 THEN
+      SET reqQueryConverted = SUBSTR(reqQuery, LOCATE("?", reqQuery)+1);
     ELSE
-			SET logCookieConverted = logCookie;
-		END IF;
+      SET reqQueryConverted = reqQuery;
+    END IF;
+    IF LOCATE("?", referer)>0 THEN
+      SET refererConverted = SUBSTR(referer,1,LOCATE("?", referer)-1);
+    ELSE
+      SET refererConverted = referer;
+    END IF;
+    IF LOCATE("[", logTime)>0 THEN
+      SET logTimeConverted = STR_TO_DATE(SUBSTR(logTime, 2, 20), '%d/%b/%Y:%H:%i:%s');
+    ELSE
+      SET logTimeConverted = STR_TO_DATE(SUBSTR(logTime, 1, 20), '%d/%b/%Y:%H:%i:%s');
+    END IF;
+    IF logCookie IS NULL OR logCookie = '-' THEN
+      SET logCookieConverted = NULL;
+    ELSEIF LOCATE('.', logCookie) > 0 THEN
+      SET logCookieConverted = SUBSTR(logCookie, 3, LOCATE('.', logCookie)-3);
+    ELSE
+      SET logCookieConverted = logCookie;
+    END IF;
 -- normalize import staging table 
-		IF reqProtocol IS NOT NULL THEN
-			SET reqProtocol_Id = apache_logs.access_reqProtocolID(reqProtocol);
+    IF reqProtocol IS NOT NULL THEN
+      SET reqProtocol_Id = apache_logs.access_reqProtocolID(reqProtocol);
     END IF;
-		IF reqMethod IS NOT NULL THEN
-			SET reqMethod_Id = apache_logs.access_reqMethodID(reqMethod);
+    IF reqMethod IS NOT NULL THEN
+      SET reqMethod_Id = apache_logs.access_reqMethodID(reqMethod);
     END IF;
-		IF reqStatus IS NOT NULL THEN
-			SET reqStatus_Id = apache_logs.access_reqStatusID(reqStatus);
+    IF reqStatus IS NOT NULL THEN
+      SET reqStatus_Id = apache_logs.access_reqStatusID(reqStatus);
     END IF;
-		IF reqUri IS NOT NULL THEN
-			SET reqUri_Id = apache_logs.access_reqUriID(reqUri);
+    IF reqUri IS NOT NULL THEN
+      SET reqUri_Id = apache_logs.access_reqUriID(reqUri);
     END IF;
-		IF reqQueryConverted IS NOT NULL THEN
-			SET reqQuery_Id = apache_logs.access_reqQueryID(reqQueryConverted);
+    IF reqQueryConverted IS NOT NULL THEN
+      SET reqQuery_Id = apache_logs.access_reqQueryID(reqQueryConverted);
     END IF;
-		IF remoteLogName IS NOT NULL AND remoteLogName != '-' THEN
-			SET remoteLogName_Id = apache_logs.access_remoteLogNameID(remoteLogName);
+    IF remoteLogName IS NOT NULL AND remoteLogName != '-' THEN
+      SET remoteLogName_Id = apache_logs.access_remoteLogNameID(remoteLogName);
     END IF;
-		IF remoteUser IS NOT NULL AND remoteUser != '-' THEN
-			SET remoteUser_Id = apache_logs.access_remoteUserID(remoteUser);
+    IF remoteUser IS NOT NULL AND remoteUser != '-' THEN
+      SET remoteUser_Id = apache_logs.access_remoteUserID(remoteUser);
     END IF;
-		IF userAgent IS NOT NULL THEN
-			SET userAgent_Id = apache_logs.access_userAgentID(userAgent);
+    IF userAgent IS NOT NULL THEN
+      SET userAgent_Id = apache_logs.access_userAgentID(userAgent);
     END IF;
-		IF logCookieConverted IS NOT NULL THEN
-			SET logCookie_Id = apache_logs.access_cookieID(logCookieConverted);
+    IF logCookieConverted IS NOT NULL THEN
+      SET logCookie_Id = apache_logs.access_cookieID(logCookieConverted);
     END IF;
-		IF refererConverted IS NOT NULL AND refererConverted != '-' THEN
-			SET referer_Id = apache_logs.log_refererID(refererConverted);
+    IF refererConverted IS NOT NULL AND refererConverted != '-' THEN
+      SET referer_Id = apache_logs.log_refererID(refererConverted);
     END IF;
-		IF client IS NOT NULL THEN
-			SET client_Id = apache_logs.log_clientID(client);
+    IF client IS NOT NULL THEN
+      SET client_Id = apache_logs.log_clientID(client);
     END IF;
-		IF server IS NOT NULL THEN
-			SET server_Id = apache_logs.log_serverID(server);
-		ELSEIF serverFile IS NOT NULL THEN
-			SET server_Id = apache_logs.log_serverID(serverFile);
+    IF server IS NOT NULL THEN
+      SET server_Id = apache_logs.log_serverID(server);
+    ELSEIF serverFile IS NOT NULL THEN
+      SET server_Id = apache_logs.log_serverID(serverFile);
     END IF;
-		IF serverPort IS NOT NULL THEN
-			SET serverPort_Id = apache_logs.log_serverPortID(serverPort);
-		ELSEIF serverPortFile IS NOT NULL THEN
-			SET serverPort_Id = apache_logs.log_serverPortID(serverPortFile);
+    IF serverPort IS NOT NULL THEN
+      SET serverPort_Id = apache_logs.log_serverPortID(serverPort);
+    ELSEIF serverPortFile IS NOT NULL THEN
+      SET serverPort_Id = apache_logs.log_serverPortID(serverPortFile);
     END IF;
-		IF requestLogID IS NOT NULL AND requestLogID != '-' THEN
-  		IF server_Id IS NOT NULL THEN
+    IF requestLogID IS NOT NULL AND requestLogID != '-' THEN
+      IF server_Id IS NOT NULL THEN
         SET requestLogID = CONCAT(requestLogID, '_', CONVERT(server_Id, CHAR));
       END IF;
-			SET requestLog_Id = apache_logs.log_requestLogID(requestLogID);
-		END IF;
-		INSERT INTO apache_logs.access_log 
+      SET requestLog_Id = apache_logs.log_requestLogID(requestLogID);
+    END IF;
+    INSERT INTO apache_logs.access_log 
       (logged, 
-		  bytes_received,
-		  bytes_sent,
-		  bytes_transferred,
-		  reqtime_milli,
-		  reqtime_micro,
-		  reqdelay_milli,
-		  reqbytes,
-  		reqstatusid, 
-	  	reqprotocolid, 
-		  reqmethodid, 
-			requriid, 
-  		reqqueryid, 
-		  remotelognameid,
-			remoteuserid, 
-	  	useragentid,
-		  cookieid,
-  		refererid, 
-	  	clientid,
-			serverid, 
-  		serverportid, 
-      requestlogid, 
-	  	importfileid) 
-		VALUES
-			(logTimeConverted,
-			bytesReceived,
-			bytesSent,
-			bytesTransferred,
-			reqTimeMilli,
-			reqTimeMicro,
-			reqDelayMilli,
-			reqBytes,
-			reqStatus_Id,
-			reqProtocol_Id,
-			reqMethod_Id,
-			reqUri_Id,
-			reqQuery_Id,
-			remoteLogName_Id,
-			remoteUser_Id,
-			userAgent_Id,
-			logCookie_Id,
-			referer_Id,
-			client_Id,
-			server_Id, 
-			serverPort_Id, 
-			requestLog_Id, 
-			importFile_ID);
-		IF in_processName = 'csv2mysql' THEN
-			UPDATE apache_logs.load_access_csv2mysql SET process_status=2 WHERE id=importRecordID;
-		ELSEIF in_processName = 'vhost' THEN
-			UPDATE apache_logs.load_access_vhost SET process_status=2 WHERE id=importRecordID;
-		ELSE
-			UPDATE apache_logs.load_access_combined SET process_status=2 WHERE id=importRecordID;
-		END IF;	
-	END LOOP;
+       bytes_received,
+       bytes_sent,
+       bytes_transferred,
+       reqtime_milli,
+       reqtime_micro,
+       reqdelay_milli,
+       reqbytes,
+       reqstatusid, 
+       reqprotocolid, 
+       reqmethodid, 
+       requriid, 
+       reqqueryid, 
+       remotelognameid,
+       remoteuserid, 
+       useragentid,
+       cookieid,
+       refererid, 
+       clientid,
+       serverid, 
+       serverportid, 
+       requestlogid, 
+       importfileid) 
+    VALUES
+      (logTimeConverted,
+       bytesReceived,
+       bytesSent,
+       bytesTransferred,
+       reqTimeMilli,
+       reqTimeMicro,
+       reqDelayMilli,
+       reqBytes,
+       reqStatus_Id,
+       reqProtocol_Id,
+       reqMethod_Id,
+       reqUri_Id,
+       reqQuery_Id,
+       remoteLogName_Id,
+       remoteUser_Id,
+       userAgent_Id,
+       logCookie_Id,
+       referer_Id,
+       client_Id,
+       server_Id, 
+       serverPort_Id, 
+       requestLog_Id, 
+       importFile_ID);
+    IF in_processName = 'csv2mysql' THEN
+      UPDATE apache_logs.load_access_csv2mysql SET process_status=2 WHERE id=importRecordID;
+    ELSEIF in_processName = 'vhost' THEN
+      UPDATE apache_logs.load_access_vhost SET process_status=2 WHERE id=importRecordID;
+    ELSE
+      UPDATE apache_logs.load_access_combined SET process_status=2 WHERE id=importRecordID;
+    END IF;	
+  END LOOP process_import;
   -- to remove SQL calculating loadsProcessed when importLoad_ID is passed. Set=1 by default.
   IF importLoad_ID IS NOT NULL AND recordsProcessed=0 THEN
     SET loadsProcessed = 0;
@@ -5499,7 +5593,7 @@ END//
 DELIMITER ;
 -- # Stored Procedure Error Log parsing performed on LOAD TABLE data below
 -- drop procedure -----------------------------------------------------------
--- DROP PROCEDURE IF EXISTS `process_error_parse`;
+DROP PROCEDURE IF EXISTS `process_error_parse`;
 -- create procedure ---------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` PROCEDURE `process_error_parse` (
@@ -5507,7 +5601,7 @@ CREATE DEFINER = `root`@`localhost` PROCEDURE `process_error_parse` (
   IN in_importLoadID VARCHAR(20)
 )
 BEGIN
-	-- standard variables for processes
+  -- standard variables for processes
   DECLARE e1 INT UNSIGNED;
   DECLARE e2, e3 VARCHAR(128);
   DECLARE e4, e5 VARCHAR(64);
@@ -5521,10 +5615,17 @@ BEGIN
   DECLARE filesProcessed INTEGER DEFAULT 0;
   DECLARE loadsProcessed INTEGER DEFAULT 1;
   DECLARE processError INTEGER DEFAULT 0;
-	-- declare cursor for default format - single importLoadID
+  -- declare cursor for default format - single importLoadID
   DECLARE defaultByLoadID CURSOR FOR 
       SELECT l.id,
              l.importfileid
+        FROM apache_logs.load_error_default l 
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
+         AND l.process_status = 0 FOR UPDATE;
+  DECLARE defaultByLoadIDFile CURSOR FOR 
+      SELECT DISTINCT(l.importfileid)
         FROM apache_logs.load_error_default l 
   INNER JOIN apache_logs.import_file f 
           ON l.importfileid = f.id
@@ -5539,8 +5640,17 @@ BEGIN
   INNER JOIN apache_logs.import_load il 
           ON f.importloadid = il.id
        WHERE il.completed IS NOT NULL 
+         AND l.process_status = 0 FOR UPDATE;
+  DECLARE defaultByStatusFile CURSOR FOR 
+      SELECT DISTINCT(l.importfileid)
+        FROM apache_logs.load_error_default l 
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+  INNER JOIN apache_logs.import_load il 
+          ON f.importloadid = il.id
+       WHERE il.completed IS NOT NULL 
          AND l.process_status = 0;
-  DECLARE vhostByLoadID CURSOR FOR 
+  DECLARE vhostByLoadIDFile CURSOR FOR 
       SELECT DISTINCT(l.importfileid)
         FROM apache_logs.load_error_default l 
   INNER JOIN apache_logs.import_file f 
@@ -5548,7 +5658,7 @@ BEGIN
        WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
          AND l.process_status = 0
          AND LOCATE(' ,', l.log_parse1)>0 OR LOCATE(' ,', l.log_parse2)>0;
-  DECLARE vhostByStatus CURSOR FOR
+  DECLARE vhostByStatusFile CURSOR FOR
       SELECT DISTINCT(l.importfileid)
         FROM apache_logs.load_error_default l 
   INNER JOIN apache_logs.import_file f 
@@ -5558,7 +5668,7 @@ BEGIN
        WHERE il.completed IS NOT NULL 
          AND l.process_status = 0
          AND LOCATE(' ,', l.log_parse1)>0 OR LOCATE(' ,', l.log_parse2)>0;
-	-- declare NOT FOUND handler
+  -- declare NOT FOUND handler
   DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION 
     BEGIN
@@ -5578,15 +5688,6 @@ BEGIN
     SET importLoad_ID = CONVERT(in_importLoadID, UNSIGNED);
   END IF;
   IF importLoad_ID IS NULL THEN
-    SELECT COUNT(DISTINCT(l.importfileid))
-      INTO filesProcessed
-      FROM apache_logs.load_error_default l 
-INNER JOIN apache_logs.import_file f 
-        ON l.importfileid = f.id
-INNER JOIN apache_logs.import_load il 
-        ON f.importloadid = il.id
-     WHERE il.completed IS NOT NULL 
-       AND l.process_status = 0;
     SELECT COUNT(DISTINCT(f.importloadid))
       INTO loadsProcessed
       FROM apache_logs.load_error_default l 
@@ -5596,29 +5697,21 @@ INNER JOIN apache_logs.import_load il
         ON f.importloadid = il.id
      WHERE il.completed IS NOT NULL 
        AND l.process_status = 0;
-  ELSE
-    SELECT COUNT(DISTINCT(l.importfileid))
-      INTO filesProcessed
-      FROM apache_logs.load_error_default l 
-INNER JOIN apache_logs.import_file f 
-        ON l.importfileid = f.id
-     WHERE f.importloadid = importLoad_ID
-       AND l.process_status = 0;
   END IF;
   SET importProcessID = apache_logs.importProcessID('error_parse', in_processName);
   START TRANSACTION;
   IF importLoad_ID IS NULL THEN
     -- importformatid SET=5 in Python check if error_vhost format - 'Import File Format - 1=common,2=combined,3=vhost,4=csv2mysql,5=error_default,6=error_vhost'
-    OPEN vhostByStatus;
+    OPEN vhostByStatusFile;
   ELSE
     -- importformatid SET=5 in Python check if error_vhost format - 'Import File Format - 1=common,2=combined,3=vhost,4=csv2mysql,5=error_default,6=error_vhost'
-    OPEN vhostByLoadID;
+    OPEN vhostByLoadIDFile;
   END IF;
   set_vhostformat: LOOP
     IF importLoad_ID IS NULL THEN
-      FETCH vhostByStatus INTO importFile_vhost_ID;
+      FETCH vhostByStatusFile INTO importFile_vhost_ID;
     ELSE
-      FETCH vhostByLoadID INTO importFile_vhost_ID;
+      FETCH vhostByLoadIDFile INTO importFile_vhost_ID;
     END IF;
     IF done = true THEN 
       LEAVE set_vhostformat;
@@ -5626,12 +5719,40 @@ INNER JOIN apache_logs.import_file f
     UPDATE apache_logs.import_file 
        SET importformatid=6 
      WHERE id = importFile_vhost_ID;
-  END LOOP;
+  END LOOP set_vhostformat;
   IF importLoad_ID IS NULL THEN
-    CLOSE vhostByStatus;
+    CLOSE vhostByStatusFile;
   ELSE
-    CLOSE vhostByLoadID;
+    CLOSE vhostByLoadIDFile;
   END IF;
+  -- process import_file TABLE first 
+  SET done = false;
+  IF importLoad_ID IS NULL THEN
+    OPEN defaultByStatusFile;
+  ELSE
+    OPEN defaultByLoadIDFile;
+  END IF;
+  process_parse_file: LOOP
+    IF importLoad_ID IS NULL THEN
+      FETCH defaultByStatusFile INTO importFile_ID;
+    ELSE
+      FETCH defaultByLoadIDFile INTO importFile_ID;
+    END IF;
+    IF done = true THEN 
+      LEAVE process_parse_file;
+    END IF;
+    IF apache_logs.importFileCheck(importFile_ID, importProcessID, 'parse') = 0 THEN
+      ROLLBACK;
+      LEAVE process_parse_file;
+    END IF;
+    SET filesProcessed = filesProcessed + 1;
+  END LOOP process_parse_file;
+  IF importLoad_ID IS NULL THEN
+    CLOSE defaultByStatusFile;
+  ELSE
+    CLOSE defaultByLoadIDFile;
+  END IF;
+  -- process records 
   SET done = false;
   IF importLoad_ID IS NULL THEN
     OPEN defaultByStatus;
@@ -5645,10 +5766,6 @@ INNER JOIN apache_logs.import_file f
       FETCH defaultByLoadID INTO importRecordID, importFile_ID;
     END IF;
     IF done = true THEN 
-      LEAVE process_parse;
-    END IF;
-    IF apache_logs.importFileCheck(importFile_ID, importProcessID, 'parse') = 0 THEN
-      ROLLBACK;
       LEAVE process_parse;
     END IF;
     SET recordsProcessed = recordsProcessed + 1;
@@ -5821,7 +5938,7 @@ INNER JOIN apache_logs.import_file f
            request_log_id=TRIM(request_log_id)
      WHERE id=importRecordID;
     UPDATE apache_logs.load_error_default SET process_status=1 WHERE id=importRecordID;
-  END LOOP;
+  END LOOP process_parse;
   -- to remove SQL calculating loadsProcessed when importLoad_ID is passed. Set=1 by default.
   IF importLoad_ID IS NOT NULL AND recordsProcessed=0 THEN
     SET loadsProcessed = 0;
@@ -5847,7 +5964,7 @@ END//
 DELIMITER ;
 -- # Stored Procedure Error Log import from LOAD TABLE and normalization below
 -- drop procedure -----------------------------------------------------------
--- DROP PROCEDURE IF EXISTS `process_error_import`;
+DROP PROCEDURE IF EXISTS `process_error_import`;
 -- create procedure ---------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` PROCEDURE `process_error_import` (
@@ -5855,10 +5972,10 @@ CREATE DEFINER = `root`@`localhost` PROCEDURE `process_error_import` (
   IN in_importLoadID VARCHAR(20)
 )
 BEGIN
-	-- standard variables for processes
-	DECLARE e1 INT UNSIGNED;
-	DECLARE e2, e3 VARCHAR(128);
-	DECLARE e4, e5 VARCHAR(64);
+  -- standard variables for processes
+  DECLARE e1 INT UNSIGNED;
+  DECLARE e2, e3 VARCHAR(128);
+  DECLARE e4, e5 VARCHAR(64);
   DECLARE done BOOL DEFAULT false;
   DECLARE importProcessID INTEGER DEFAULT NULL;
   DECLARE importLoad_ID INTEGER DEFAULT NULL;
@@ -5869,43 +5986,42 @@ BEGIN
   DECLARE loadsProcessed INTEGER DEFAULT 1;
   DECLARE processError INTEGER DEFAULT 0;
   -- LOAD DATA staging table column variables
-	DECLARE log_time DATETIME DEFAULT now();
-	DECLARE log_level VARCHAR(100) DEFAULT NULL;
-	DECLARE log_module VARCHAR(100) DEFAULT NULL;
-	DECLARE log_processid VARCHAR(100) DEFAULT NULL;
-	DECLARE log_threadid VARCHAR(100) DEFAULT NULL;
-	DECLARE log_apacheCode VARCHAR(400) DEFAULT NULL;
-	DECLARE log_apacheMessage VARCHAR(400) DEFAULT NULL;
-	DECLARE log_systemCode VARCHAR(400) DEFAULT NULL;
-	DECLARE log_systemMessage VARCHAR(400) DEFAULT NULL;
-	DECLARE log_message VARCHAR(500) DEFAULT NULL;
-	DECLARE log_referer VARCHAR(1000) DEFAULT NULL;
-	DECLARE refererConverted VARCHAR(1000) DEFAULT NULL;
-	DECLARE client VARCHAR(253) DEFAULT NULL;
-	DECLARE clientPort VARCHAR(100) DEFAULT NULL;
-	DECLARE server VARCHAR(253) DEFAULT NULL;
-	DECLARE serverPort INTEGER DEFAULT NULL;
-	DECLARE requestLogID VARCHAR(50) DEFAULT NULL;
-	DECLARE serverFile VARCHAR(253) DEFAULT NULL;
-	DECLARE serverPortFile INTEGER DEFAULT NULL;
-	DECLARE importFile VARCHAR(300) DEFAULT NULL;
-	-- Primary IDs for the normalized Attribute tables
-	DECLARE logLevel_Id,
-		module_Id,
-		process_Id, 
-		thread_Id, 
-		apacheCode_Id, 
-		apacheMessage_Id, 
-		systemCode_Id, 
-		systemMessage_Id, 
-		logMessage_Id, 
-		referer_Id,
-		client_Id, 
-		clientPort_Id, 
- 		server_Id, 
-		serverPort_Id, 
-		requestLog_Id 
-		INTEGER DEFAULT NULL;
+  DECLARE log_time DATETIME DEFAULT now();
+  DECLARE log_level VARCHAR(100) DEFAULT NULL;
+  DECLARE log_module VARCHAR(100) DEFAULT NULL;
+  DECLARE log_processid VARCHAR(100) DEFAULT NULL;
+  DECLARE log_threadid VARCHAR(100) DEFAULT NULL;
+  DECLARE log_apacheCode VARCHAR(400) DEFAULT NULL;
+  DECLARE log_apacheMessage VARCHAR(400) DEFAULT NULL;
+  DECLARE log_systemCode VARCHAR(400) DEFAULT NULL;
+  DECLARE log_systemMessage VARCHAR(400) DEFAULT NULL;
+  DECLARE log_message VARCHAR(500) DEFAULT NULL;
+  DECLARE log_referer VARCHAR(1000) DEFAULT NULL;
+  DECLARE refererConverted VARCHAR(1000) DEFAULT NULL;
+  DECLARE client VARCHAR(253) DEFAULT NULL;
+  DECLARE clientPort VARCHAR(100) DEFAULT NULL;
+  DECLARE server VARCHAR(253) DEFAULT NULL;
+  DECLARE serverPort INTEGER DEFAULT NULL;
+  DECLARE requestLogID VARCHAR(50) DEFAULT NULL;
+  DECLARE serverFile VARCHAR(253) DEFAULT NULL;
+  DECLARE serverPortFile INTEGER DEFAULT NULL;
+  DECLARE importFile VARCHAR(300) DEFAULT NULL;
+  -- Primary IDs for the normalized Attribute tables
+  DECLARE logLevel_Id,
+          module_Id,
+          process_Id, 
+          thread_Id, 
+          apacheCode_Id, 
+          apacheMessage_Id, 
+          systemCode_Id, 
+          systemMessage_Id, 
+          logMessage_Id, 
+          referer_Id,
+          client_Id, 
+          clientPort_Id, 
+          server_Id, 
+          serverPort_Id, 
+          requestLog_Id INTEGER DEFAULT NULL;
 	-- declare cursor for default format - single importLoadID
   DECLARE defaultByLoadID CURSOR FOR 
       SELECT l.logtime, 
@@ -5924,7 +6040,6 @@ BEGIN
              l.server_name, 
              l.server_port, 
              l.request_log_id, 
-             l.importfileid,
              f.server_name server_name_file, 
              f.server_port server_port_file, 
              l.id
@@ -5933,7 +6048,14 @@ BEGIN
           ON l.importfileid = f.id
        WHERE l.process_status = 1
          AND f.importloadid = CONVERT(in_importLoadID, UNSIGNED);
-DECLARE defaultByStatus CURSOR FOR 
+  DECLARE defaultByLoadIDFile CURSOR FOR 
+      SELECT l.importfileid
+        FROM apache_logs.load_error_default l 
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE l.process_status = 1
+         AND f.importloadid = CONVERT(in_importLoadID, UNSIGNED);
+  DECLARE defaultByStatus CURSOR FOR 
      SELECT l.logtime, 
             l.loglevel, 
             l.module, 
@@ -5950,7 +6072,6 @@ DECLARE defaultByStatus CURSOR FOR
             l.server_name, 
             l.server_port, 
             l.request_log_id, 
-            l.importfileid,
             f.server_name server_name_file, 
             f.server_port server_port_file, 
             l.id
@@ -5958,15 +6079,21 @@ DECLARE defaultByStatus CURSOR FOR
  INNER JOIN apache_logs.import_file f 
          ON l.importfileid = f.id
       WHERE l.process_status = 1;
+  DECLARE defaultByStatusFile CURSOR FOR 
+     SELECT l.importfileid
+       FROM apache_logs.load_error_default l 
+ INNER JOIN apache_logs.import_file f 
+         ON l.importfileid = f.id
+      WHERE l.process_status = 1;
   -- declare NOT FOUND handler
-	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-		BEGIN
-			GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME; 
- 			CALL apache_logs.errorProcess('process_error_import', e1, e2, e3, e4, e5, importLoad_ID, importProcessID);
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN
+      GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME; 
+      CALL apache_logs.errorProcess('process_error_import', e1, e2, e3, e4, e5, importLoad_ID, importProcessID);
       SET processError = processError + 1;
- 			ROLLBACK;
-		END;
+      ROLLBACK;
+    END;
   -- check parameters for valid values
   IF CONVERT(in_importLoadID, UNSIGNED) = 0 AND in_importLoadID != 'ALL' THEN
     SIGNAL SQLSTATE '22003' SET MESSAGE_TEXT = 'Invalid parameter value for in_importLoadID. Must be convert to number or be ALL';
@@ -5974,203 +6101,216 @@ DECLARE defaultByStatus CURSOR FOR
   IF FIND_IN_SET(in_processName, "default") = 0 THEN
     SIGNAL SQLSTATE '22003' SET MESSAGE_TEXT = 'Invalid parameter value for in_processName. Must be default';
   END IF;
-	IF NOT CONVERT(in_importLoadID, UNSIGNED) = 0 THEN
-		SET importLoad_ID = CONVERT(in_importLoadID, UNSIGNED);
-	END IF;
+  IF NOT CONVERT(in_importLoadID, UNSIGNED) = 0 THEN
+    SET importLoad_ID = CONVERT(in_importLoadID, UNSIGNED);
+  END IF;
   IF importLoad_ID IS NULL THEN
-    SELECT COUNT(DISTINCT(l.importfileid))
-      INTO filesProcessed
-      FROM apache_logs.load_error_default l 
-     WHERE l.process_status = 1;
     SELECT COUNT(DISTINCT(f.importloadid))
       INTO loadsProcessed
       FROM apache_logs.load_error_default l 
 INNER JOIN apache_logs.import_file f 
         ON l.importfileid = f.id
      WHERE l.process_status = 1;
-  ELSE
-    SELECT COUNT(DISTINCT(l.importfileid))
-      INTO filesProcessed
-      FROM apache_logs.load_error_default l 
-INNER JOIN apache_logs.import_file f 
-        ON l.importfileid = f.id
-     WHERE l.process_status = 1
-       AND f.importloadid = importLoad_ID;
   END IF;
   SET importProcessID = apache_logs.importProcessID('error_import', in_processName);
-	START TRANSACTION;
+  START TRANSACTION;
+-- process import_file TABLE first 
+-- open the cursor
+  IF importLoad_ID IS NULL THEN
+    OPEN defaultByStatusFile;
+  ELSE
+    OPEN defaultByLoadIDFile;
+  END IF;
+  process_import_file: LOOP
+    IF importLoad_ID IS NULL THEN
+      FETCH defaultByStatusFile INTO importFile_ID; 
+    ELSE
+      FETCH defaultByLoadIDFile INTO importFile_ID; 
+    END IF;
+    IF done = true THEN 
+      LEAVE process_import_file;
+    END IF;
+    IF apache_logs.importFileCheck(importFile_ID, importProcessID, 'import') = 0 THEN
+      ROLLBACK;
+      LEAVE process_import_file;
+    END IF;
+    SET filesProcessed = filesProcessed + 1;
+  END LOOP process_import_file;
+  -- close the cursor
+  IF importLoad_ID IS NULL THEN
+    CLOSE defaultByStatusFile;
+  ELSE
+    CLOSE defaultByLoadIDFile;
+  END IF;
+  -- process records 
+  SET done = false;
+  -- open the cursor
   IF importLoad_ID IS NULL THEN
     OPEN defaultByStatus;
   ELSE
-  	OPEN defaultByLoadID;
+    OPEN defaultByLoadID;
   END IF;
   process_import: LOOP
     IF importLoad_ID IS NULL THEN
-		  FETCH defaultByStatus INTO 
-  			log_time, 
-	  		log_level,
-		  	log_module,
-			  log_processid, 
-  			log_threadid, 
-	  		log_apacheCode, 
-		  	log_apacheMessage, 
-			  log_systemCode, 
-  			log_systemMessage, 
-	  		log_message, 
-			  log_referer, 
-		  	client, 
-		  	clientPort, 
-		  	server, 
-			  serverPort, 
-			  requestLogID, 
-			  importFile_ID,
-		  	serverFile, 
-			  serverPortFile, 
-        importRecordID; 
+      FETCH defaultByStatus INTO 
+            log_time, 
+            log_level,
+            log_module,
+            log_processid, 
+            log_threadid, 
+            log_apacheCode, 
+            log_apacheMessage, 
+            log_systemCode, 
+            log_systemMessage, 
+            log_message, 
+            log_referer, 
+            client, 
+            clientPort, 
+            server, 
+            serverPort, 
+            requestLogID, 
+            serverFile, 
+            serverPortFile, 
+            importRecordID; 
     ELSE
-		  FETCH defaultByLoadID INTO 
-  			log_time, 
-	  		log_level,
-		  	log_module,
-			  log_processid, 
-			  log_threadid, 
-			  log_apacheCode, 
-			  log_apacheMessage, 
-  			log_systemCode, 
-	  		log_systemMessage, 
-		  	log_message, 
-			  log_referer, 
-		  	client, 
-		  	clientPort, 
-		  	server, 
-			  serverPort, 
-			  requestLogID, 
-		  	importFile_ID,
-		  	serverFile, 
-			  serverPortFile, 
-        importRecordID; 
+      FETCH defaultByLoadID INTO 
+            log_time, 
+            log_level,
+            log_module,
+            log_processid, 
+            log_threadid, 
+            log_apacheCode, 
+            log_apacheMessage, 
+            log_systemCode, 
+            log_systemMessage, 
+            log_message, 
+            log_referer, 
+            client, 
+            clientPort, 
+            server, 
+            serverPort, 
+            requestLogID, 
+            serverFile, 
+            serverPortFile, 
+            importRecordID; 
     END IF;
     IF done = true THEN 
-		  LEAVE process_import;
-    END IF;
-    IF apache_logs.importFileCheck(importFile_ID, importProcessID, 'import') = 0 THEN
-  		ROLLBACK;
-			LEAVE process_import;
+      LEAVE process_import;
     END IF;
     SET recordsProcessed = recordsProcessed + 1;
-		SET logLevel_Id = null,
-    		module_Id = null,
-    		process_Id = null, 
-    		thread_Id = null, 
-    		apacheCode_Id = null, 
-    		apacheMessage_Id = null, 
-    		systemCode_Id = null, 
-    		systemMessage_Id = null, 
-    		logMessage_Id = null, 
-    		referer_Id = null,
+    SET logLevel_Id = null,
+        module_Id = null,
+        process_Id = null, 
+        thread_Id = null, 
+        apacheCode_Id = null, 
+        apacheMessage_Id = null, 
+        systemCode_Id = null, 
+        systemMessage_Id = null, 
+        logMessage_Id = null, 
+        referer_Id = null,
         client_Id = null, 
         clientPort_Id = null, 
         server_Id = null, 
         serverPort_Id = null,
         requestLog_Id = null;
-		-- any customizing for business needs should be done here before normalization functions called.
+    -- any customizing for business needs should be done here before normalization functions called.
     -- convert staging columns - log_referer in import for audit purposes
-		IF LOCATE("?", log_referer)>0 THEN
-			SET refererConverted = SUBSTR(log_referer, 1, LOCATE("?", log_referer)-1);
-		ELSE
-			SET refererConverted = log_referer;
-		END IF;
+    IF LOCATE("?", log_referer)>0 THEN
+      SET refererConverted = SUBSTR(log_referer, 1, LOCATE("?", log_referer)-1);
+    ELSE
+      SET refererConverted = log_referer;
+    END IF;
     -- normalize import staging table 
-		IF log_level IS NOT NULL THEN
-			SET logLevel_Id = apache_logs.error_logLevelID(log_level);
-		END IF;
-		IF log_module IS NOT NULL THEN
-			SET module_Id = apache_logs.error_moduleID(log_module);
-		END IF;
-		IF log_processid IS NOT NULL THEN
-			SET process_Id = apache_logs.error_processID(log_processid);
-		END IF;
-		IF log_threadid IS NOT NULL THEN
-			SET thread_Id = apache_logs.error_threadID(log_threadid);
-		END IF;
-		IF log_apacheCode IS NOT NULL THEN
-			SET apacheCode_Id = apache_logs.error_apacheCodeID(log_apacheCode);
-		END IF;
-		IF log_apacheMessage IS NOT NULL THEN
-			SET apacheMessage_Id = apache_logs.error_apacheMessageID(log_apacheMessage);
-		END IF;
-		IF log_systemCode IS NOT NULL THEN
-			SET systemCode_Id = apache_logs.error_systemCodeID(log_systemCode);
-		END IF;
-		IF log_systemMessage IS NOT NULL THEN
-			SET systemMessage_Id = apache_logs.error_systemMessageID(log_systemMessage);
-		END IF;
-		IF log_message IS NOT NULL THEN
-			SET logMessage_id = apache_logs.error_logMessageID(log_message);
-		END IF;
-		IF refererConverted IS NOT NULL AND refererConverted != '-' THEN
-			SET referer_Id = apache_logs.log_refererID(refererConverted);
-		END IF;
-		IF client IS NOT NULL THEN
-			SET client_id = apache_logs.log_clientID(client);
-		END IF;
-		IF clientPort IS NOT NULL THEN
-			SET clientPort_id = apache_logs.log_clientPortID(clientPort);
-		END IF;
-		IF server IS NOT NULL THEN
-			SET server_Id = apache_logs.log_serverID(server);
-		ELSEIF serverFile IS NOT NULL THEN
-			SET server_Id = apache_logs.log_serverID(serverFile);
+    IF log_level IS NOT NULL THEN
+      SET logLevel_Id = apache_logs.error_logLevelID(log_level);
     END IF;
-		IF serverPort IS NOT NULL THEN
-			SET serverPort_Id = apache_logs.log_serverPortID(serverPort);
-		ELSEIF serverPortFile IS NOT NULL THEN
-			SET serverPort_Id = apache_logs.log_serverPortID(serverPortFile);
+    IF log_module IS NOT NULL THEN
+      SET module_Id = apache_logs.error_moduleID(log_module);
     END IF;
-		IF requestLogID IS NOT NULL AND requestLogID != '-' THEN
-  		IF server_Id IS NOT NULL THEN
+    IF log_processid IS NOT NULL THEN
+      SET process_Id = apache_logs.error_processID(log_processid);
+    END IF;
+    IF log_threadid IS NOT NULL THEN
+      SET thread_Id = apache_logs.error_threadID(log_threadid);
+    END IF;
+    IF log_apacheCode IS NOT NULL THEN
+      SET apacheCode_Id = apache_logs.error_apacheCodeID(log_apacheCode);
+    END IF;
+    IF log_apacheMessage IS NOT NULL THEN
+      SET apacheMessage_Id = apache_logs.error_apacheMessageID(log_apacheMessage);
+    END IF;
+    IF log_systemCode IS NOT NULL THEN
+      SET systemCode_Id = apache_logs.error_systemCodeID(log_systemCode);
+    END IF;
+    IF log_systemMessage IS NOT NULL THEN
+      SET systemMessage_Id = apache_logs.error_systemMessageID(log_systemMessage);
+    END IF;
+    IF log_message IS NOT NULL THEN
+      SET logMessage_id = apache_logs.error_logMessageID(log_message);
+    END IF;
+    IF refererConverted IS NOT NULL AND refererConverted != '-' THEN
+      SET referer_Id = apache_logs.log_refererID(refererConverted);
+    END IF;
+    IF client IS NOT NULL THEN
+      SET client_id = apache_logs.log_clientID(client);
+    END IF;
+    IF clientPort IS NOT NULL THEN
+      SET clientPort_id = apache_logs.log_clientPortID(clientPort);
+    END IF;
+    IF server IS NOT NULL THEN
+      SET server_Id = apache_logs.log_serverID(server);
+    ELSEIF serverFile IS NOT NULL THEN
+      SET server_Id = apache_logs.log_serverID(serverFile);
+    END IF;
+    IF serverPort IS NOT NULL THEN
+      SET serverPort_Id = apache_logs.log_serverPortID(serverPort);
+    ELSEIF serverPortFile IS NOT NULL THEN
+      SET serverPort_Id = apache_logs.log_serverPortID(serverPortFile);
+    END IF;
+    IF requestLogID IS NOT NULL AND requestLogID != '-' THEN
+      IF server_Id IS NOT NULL THEN
         SET requestLogID = CONCAT(requestLogID, '_', CONVERT(server_Id, CHAR));
       END IF;
-			SET requestLog_Id = apache_logs.log_requestLogID(requestLogID);
-		END IF;
-		INSERT INTO apache_logs.error_log 
-			(logged, 
-			loglevelid,
-			moduleid,
-			processid, 
-			threadid, 
-			apachecodeid, 
-			apachemessageid, 
-			systemcodeid, 
-			systemmessageid, 
-			logmessageid, 
-			refererid,
-			clientid, 
-			clientportid, 
-			serverid, 
-  		serverportid,
-      requestlogid, 
-      importfileid) 
-		VALUES
-			(log_time,
-			logLevel_Id,
-			module_Id,
-			process_Id, 
-			thread_Id, 
-			apacheCode_Id, 
-			apacheMessage_Id, 
-			systemCode_Id, 
-			systemMessage_Id, 
-			logMessage_Id, 
-			referer_Id,
-			client_Id, 
-			clientPort_Id, 
-			server_Id, 
-			serverPort_Id, 
-			requestLog_Id, 
-      importFile_ID);
+      SET requestLog_Id = apache_logs.log_requestLogID(requestLogID);
+    END IF;
+    INSERT INTO apache_logs.error_log 
+       (logged, 
+        loglevelid,
+        moduleid,
+        processid, 
+        threadid, 
+        apachecodeid, 
+        apachemessageid, 
+        systemcodeid, 
+        systemmessageid, 
+        logmessageid, 
+        refererid,
+        clientid, 
+        clientportid, 
+        serverid, 
+        serverportid,
+        requestlogid, 
+        importfileid) 
+    VALUES
+       (log_time,
+        logLevel_Id,
+        module_Id,
+        process_Id, 
+        thread_Id, 
+        apacheCode_Id, 
+        apacheMessage_Id, 
+        systemCode_Id, 
+        systemMessage_Id, 
+        logMessage_Id, 
+        referer_Id,
+        client_Id, 
+        clientPort_Id, 
+        server_Id, 
+        serverPort_Id, 
+        requestLog_Id, 
+        importFile_ID);
     UPDATE apache_logs.load_error_default SET process_status=2 WHERE id=importRecordID;
-  END LOOP;
+  END LOOP process_import;
   -- to remove SQL calculating loadsProcessed when importLoad_ID is passed. Set=1 by default.
   IF importLoad_ID IS NOT NULL AND recordsProcessed=0 THEN
     SET loadsProcessed = 0;
@@ -6196,7 +6336,7 @@ END//
 DELIMITER ;
 -- # Stored Procedure for Browser User Agent data normalization below
 -- drop procedure -----------------------------------------------------------
--- DROP PROCEDURE IF EXISTS `normalize_useragent`;
+DROP PROCEDURE IF EXISTS `normalize_useragent`;
 -- create procedure ---------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` PROCEDURE `normalize_useragent` (
@@ -6374,7 +6514,7 @@ END//
 DELIMITER ;
 -- # Stored Procedure for GeoIP data normalization below
 -- drop procedure -----------------------------------------------------------
--- DROP PROCEDURE IF EXISTS `normalize_client`;
+DROP PROCEDURE IF EXISTS `normalize_client`;
 -- create procedure ---------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` PROCEDURE `normalize_client` (
@@ -6571,7 +6711,8 @@ ALTER TABLE `error_log_threadid` ADD CONSTRAINT `U_error_threadid` UNIQUE (name)
 
 ALTER TABLE `import_file` ADD CONSTRAINT `U_import_file` UNIQUE (importdeviceid, name);
 ALTER TABLE `import_format` ADD CONSTRAINT `U_import_format` UNIQUE (name);
-ALTER TABLE `import_server` ADD CONSTRAINT `U_import_server` UNIQUE(dbuser, dbhost, dbversion, dbsystem, dbmachine, serveruuid);
+-- ALTER TABLE `import_server` ADD CONSTRAINT `U_import_server` UNIQUE(dbuser, dbhost, dbversion, dbsystem, dbmachine, serveruuid);
+ALTER TABLE `import_server` ADD CONSTRAINT `U_import_server` UNIQUE(dbuser, dbhost, dbversion, dbsystem, dbmachine, dbcomment);
 ALTER TABLE `import_device` ADD CONSTRAINT `U_import_device` UNIQUE(deviceid, platformNode, platformSystem, platformMachine, platformProcessor);
 ALTER TABLE `import_client` ADD CONSTRAINT `U_import_client` UNIQUE(importdeviceid, ipaddress, login, expandUser, platformRelease, platformVersion);
 
@@ -6668,8 +6809,3 @@ ALTER TABLE `load_error_default` ADD INDEX `I_load_error_default_process` (proce
 -- indexes for parse and retrieve processes
 ALTER TABLE `log_client` ADD INDEX `I_log_client_country_code` (country_code);
 ALTER TABLE `access_log_useragent` ADD INDEX `I_access_log_useragent_ua` (ua);
--- indexes not needed and serve no purpose since each file would never have more than one value for process_status
--- ALTER TABLE `load_access_combined` ADD INDEX `I_load_access_combined_import_process (importfileid, process_status);
--- ALTER TABLE `load_access_csv2mysql` ADD INDEX `I_load_access_csv2mysql_import_process (importfileid, process_status);
--- ALTER TABLE `load_access_vhost` ADD INDEX `I_load_access_vhost_import_process (importfileid, process_status);
--- ALTER TABLE `load_error_default` ADD INDEX `I_load_error_default_import_process (importfileid, process_status);

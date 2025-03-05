@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# version 3.2.7 - 02/28/2025 - added error message Exception details, resolved backslash & forward slash issues, schema script improvements - see changelog
+# version 3.2.8 - 03/05/2025 - revamped 4 process_*, importProcessID, importServerID Procedures - see changelog
 #
 # Copyright 2024-2025 Will Raymond <farmfreshsoftware@gmail.com>
 #

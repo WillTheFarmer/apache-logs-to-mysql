@@ -13,7 +13,8 @@
 - version 3.2.0 - 02/01/2025 - MariaDB compatible and Log Rotation
 - version 3.2.5 - 02/06/2025 - Log Generator Stress Test Improvements
 - version 3.2.6 - 02/14/2025 - consolidation of 25 source code scripts refined for MySQL & MariaDB
-- version 3.2.7 - 02/28/2025 - added error message Exception details, resolved backslash & forward slash issues, schema script improvements - see changelog
+- version 3.2.7 - 02/28/2025 - added error message Exception details, resolved backslash & forward slash issues, schema script improvements
+- version 3.2.8 - 03/05/2025 - revamped 4 process_*, importProcessID, importServerID Procedures
 - [1.0.1] apache_logs.error_systemCodeID corrected line - INTO logsystemCode to INTO logsystemCodeID
 - [1.0.1] remove debugging - SELECT statement from apache_logs.process_access_import, process_error_import & normalize_useragent.
 - [1.0.1] remove whitespace and commented out old code on all stored programs
@@ -126,3 +127,8 @@
 - [3.2.7] fixed MacOS and Linux platforms issue with double seperators in paths stored in `import_file` TABLE. This was a result of fixing the double separator on Windows platform. Issue now fixed on all 3 platforms.
 - [3.2.7] modify `apache_logs_schema.sql` generation script to comment out DROP statements and add comment to start of each merged file. 
 - [3.2.7] add two indexes for companion Web Interface - mysql-to-apache-echarts which is due to be released mid-March.
+- [3.2.8] @@server_uuid and UUID() - these 2 are not the same - changed in version 3.2.0 on 02/01/2025 release - since then records are added to import_server TABLE as different servers each execution
+- [3.2.8] add comments to `importProcessID` explain changes - scraped using server_uuid, UUID() and server_uid.
+- [3.2.8] alter TABLE `import_server` rename COLUMN `serveruuid` to `dbcomment`.
+- [3.2.8] modify `process_access_parse`, `process_error_parse`, `process_access_import` and `process_error_import` add file LOOP for CALL to `importFileCheck`. Less CALLS, cleaner code for changes made in version 3.0.
+- [3.2.8] add `FOR UPDATE` clause to SELECTS for `process_access_parse`, `process_error_parse`, `process_access_import` and `process_error_import` to LOCK RECORDS.
