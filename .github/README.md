@@ -221,9 +221,17 @@ local-infile=1
 To minimize data exposure and breach risks create a Database USER for Python module with GRANTS to only schema objects and privileges required to execute import processes. Replace hostname from `localhost` to hostname of installed database if different. (`mysql_user_and_grants.sql` in repository)
 ![mysql_user_and_grants.sql in repository](./assets/mysql_user_and_grants.png)
 ### 4. Settings.env Variables
-settings.env with default settings for Ubuntu. Use backslash `\` for Windows and forward slash `/` for Linux and MacOS. 
+Setting environment variables `ERROR`,`COMBINED`, `VHOST`, `CSV2MYSQL`, `USERAGENT` and `GEOIP` = 0 processes nothing but does insert a record into `import_load` TABLE indicating `processLogs` was executed.
 
-Make sure logFormats are in correct logFormat folders. Application does not detect logFormats and data will not import properly. (`settings.env` in repository)
+`COMBINED` processes ***COMMON*** and ***COMBINED*** LogFormats. `ERROR` processes ***default*** and ***additional*** ErrorLogFormats.
+
+Most configurations will only process a single LogFormat and ErrorLogFormat. Set required formats = 1. 
+
+Make sure logFormats are in correct logFormat folders. Application does not detect logFormats and data will not import properly.
+
+Use backslash `\` for Windows paths and forward slash `/` for Linux and MacOS paths. 
+
+settings.env with default settings for Ubuntu. (`settings.env` in repository)
 ![settings.env in repository](./assets/settings.png)
 ### 5. Rename settings.env file to .env
 By default, load_dotenv() looks for standard setting file name `.env` and file is loaded in both `logs2mysql.py` and `watch4files.py` with following line:
