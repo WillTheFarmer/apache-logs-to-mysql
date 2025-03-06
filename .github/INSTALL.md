@@ -27,7 +27,7 @@ To minimize data exposure and breach risks create a Database USER for Python mod
 ### 4. Settings.env steps
 Setting environment variables `ERROR`,`COMBINED`, `VHOST`, `CSV2MYSQL`, `USERAGENT` and `GEOIP` = 0 processes nothing but does insert a record into `import_load` TABLE indicating `processLogs` was executed.
 
-`COMBINED` processes ***COMMON*** and ***COMBINED*** LogFormats. `ERROR` processes ***default*** and ***additional*** ErrorLogFormats.
+`COMBINED` processes ***common*** and ***combined*** LogFormats. `ERROR` processes ***default*** and ***additional*** ErrorLogFormats.
 
 Most configurations will only process a single LogFormat and ErrorLogFormat. Set required formats = 1. 
 
