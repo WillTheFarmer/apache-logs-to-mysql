@@ -302,12 +302,12 @@ Log files imported from multiple domains require a ServerName value to properly 
 Database normalization is the process of organizing data in a relational database to improve data integrity and reduce redundancy. 
 Normalization ensures that data is organized in a way that makes sense for the data model and attributes, and that the database functions efficiently.
 
-Database `apache_logs` schema currently has 55 Tables, 908 Columns, 188 Indexes, 72 Views, 8 Stored Procedures and 90 Functions to process Apache Access log in 4 formats 
+Database `apache_logs` schema currently has 55 Tables, 1040 Columns, 190 Indexes, 85 Views, 8 Stored Procedures and 90 Functions to process Apache Access log in 4 formats 
 & Apache Error log in 2 formats. Database normalization at work!
 
 Database normalization is a critical process in database design with objectives of optimizing data storage, improving data integrity, and reducing data anomalies.
 Organizing data into normalized tables greatly enhances efficiency and maintainability of a database system.
-### Database Access Log View by Browser - 1 of 72 schema views
+### Database Access Log View by Browser - 1 of 85 schema views
 Current schema views are Access and Error primary attribute tables created in normalization process with simple aggregate values. 
 These are primitive access and error data presentations of the log data warehouse. The complex data Slicing and Dicing is done in [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts).
 

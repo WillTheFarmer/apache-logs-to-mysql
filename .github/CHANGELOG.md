@@ -133,5 +133,5 @@
 - [3.2.8] alter TABLE `import_server` rename COLUMN `serveruuid` to `dbcomment`.
 - [3.2.8] modify `process_access_parse`, `process_error_parse`, `process_access_import` and `process_error_import` add file LOOP for CALL to `importFileCheck`. Less CALLS, cleaner code for changes made in version 3.0.
 - [3.2.8] add `FOR UPDATE` clause to SELECTS for `process_access_parse`, `process_error_parse`, `process_access_import` and `process_error_import` to LOCK RECORDS.
-- [3.2.9] fix mistake in made in last version of `process_access_import` and `process_error_import`. importfileid was incorrectly changed causing records not to be related to files.
+- [3.2.9] fix mistake made in last version of `process_access_import` and `process_error_import`. importfileid incorrectly changed caused records not to be related to files when inserted in `access_log` & `error_log`.
 - [3.2.9] add views - `access_client_city_list`, `access_client_country_code_list`, `access_client_country_list`, `access_client_subdivision_list`, `access_client_organization_list`, `access_client_network_list`
