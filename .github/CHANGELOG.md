@@ -15,6 +15,7 @@
 - version 3.2.6 - 02/14/2025 - consolidation of 25 source code scripts refined for MySQL & MariaDB
 - version 3.2.7 - 02/28/2025 - added error message Exception details, resolved backslash & forward slash issues, schema script improvements
 - version 3.2.8 - 03/05/2025 - revamped 4 process_*, importProcessID, importServerID Procedures
+- version 3.2.9 - 03/07/2025 - process_access_import & process_error_import importfileid fix, added client GeoIP views
 - [1.0.1] apache_logs.error_systemCodeID corrected line - INTO logsystemCode to INTO logsystemCodeID
 - [1.0.1] remove debugging - SELECT statement from apache_logs.process_access_import, process_error_import & normalize_useragent.
 - [1.0.1] remove whitespace and commented out old code on all stored programs
@@ -132,3 +133,5 @@
 - [3.2.8] alter TABLE `import_server` rename COLUMN `serveruuid` to `dbcomment`.
 - [3.2.8] modify `process_access_parse`, `process_error_parse`, `process_access_import` and `process_error_import` add file LOOP for CALL to `importFileCheck`. Less CALLS, cleaner code for changes made in version 3.0.
 - [3.2.8] add `FOR UPDATE` clause to SELECTS for `process_access_parse`, `process_error_parse`, `process_access_import` and `process_error_import` to LOCK RECORDS.
+- [3.2.9] fix mistake in made in last version of `process_access_import` and `process_error_import`. importfileid was incorrectly changed causing records not to be related to files.
+- [3.2.9] add views - `access_client_city_list`, `access_client_country_code_list`, `access_client_country_list`, `access_client_subdivision_list`, `access_client_organization_list`, `access_client_network_list`

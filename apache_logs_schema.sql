@@ -10,16 +10,16 @@
 -- # See the License for the specific language governing permissions and
 -- # limitations under the License.
 -- #
--- # version 3.2.8 - 03/05/2025 - revamped 4 process_*, importProcessID, importServerID Procedures - see changelog
+-- # version 3.2.9 - 03/07/2025 - process_access_import & process_error_import importfileid fix, added client GeoIP views - see changelog
 -- #
 -- # Copyright 2024-2025 Will Raymond <farmfreshsoftware@gmail.com>
 -- #
 -- # CHANGELOG.md in repository - https://github.com/WillTheFarmer/apache-logs-to-mysql
 -- #
--- file: apache_logs_schema.sql - requires minimum versions MariaDB 10.5.26 and MySQL 8.0.41
+-- file: apache_logs_schema.sql - requires minimum versions MySQL 8.0.41 or MariaDB 10.5.26
 -- synopsis: Data Definition (DDL) & Data Manipulation (DML) for MySQL & MariaDB schema apache_logs for ApacheLogs2MySQL
 -- author: Will Raymond <farmfreshsoftware@gmail.com>
--- # Script generated from 24 files of database object groups designed to run independently -- # comments at start each file
+-- # Script generated from 27 files of database object groups designed to run independently -- # comments at start each file
 -- drop schema --------------------------------------------------------
 DROP SCHEMA IF EXISTS `apache_logs`;
 -- create schema --------------------------------------------------------
@@ -2429,10 +2429,10 @@ BEGIN
   DECLARE e2, e3 VARCHAR(128);
   DECLARE importDevice_ID INTEGER DEFAULT null;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-	BEGIN
+  BEGIN
     GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
-		CALL apache_logs.errorProcess('importdeviceID', e1, e2, e3, 'apache_logs', 'logs2mysql.py', null, null);
-	END;
+    CALL apache_logs.errorProcess('importdeviceID', e1, e2, e3, 'apache_logs', 'logs2mysql.py', null, null);
+  END;
   SELECT id
     INTO importDevice_ID
     FROM apache_logs.import_device
@@ -2479,12 +2479,12 @@ BEGIN
   DECLARE importClient_ID INTEGER DEFAULT null;
   DECLARE importDevice_ID INTEGER DEFAULT null;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-	BEGIN
+  BEGIN
     GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
-		CALL apache_logs.errorProcess('importclientID', e1, e2, e3, 'apache_logs', 'logs2mysql.py', null, null);
-	END;
+    CALL apache_logs.errorProcess('importclientID', e1, e2, e3, 'apache_logs', 'logs2mysql.py', null, null);
+  END;
   IF NOT CONVERT(in_importdevice_id, UNSIGNED) = 0 THEN
-	  SET importDevice_ID = CONVERT(in_importdevice_id, UNSIGNED);
+    SET importDevice_ID = CONVERT(in_importdevice_id, UNSIGNED);
   END IF;
   SELECT id
     INTO importClient_ID
@@ -2529,12 +2529,12 @@ BEGIN
   DECLARE importLoad_ID INTEGER DEFAULT null;
   DECLARE importclient_ID INTEGER DEFAULT null;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-	BEGIN
+  BEGIN
     GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
     CALL apache_logs.errorProcess('importLoadID', e1, e2, e3, 'apache_logs', 'logs2mysql.py', importLoad_ID, null );
-	END;
+  END;
   IF NOT CONVERT(in_importclient_id, UNSIGNED) = 0 THEN
-	  SET importclient_ID = CONVERT(in_importclient_id, UNSIGNED);
+    SET importclient_ID = CONVERT(in_importclient_id, UNSIGNED);
   END IF;
   INSERT INTO apache_logs.import_load (importclientid) VALUES (importclient_ID);
   SET importLoad_ID = LAST_INSERT_ID();
@@ -2559,12 +2559,12 @@ BEGIN
   DECLARE importDays INTEGER DEFAULT null;
   DECLARE importDevice_ID INTEGER DEFAULT null;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-	BEGIN
+  BEGIN
     GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
     CALL apache_logs.errorProcess('importFileExists', e1, e2, e3, 'apache_logs', 'logs2mysql.py', null, null );
-	END;
+  END;
   IF NOT CONVERT(in_importdevice_id, UNSIGNED) = 0 THEN
-	  SET importDevice_ID = CONVERT(in_importdevice_id, UNSIGNED);
+    SET importDevice_ID = CONVERT(in_importdevice_id, UNSIGNED);
   END IF;
   SELECT id,
          added
@@ -2602,12 +2602,12 @@ BEGIN
   DECLARE importDevice_ID INTEGER DEFAULT null;
   DECLARE formatfile_ID INTEGER DEFAULT 0;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-	BEGIN
+  BEGIN
     GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
     CALL apache_logs.errorProcess('importFileID', e1, e2, e3, 'apache_logs', 'logs2mysql.py', importload_id, null );
-	END;
+  END;
   IF NOT CONVERT(in_importdevice_id, UNSIGNED) = 0 THEN
-	  SET importDevice_ID = CONVERT(in_importdevice_id, UNSIGNED);
+    SET importDevice_ID = CONVERT(in_importdevice_id, UNSIGNED);
   END IF;
   SELECT id
     INTO importFile_ID
@@ -2622,13 +2622,13 @@ BEGIN
   	  SET formatFile_ID = CONVERT(fileformat, UNSIGNED);
     END IF;
     INSERT INTO apache_logs.import_file 
-			(name,
-			 filesize,
-			 filecreated,
-			 filemodified,
-       importdeviceid,
-       importloadid,
-       importformatid)
+       (name,
+        filesize,
+        filecreated,
+        filemodified,
+        importdeviceid,
+        importloadid,
+        importformatid)
     VALUES 
       (importFile, 
        CONVERT(file_size, UNSIGNED),
@@ -2648,11 +2648,11 @@ DROP FUNCTION IF EXISTS `importServerID`;
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` FUNCTION `importServerID`
   (in_user VARCHAR(255),
-	 in_host VARCHAR(255),
+   in_host VARCHAR(255),
    in_version VARCHAR(55),
    in_system VARCHAR(55),
    in_machine VARCHAR(55),
-	 in_comment VARCHAR(75)
+   in_comment VARCHAR(75)
   )
   RETURNS INTEGER
   READS SQL DATA
@@ -2660,8 +2660,8 @@ BEGIN
   DECLARE importServer_ID INTEGER DEFAULT null;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION
   BEGIN
-  	SET @error_count = 1;
-	  RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'importServerID'; 
+    SET @error_count = 1;
+    RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'importServerID'; 
   END;
   SELECT id
 	  INTO importServer_ID
@@ -2674,19 +2674,19 @@ BEGIN
      AND dbcomment = in_comment;
   IF importServer_ID IS NULL THEN
     INSERT INTO apache_logs.import_server 
-      (dbuser,
-       dbhost,
-       dbversion,
-       dbsystem,
-       dbmachine,
-       dbcomment)
+       (dbuser,
+        dbhost,
+        dbversion,
+        dbsystem,
+        dbmachine,
+        dbcomment)
     VALUES
-      (in_user,
-       in_host,
-       in_version,
-       in_system,
-       in_machine,
-       in_comment);
+       (in_user,
+        in_host,
+        in_version,
+        in_system,
+        in_machine,
+        in_comment);
     SET importServer_ID = LAST_INSERT_ID();
   END IF;
   RETURN importServer_ID;
@@ -2713,16 +2713,16 @@ BEGIN
   DECLARE db_comment VARCHAR(75) DEFAULT NULL;
   -- DECLARE db_server VARCHAR(75) DEFAULT NULL;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION
-  	BEGIN
-	  	IF @error_count=1 THEN RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'importServerID called from importProcessID'; ELSE RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'importProcessID'; END IF;
-	  END;
+  BEGIN
+    IF @error_count=1 THEN RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'importServerID called from importProcessID'; ELSE RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'importProcessID'; END IF;
+  END;
   SET @error_count = 0;
 -- 03/04/2025 - @@server_uuid and UUID() - these 2 are not the same - changed in version 3.2.0 on 02/01/2025 release - since then records are added to import_server TABLE as different servers
 -- UUUID() - unique per execution. everytime called the value is different. My fault thinking it was the same functionality as @server_uid. Changed and never tested due to workig on another project at time.
 -- @@server_uuid - Introduced MySQL 5.7 - the server generates a true UUID in addition to the server_id value supplied by the user. This is available as the global, read-only server_uuid system variable.
 -- @@server_uid - Introduced MariaDB 10.5.26 - Automatically calculated server unique id hash. Added to the error log to allow one to verify if error reports are from the same server. continued on next line.
 -- UID is a base64-encoded SHA1 hash of the MAC address of one of the interfaces, and the tcp port that the server is listening on.
-	SELECT user(),
+  SELECT user(),
     @@hostname,
     @@version,
     @@version_compile_os,
@@ -2831,8 +2831,8 @@ DROP PROCEDURE IF EXISTS `errorProcess`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` PROCEDURE `errorProcess`
-	(IN in_module VARCHAR(300),
-	 IN in_mysqlerrno INTEGER, 
+  (IN in_module VARCHAR(300),
+   IN in_mysqlerrno INTEGER, 
    IN in_messagetext VARCHAR(1000), 
    IN in_returnedsqlstate VARCHAR(250), 
    IN in_schemaname VARCHAR(64),
@@ -2840,22 +2840,22 @@ CREATE DEFINER = `root`@`localhost` PROCEDURE `errorProcess`
    IN in_loadID INTEGER,
    IN in_processID INTEGER)
 BEGIN
-	INSERT INTO import_error 
-			(module,
-			mysql_errno,
-			message_text,
-			returned_sqlstate,
-			schema_name,
+   INSERT INTO import_error 
+     (module,
+      mysql_errno,
+      message_text,
+      returned_sqlstate,
+      schema_name,
       catalog_name,
       importloadid,
       importprocessid)
-		VALUES
-			(in_module,
-			in_mysqlerrno,
-			in_messagetext,
-			in_returnedsqlstate,
-			in_schemaname,
-			in_catalogname,
+   VALUES
+     (in_module,
+      in_mysqlerrno,
+      in_messagetext,
+      in_returnedsqlstate,
+      in_schemaname,
+      in_catalogname,
       in_loadID,
       in_processID);
 END //
@@ -2872,22 +2872,22 @@ CREATE DEFINER = `root`@`localhost` PROCEDURE `errorLoad`
 BEGIN
 	DECLARE mysqlerrno INTEGER DEFAULT 0;
 	DECLARE loadID INTEGER DEFAULT 0;
-    IF NOT CONVERT(in_mysqlerrno, UNSIGNED) = 0 THEN
-	    SET mysqlerrno = CONVERT(in_mysqlerrno, UNSIGNED);
-    END IF;
-    IF NOT CONVERT(in_loadID, UNSIGNED) = 0 THEN
-	    SET loadID = CONVERT(in_loadID, UNSIGNED);
-    END IF;
-	INSERT INTO import_error 
-			(module,
-			mysql_errno,
-			message_text,
+  IF NOT CONVERT(in_mysqlerrno, UNSIGNED) = 0 THEN
+    SET mysqlerrno = CONVERT(in_mysqlerrno, UNSIGNED);
+  END IF;
+  IF NOT CONVERT(in_loadID, UNSIGNED) = 0 THEN
+    SET loadID = CONVERT(in_loadID, UNSIGNED);
+  END IF;
+  INSERT INTO import_error 
+     (module,
+      mysql_errno,
+      message_text,
       importloadid,
       schema_name)
-		VALUES
-			(in_module,
-			mysqlerrno,
-			in_messagetext,
+  VALUES
+     (in_module,
+      mysqlerrno,
+      in_messagetext,
       loadID,
       'logs2mysql.py');
 END //
@@ -3038,30 +3038,6 @@ VIEW `access_reqmethod_list` AS
    ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
-DROP VIEW IF EXISTS `access_client_list`;
--- create table ---------------------------------------------------------
-CREATE 
-    ALGORITHM = UNDEFINED 
-    DEFINER = `root`@`localhost` 
-    SQL SECURITY DEFINER
-VIEW `access_client_list` AS
-     SELECT `ln`.`name` AS `Access Log Client Name`,
-            COUNT(`l`.`id`) AS `Log Count`, 
-            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
-            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
-            SUM(`l`.`bytes_received`) AS `Bytes Received`,
-            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
-            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
-            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
-            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
-            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM `log_client` `ln`
- INNER JOIN `access_log` `l` 
-         ON `l`.`clientid` = `ln`.`id`
-   GROUP BY `ln`.`id`
-   ORDER BY `ln`.`name`;
-
--- drop table -----------------------------------------------------------
 DROP VIEW IF EXISTS `access_remotelogname_list`;
 -- create table ---------------------------------------------------------
 CREATE 
@@ -3084,7 +3060,6 @@ VIEW `access_remotelogname_list` AS
          ON `l`.`remotelognameid` = `ln`.`id`
    GROUP BY `ln`.`id`
    ORDER BY `ln`.`name`;
-
 
 -- drop table -----------------------------------------------------------
 DROP VIEW IF EXISTS `access_remoteuser_list`;
@@ -3210,634 +3185,6 @@ VIEW `access_server_serverport_list` AS
             `l`.`serverportid`
    ORDER BY `sn`.`name`,
 	          `sp`.`name`;
-
--- drop table -----------------------------------------------------------
-DROP VIEW IF EXISTS `access_useragent_list`;
--- create table ---------------------------------------------------------
-CREATE 
-    ALGORITHM = UNDEFINED 
-    DEFINER = `root`@`localhost` 
-    SQL SECURITY DEFINER
-VIEW `access_useragent_list` AS
-     SELECT `ln`.`name` AS `Access Log UserAgent`,
-            COUNT(`l`.`id`) AS `Log Count`, 
-            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
-            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
-            SUM(`l`.`bytes_received`) AS `Bytes Received`,
-            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
-            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
-            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
-            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
-            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM `access_log_useragent` `ln`
- INNER JOIN `access_log` `l` 
-         ON `l`.`useragentid` = `ln`.`id`
-   GROUP BY `ln`.`id`
-   ORDER BY `ln`.`name`;
-
--- drop table -----------------------------------------------------------
-DROP VIEW IF EXISTS `access_useragent_pretty_list`;
--- create table ---------------------------------------------------------
-CREATE 
-    ALGORITHM = UNDEFINED 
-    DEFINER = `root`@`localhost` 
-    SQL SECURITY DEFINER
-VIEW `access_useragent_pretty_list` AS
-     SELECT `ln`.`ua` AS `Access Log Pretty User Agent`,
-            COUNT(`l`.`id`) AS `Log Count`, 
-            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
-            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
-            SUM(`l`.`bytes_received`) AS `Bytes Received`,
-            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
-            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
-            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
-            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
-            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM `access_log_useragent` `ln`
- INNER JOIN `access_log` `l` 
-         ON `l`.`useragentid` = `ln`.`id`
-   GROUP BY `ln`.`ua`
-   ORDER BY `ln`.`ua`;
-
--- drop table -----------------------------------------------------------
-DROP VIEW IF EXISTS `access_useragent_os_browser_device_list`;
--- create table ---------------------------------------------------------
-CREATE 
-    ALGORITHM = UNDEFINED 
-    DEFINER = `root`@`localhost` 
-    SQL SECURITY DEFINER
-VIEW `access_useragent_os_browser_device_list` AS
-     SELECT `ln`.`ua_os_family` AS `Operating System`,
-            `ln`.`ua_browser_family` AS `Browser`,
-            `ln`.`ua_device_family` AS `Device`,
-            COUNT(`l`.`id`) AS `Log Count`, 
-            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
-            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
-            SUM(`l`.`bytes_received`) AS `Bytes Received`,
-            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
-            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
-            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
-            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
-            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM `access_log_useragent` `ln`
- INNER JOIN `access_log` `l` 
-         ON `l`.`useragentid` = `ln`.`id`
-   GROUP BY `ln`.`ua_os_family`,
-            `ln`.`ua_browser_family`,
-            `ln`.`ua_device_family`
-   ORDER BY `ln`.`ua_os_family`, 
-            `ln`.`ua_browser_family`,
-            `ln`.`ua_device_family`;
-
--- drop table -----------------------------------------------------------
-DROP VIEW IF EXISTS `access_useragent_browser_list`;
--- create table ---------------------------------------------------------
-CREATE 
-    ALGORITHM = UNDEFINED 
-    DEFINER = `root`@`localhost` 
-    SQL SECURITY DEFINER
-VIEW `access_useragent_browser_list` AS
-     SELECT `ln`.`ua_browser` AS `Browser`,
-            COUNT(`l`.`id`) AS `Log Count`, 
-            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
-            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
-            SUM(`l`.`bytes_received`) AS `Bytes Received`,
-            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
-            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
-            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
-            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
-            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM `access_log_useragent` `ln`
- INNER JOIN `access_log` `l` 
-         ON `l`.`useragentid` = `ln`.`id`
-   GROUP BY `ln`.`ua_browser`
-   ORDER BY `ln`.`ua_browser`;
-
--- drop table -----------------------------------------------------------
-DROP VIEW IF EXISTS `access_useragent_browser_family_list`;
--- create table ---------------------------------------------------------
-CREATE 
-    ALGORITHM = UNDEFINED 
-    DEFINER = `root`@`localhost` 
-    SQL SECURITY DEFINER
-VIEW `access_useragent_browser_family_list` AS
-     SELECT `ln`.`ua_browser_family` AS `Browser Family`,
-            COUNT(`l`.`id`) AS `Log Count`, 
-            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
-            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
-            SUM(`l`.`bytes_received`) AS `Bytes Received`,
-            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
-            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
-            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
-            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
-            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM `access_log_useragent` `ln`
- INNER JOIN `access_log` `l` 
-         ON `l`.`useragentid` = `ln`.`id`
-   GROUP BY `ln`.`ua_browser_family`
-   ORDER BY `ln`.`ua_browser_family`;
-
--- drop table -----------------------------------------------------------
-DROP VIEW IF EXISTS `access_useragent_browser_version_list`;
--- create table ---------------------------------------------------------
-CREATE 
-    ALGORITHM = UNDEFINED 
-    DEFINER = `root`@`localhost` 
-    SQL SECURITY DEFINER
-VIEW `access_useragent_browser_version_list` AS
-     SELECT `ln`.`ua_browser_version` AS `Browser Version`,
-            COUNT(`l`.`id`) AS `Log Count`, 
-            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
-            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
-            SUM(`l`.`bytes_received`) AS `Bytes Received`,
-            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
-            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
-            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
-            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
-            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM `access_log_useragent` `ln`
- INNER JOIN `access_log` `l` 
-         ON `l`.`useragentid` = `ln`.`id`
-   GROUP BY `ln`.`ua_browser_version`
-   ORDER BY `ln`.`ua_browser_version`;
-
--- drop table -----------------------------------------------------------
-DROP VIEW IF EXISTS `access_useragent_device_list`;
--- create table ---------------------------------------------------------
-CREATE 
-    ALGORITHM = UNDEFINED 
-    DEFINER = `root`@`localhost` 
-    SQL SECURITY DEFINER
-VIEW `access_useragent_device_list` AS
-     SELECT `ln`.`ua_device` AS `Device`,
-            COUNT(`l`.`id`) AS `Log Count`, 
-            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
-            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
-            SUM(`l`.`bytes_received`) AS `Bytes Received`,
-            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
-            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
-            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
-            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
-            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM `access_log_useragent` `ln`
- INNER JOIN `access_log` `l` 
-         ON `l`.`useragentid` = `ln`.`id`
-   GROUP BY `ln`.`ua_device`
-   ORDER BY `ln`.`ua_device`;
-
--- drop table -----------------------------------------------------------
-DROP VIEW IF EXISTS `access_useragent_device_brand_list`;
--- create table ---------------------------------------------------------
-CREATE 
-    ALGORITHM = UNDEFINED 
-    DEFINER = `root`@`localhost` 
-    SQL SECURITY DEFINER
-VIEW `access_useragent_device_brand_list` AS
-     SELECT `ln`.`ua_device_brand` AS `Device Brand`,
-            COUNT(`l`.`id`) AS `Log Count`, 
-            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
-            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
-            SUM(`l`.`bytes_received`) AS `Bytes Received`,
-            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
-            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
-            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
-            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
-            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM `access_log_useragent` `ln`
- INNER JOIN `access_log` `l` 
-         ON `l`.`useragentid` = `ln`.`id`
-   GROUP BY `ln`.`ua_device_brand`
-   ORDER BY `ln`.`ua_device_brand`;
-
--- drop table -----------------------------------------------------------
-DROP VIEW IF EXISTS `access_useragent_device_family_list`;
--- create table ---------------------------------------------------------
-CREATE 
-    ALGORITHM = UNDEFINED 
-    DEFINER = `root`@`localhost` 
-    SQL SECURITY DEFINER
-VIEW `access_useragent_device_family_list` AS
-     SELECT `ln`.`ua_device_family` AS `Device Family`,
-            COUNT(`l`.`id`) AS `Log Count`, 
-            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
-            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
-            SUM(`l`.`bytes_received`) AS `Bytes Received`,
-            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
-            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
-            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
-            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
-            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM `access_log_useragent` `ln`
- INNER JOIN `access_log` `l` 
-         ON `l`.`useragentid` = `ln`.`id`
-   GROUP BY `ln`.`ua_device_family`
-   ORDER BY `ln`.`ua_device_family`;
-
--- drop table -----------------------------------------------------------
-DROP VIEW IF EXISTS `access_useragent_device_model_list`;
--- create table ---------------------------------------------------------
-CREATE 
-    ALGORITHM = UNDEFINED 
-    DEFINER = `root`@`localhost` 
-    SQL SECURITY DEFINER
-VIEW `access_useragent_device_model_list` AS
-     SELECT `ln`.`ua_device_model` AS `Device Model`,
-            COUNT(`l`.`id`) AS `Log Count`, 
-            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
-            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
-            SUM(`l`.`bytes_received`) AS `Bytes Received`,
-            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
-            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
-            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
-            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
-            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM `access_log_useragent` `ln`
- INNER JOIN `access_log` `l` 
-         ON `l`.`useragentid` = `ln`.`id`
-   GROUP BY `ln`.`ua_device_model`
-   ORDER BY `ln`.`ua_device_model`;
-
--- drop table -----------------------------------------------------------
-DROP VIEW IF EXISTS `access_useragent_os_list`;
--- create table ---------------------------------------------------------
-CREATE 
-    ALGORITHM = UNDEFINED 
-    DEFINER = `root`@`localhost` 
-    SQL SECURITY DEFINER
-VIEW `access_useragent_os_list` AS
-     SELECT `ln`.`ua_os` AS `Operating System`,
-            COUNT(`l`.`id`) AS `Log Count`, 
-            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
-            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
-            SUM(`l`.`bytes_received`) AS `Bytes Received`,
-            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
-            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
-            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
-            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
-            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM `access_log_useragent` `ln`
- INNER JOIN `access_log` `l` 
-         ON `l`.`useragentid` = `ln`.`id`
-   GROUP BY `ln`.`ua_os`
-   ORDER BY `ln`.`ua_os`;
-
--- drop table -----------------------------------------------------------
-DROP VIEW IF EXISTS `access_useragent_os_family_list`;
--- create table ---------------------------------------------------------
-CREATE 
-    ALGORITHM = UNDEFINED 
-    DEFINER = `root`@`localhost` 
-    SQL SECURITY DEFINER
-VIEW `access_useragent_os_family_list` AS
-     SELECT `ln`.`ua_os_family` AS `Operating System Family`,
-            COUNT(`l`.`id`) AS `Log Count`, 
-            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
-            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
-            SUM(`l`.`bytes_received`) AS `Bytes Received`,
-            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
-            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
-            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
-            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
-            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM `access_log_useragent` `ln`
- INNER JOIN `access_log` `l` 
-         ON `l`.`useragentid` = `ln`.`id`
-   GROUP BY `ln`.`ua_os_family`
-   ORDER BY `ln`.`ua_os_family`;
-
--- drop table -----------------------------------------------------------
-DROP VIEW IF EXISTS `access_useragent_os_version_list`;
--- create table ---------------------------------------------------------
-CREATE 
-    ALGORITHM = UNDEFINED 
-    DEFINER = `root`@`localhost` 
-    SQL SECURITY DEFINER
-VIEW `access_useragent_os_version_list` AS
-     SELECT `ln`.`ua_os_version` AS `Operating System Version`,
-            COUNT(`l`.`id`) AS `Log Count`, 
-            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
-            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
-            SUM(`l`.`bytes_received`) AS `Bytes Received`,
-            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
-            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
-            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
-            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
-            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM `access_log_useragent` `ln`
- INNER JOIN `access_log` `l` 
-         ON `l`.`useragentid` = `ln`.`id`
-   GROUP BY `ln`.`ua_os_version`
-   ORDER BY `ln`.`ua_os_version`;
-
--- drop table -----------------------------------------------------------
-DROP VIEW IF EXISTS `access_ua_list`;
--- create table ---------------------------------------------------------
-CREATE 
-    ALGORITHM = UNDEFINED 
-    DEFINER = `root`@`localhost` 
-    SQL SECURITY DEFINER
-VIEW `access_ua_list` AS
-     SELECT `ln`.`name` AS `Access Log User Agent`,
-            COUNT(`l`.`id`) AS `Log Count`, 
-            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
-            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
-            SUM(`l`.`bytes_received`) AS `Bytes Received`,
-            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
-            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
-            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
-            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
-            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM `access_log_ua` `ln`
- INNER JOIN `access_log_useragent` `lua` 
-         ON `lua`.`uaid` = `ln`.`id`
- INNER JOIN `access_log` `l` 
-         ON `l`.`useragentid` = `lua`.`id`
-   GROUP BY `ln`.`id`
-   ORDER BY `ln`.`name`;
-
--- drop table -----------------------------------------------------------
-DROP VIEW IF EXISTS `access_ua_browser_list`;
--- create table ---------------------------------------------------------
-CREATE 
-    ALGORITHM = UNDEFINED 
-    DEFINER = `root`@`localhost` 
-    SQL SECURITY DEFINER
-VIEW `access_ua_browser_list` AS
-    SELECT `ln`.`name` AS `Browser`,
-            COUNT(`l`.`id`) AS `Log Count`, 
-            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
-            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
-            SUM(`l`.`bytes_received`) AS `Bytes Received`,
-            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
-            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
-            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
-            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
-            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM `access_log_ua_browser` `ln`
- INNER JOIN `access_log_useragent` `lua` 
-         ON `lua`.`uabrowserid` = `ln`.`id`
- INNER JOIN `access_log` `l` 
-         ON `l`.`useragentid` = `lua`.`id`
-   GROUP BY `ln`.`id`
-   ORDER BY `ln`.`name`;
-
--- drop table -----------------------------------------------------------
-DROP VIEW IF EXISTS `access_ua_browser_family_list`;
--- create table ---------------------------------------------------------
-CREATE 
-    ALGORITHM = UNDEFINED 
-    DEFINER = `root`@`localhost` 
-    SQL SECURITY DEFINER
-VIEW `access_ua_browser_family_list` AS
-     SELECT `ln`.`name` AS `Browser Family`,
-            COUNT(`l`.`id`) AS `Log Count`, 
-            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
-            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
-            SUM(`l`.`bytes_received`) AS `Bytes Received`,
-            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
-            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
-            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
-            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
-            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM `access_log_ua_browser_family` `ln`
- INNER JOIN `access_log_useragent` `lua` 
-         ON `lua`.`uabrowserfamilyid` = `ln`.`id`
- INNER JOIN `access_log` `l` 
-         ON `l`.`useragentid` = `lua`.`id`
-   GROUP BY `ln`.`id`
-   ORDER BY `ln`.`name`;
-
--- drop table -----------------------------------------------------------
-DROP VIEW IF EXISTS `access_ua_browser_version_list`;
--- create table ---------------------------------------------------------
-CREATE 
-    ALGORITHM = UNDEFINED 
-    DEFINER = `root`@`localhost` 
-    SQL SECURITY DEFINER
-VIEW `access_ua_browser_version_list` AS
-    SELECT `ln`.`name` AS `Browser Version`,
-            COUNT(`l`.`id`) AS `Log Count`, 
-            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
-            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
-            SUM(`l`.`bytes_received`) AS `Bytes Received`,
-            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
-            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
-            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
-            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
-            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM `access_log_ua_browser_version` `ln`
- INNER JOIN `access_log_useragent` `lua` 
-         ON `lua`.`uabrowserversionid` = `ln`.`id`
- INNER JOIN `access_log` `l` 
-         ON `l`.`useragentid` = `lua`.`id`
-   GROUP BY `ln`.`id`
-   ORDER BY `ln`.`name`;
-
--- drop table -----------------------------------------------------------
-DROP VIEW IF EXISTS `access_ua_device_list`;
--- create table ---------------------------------------------------------
-CREATE 
-    ALGORITHM = UNDEFINED 
-    DEFINER = `root`@`localhost` 
-    SQL SECURITY DEFINER
-VIEW `access_ua_device_list` AS
-    SELECT `ln`.`name` AS `Device`,
-            COUNT(`l`.`id`) AS `Log Count`, 
-            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
-            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
-            SUM(`l`.`bytes_received`) AS `Bytes Received`,
-            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
-            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
-            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
-            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
-            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM `access_log_ua_device` `ln`
- INNER JOIN `access_log_useragent` `lua` 
-         ON `lua`.`uadeviceid` = `ln`.`id`
- INNER JOIN `access_log` `l` 
-         ON `l`.`useragentid` = `lua`.`id`
-   GROUP BY `ln`.`id`
-   ORDER BY `ln`.`name`;
-
--- drop table -----------------------------------------------------------
-DROP VIEW IF EXISTS `access_ua_device_brand_list`;
--- create table ---------------------------------------------------------
-CREATE 
-    ALGORITHM = UNDEFINED 
-    DEFINER = `root`@`localhost` 
-    SQL SECURITY DEFINER
-VIEW `access_ua_device_brand_list` AS
-    SELECT `ln`.`name` AS `Device Brand`,
-            COUNT(`l`.`id`) AS `Log Count`, 
-            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
-            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
-            SUM(`l`.`bytes_received`) AS `Bytes Received`,
-            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
-            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
-            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
-            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
-            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM `access_log_ua_device_brand` `ln`
- INNER JOIN `access_log_useragent` `lua` 
-         ON `lua`.`uadevicebrandid` = `ln`.`id`
- INNER JOIN `access_log` `l` 
-         ON `l`.`useragentid` = `lua`.`id`
-   GROUP BY `ln`.`id`
-   ORDER BY `ln`.`name`;
-
--- drop table -----------------------------------------------------------
-DROP VIEW IF EXISTS `access_ua_device_family_list`;
--- create table ---------------------------------------------------------
-CREATE 
-    ALGORITHM = UNDEFINED 
-    DEFINER = `root`@`localhost` 
-    SQL SECURITY DEFINER
-VIEW `access_ua_device_family_list` AS
-    SELECT `ln`.`name` AS `Device Family`,
-            COUNT(`l`.`id`) AS `Log Count`, 
-            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
-            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
-            SUM(`l`.`bytes_received`) AS `Bytes Received`,
-            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
-            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
-            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
-            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
-            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM `access_log_ua_device_family` `ln`
- INNER JOIN `access_log_useragent` `lua` 
-         ON `lua`.`uadevicefamilyid` = `ln`.`id`
- INNER JOIN `access_log` `l` 
-         ON `l`.`useragentid` = `lua`.`id`
-   GROUP BY `ln`.`id`
-   ORDER BY `ln`.`name`;
-
--- drop table -----------------------------------------------------------
-DROP VIEW IF EXISTS `access_ua_device_model_list`;
--- create table ---------------------------------------------------------
-CREATE 
-    ALGORITHM = UNDEFINED 
-    DEFINER = `root`@`localhost` 
-    SQL SECURITY DEFINER
-VIEW `access_ua_device_model_list` AS
-     SELECT `ln`.`name` AS `Device Model`,
-            COUNT(`l`.`id`) AS `Log Count`, 
-            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
-            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
-            SUM(`l`.`bytes_received`) AS `Bytes Received`,
-            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
-            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
-            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
-            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
-            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM `access_log_ua_device_model` `ln`
- INNER JOIN `access_log_useragent` `lua` 
-         ON `lua`.`uadevicefamilyid` = `ln`.`id`
- INNER JOIN `access_log` `l` 
-         ON `l`.`useragentid` = `lua`.`id`
-   GROUP BY `ln`.`id`
-   ORDER BY `ln`.`name`;
-
--- drop table -----------------------------------------------------------
-DROP VIEW IF EXISTS `access_ua_os_list`;
--- create table ---------------------------------------------------------
-CREATE 
-    ALGORITHM = UNDEFINED 
-    DEFINER = `root`@`localhost` 
-    SQL SECURITY DEFINER
-VIEW `access_ua_os_list` AS
-    SELECT `ln`.`name` AS `Operating System`,
-            COUNT(`l`.`id`) AS `Log Count`, 
-            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
-            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
-            SUM(`l`.`bytes_received`) AS `Bytes Received`,
-            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
-            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
-            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
-            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
-            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM `access_log_ua_os` `ln`
- INNER JOIN `access_log_useragent` `lua` 
-         ON `lua`.`uaosid` = `ln`.`id`
- INNER JOIN `access_log` `l` 
-         ON `l`.`useragentid` = `lua`.`id`
-   GROUP BY `ln`.`id`
-   ORDER BY `ln`.`name`;
-
--- drop table -----------------------------------------------------------
-DROP VIEW IF EXISTS `access_ua_os_family_list`;
--- create table ---------------------------------------------------------
-CREATE 
-    ALGORITHM = UNDEFINED 
-    DEFINER = `root`@`localhost` 
-    SQL SECURITY DEFINER
-VIEW `access_ua_os_family_list` AS
-     SELECT `ln`.`name` AS `Operating System Family`,
-            COUNT(`l`.`id`) AS `Log Count`, 
-            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
-            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
-            SUM(`l`.`bytes_received`) AS `Bytes Received`,
-            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
-            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
-            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
-            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
-            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM `access_log_ua_os_family` `ln`
- INNER JOIN `access_log_useragent` `lua` 
-         ON `lua`.`uaosfamilyid` = `ln`.`id`
- INNER JOIN `access_log` `l` 
-         ON `l`.`useragentid` = `lua`.`id`
-   GROUP BY `ln`.`id`
-   ORDER BY `ln`.`name`;
-
--- drop table -----------------------------------------------------------
-DROP VIEW IF EXISTS `access_ua_os_version_list`;
--- create table ---------------------------------------------------------
-CREATE 
-    ALGORITHM = UNDEFINED 
-    DEFINER = `root`@`localhost` 
-    SQL SECURITY DEFINER
-VIEW `access_ua_os_version_list` AS
-     SELECT `ln`.`name` AS `Operating System Version`,
-            COUNT(`l`.`id`) AS `Log Count`, 
-            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
-            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
-            SUM(`l`.`bytes_received`) AS `Bytes Received`,
-            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
-            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
-            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
-            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
-            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM `access_log_ua_os_version` `ln`
- INNER JOIN `access_log_useragent` `lua` 
-         ON `lua`.`uaosversionid` = `ln`.`id`
- INNER JOIN `access_log` `l` 
-         ON `l`.`useragentid` = `lua`.`id`
-   GROUP BY `ln`.`id`
-   ORDER BY `ln`.`name`;
-
--- drop table -----------------------------------------------------------
-DROP VIEW IF EXISTS `access_importfile_list`;
--- create table ---------------------------------------------------------
-CREATE 
-    ALGORITHM = UNDEFINED 
-    DEFINER = `root`@`localhost` 
-    SQL SECURITY DEFINER
-VIEW `access_importfile_list` AS
-     SELECT `ln`.`name` AS `Access Log Import File`, 
-            COUNT(`l`.`id`) AS `Log Count`, 
-            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
-            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
-            SUM(`l`.`bytes_received`) AS `Bytes Received`,
-            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
-            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
-            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
-            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
-            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM `import_file` `ln`
- INNER JOIN `access_log` `l` 
-         ON `l`.`importfileid` = `ln`.`id`
-   GROUP BY `ln`.`id`
-   ORDER BY `ln`.`name`;
 
 -- drop table -----------------------------------------------------------
 DROP VIEW IF EXISTS `access_period_year_list`;
@@ -4457,6 +3804,977 @@ SELECT `name` AS `Server Port`,
   FROM `log_serverport`
 ORDER BY `name`;
 
+-- # Views associated with UserAgent and User-Agent data tables below
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_useragent_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_useragent_list` AS
+     SELECT `ln`.`name` AS `Access Log UserAgent`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `access_log_useragent` `ln`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`useragentid` = `ln`.`id`
+   GROUP BY `ln`.`id`
+   ORDER BY `ln`.`name`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_useragent_pretty_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_useragent_pretty_list` AS
+     SELECT `ln`.`ua` AS `Access Log Pretty User Agent`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `access_log_useragent` `ln`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`useragentid` = `ln`.`id`
+   GROUP BY `ln`.`ua`
+   ORDER BY `ln`.`ua`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_useragent_os_browser_device_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_useragent_os_browser_device_list` AS
+     SELECT `ln`.`ua_os_family` AS `Operating System`,
+            `ln`.`ua_browser_family` AS `Browser`,
+            `ln`.`ua_device_family` AS `Device`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `access_log_useragent` `ln`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`useragentid` = `ln`.`id`
+   GROUP BY `ln`.`ua_os_family`,
+            `ln`.`ua_browser_family`,
+            `ln`.`ua_device_family`
+   ORDER BY `ln`.`ua_os_family`, 
+            `ln`.`ua_browser_family`,
+            `ln`.`ua_device_family`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_useragent_browser_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_useragent_browser_list` AS
+     SELECT `ln`.`ua_browser` AS `Browser`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `access_log_useragent` `ln`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`useragentid` = `ln`.`id`
+   GROUP BY `ln`.`ua_browser`
+   ORDER BY `ln`.`ua_browser`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_useragent_browser_family_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_useragent_browser_family_list` AS
+     SELECT `ln`.`ua_browser_family` AS `Browser Family`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `access_log_useragent` `ln`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`useragentid` = `ln`.`id`
+   GROUP BY `ln`.`ua_browser_family`
+   ORDER BY `ln`.`ua_browser_family`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_useragent_browser_version_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_useragent_browser_version_list` AS
+     SELECT `ln`.`ua_browser_version` AS `Browser Version`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `access_log_useragent` `ln`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`useragentid` = `ln`.`id`
+   GROUP BY `ln`.`ua_browser_version`
+   ORDER BY `ln`.`ua_browser_version`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_useragent_device_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_useragent_device_list` AS
+     SELECT `ln`.`ua_device` AS `Device`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `access_log_useragent` `ln`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`useragentid` = `ln`.`id`
+   GROUP BY `ln`.`ua_device`
+   ORDER BY `ln`.`ua_device`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_useragent_device_brand_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_useragent_device_brand_list` AS
+     SELECT `ln`.`ua_device_brand` AS `Device Brand`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `access_log_useragent` `ln`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`useragentid` = `ln`.`id`
+   GROUP BY `ln`.`ua_device_brand`
+   ORDER BY `ln`.`ua_device_brand`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_useragent_device_family_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_useragent_device_family_list` AS
+     SELECT `ln`.`ua_device_family` AS `Device Family`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `access_log_useragent` `ln`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`useragentid` = `ln`.`id`
+   GROUP BY `ln`.`ua_device_family`
+   ORDER BY `ln`.`ua_device_family`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_useragent_device_model_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_useragent_device_model_list` AS
+     SELECT `ln`.`ua_device_model` AS `Device Model`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `access_log_useragent` `ln`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`useragentid` = `ln`.`id`
+   GROUP BY `ln`.`ua_device_model`
+   ORDER BY `ln`.`ua_device_model`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_useragent_os_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_useragent_os_list` AS
+     SELECT `ln`.`ua_os` AS `Operating System`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `access_log_useragent` `ln`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`useragentid` = `ln`.`id`
+   GROUP BY `ln`.`ua_os`
+   ORDER BY `ln`.`ua_os`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_useragent_os_family_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_useragent_os_family_list` AS
+     SELECT `ln`.`ua_os_family` AS `Operating System Family`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `access_log_useragent` `ln`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`useragentid` = `ln`.`id`
+   GROUP BY `ln`.`ua_os_family`
+   ORDER BY `ln`.`ua_os_family`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_useragent_os_version_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_useragent_os_version_list` AS
+     SELECT `ln`.`ua_os_version` AS `Operating System Version`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `access_log_useragent` `ln`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`useragentid` = `ln`.`id`
+   GROUP BY `ln`.`ua_os_version`
+   ORDER BY `ln`.`ua_os_version`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_ua_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_ua_list` AS
+     SELECT `ln`.`name` AS `Access Log User Agent`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `access_log_ua` `ln`
+ INNER JOIN `access_log_useragent` `lua` 
+         ON `lua`.`uaid` = `ln`.`id`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`useragentid` = `lua`.`id`
+   GROUP BY `ln`.`id`
+   ORDER BY `ln`.`name`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_ua_browser_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_ua_browser_list` AS
+    SELECT `ln`.`name` AS `Browser`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `access_log_ua_browser` `ln`
+ INNER JOIN `access_log_useragent` `lua` 
+         ON `lua`.`uabrowserid` = `ln`.`id`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`useragentid` = `lua`.`id`
+   GROUP BY `ln`.`id`
+   ORDER BY `ln`.`name`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_ua_browser_family_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_ua_browser_family_list` AS
+     SELECT `ln`.`name` AS `Browser Family`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `access_log_ua_browser_family` `ln`
+ INNER JOIN `access_log_useragent` `lua` 
+         ON `lua`.`uabrowserfamilyid` = `ln`.`id`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`useragentid` = `lua`.`id`
+   GROUP BY `ln`.`id`
+   ORDER BY `ln`.`name`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_ua_browser_version_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_ua_browser_version_list` AS
+    SELECT `ln`.`name` AS `Browser Version`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `access_log_ua_browser_version` `ln`
+ INNER JOIN `access_log_useragent` `lua` 
+         ON `lua`.`uabrowserversionid` = `ln`.`id`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`useragentid` = `lua`.`id`
+   GROUP BY `ln`.`id`
+   ORDER BY `ln`.`name`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_ua_device_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_ua_device_list` AS
+    SELECT `ln`.`name` AS `Device`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `access_log_ua_device` `ln`
+ INNER JOIN `access_log_useragent` `lua` 
+         ON `lua`.`uadeviceid` = `ln`.`id`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`useragentid` = `lua`.`id`
+   GROUP BY `ln`.`id`
+   ORDER BY `ln`.`name`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_ua_device_brand_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_ua_device_brand_list` AS
+    SELECT `ln`.`name` AS `Device Brand`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `access_log_ua_device_brand` `ln`
+ INNER JOIN `access_log_useragent` `lua` 
+         ON `lua`.`uadevicebrandid` = `ln`.`id`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`useragentid` = `lua`.`id`
+   GROUP BY `ln`.`id`
+   ORDER BY `ln`.`name`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_ua_device_family_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_ua_device_family_list` AS
+    SELECT `ln`.`name` AS `Device Family`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `access_log_ua_device_family` `ln`
+ INNER JOIN `access_log_useragent` `lua` 
+         ON `lua`.`uadevicefamilyid` = `ln`.`id`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`useragentid` = `lua`.`id`
+   GROUP BY `ln`.`id`
+   ORDER BY `ln`.`name`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_ua_device_model_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_ua_device_model_list` AS
+     SELECT `ln`.`name` AS `Device Model`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `access_log_ua_device_model` `ln`
+ INNER JOIN `access_log_useragent` `lua` 
+         ON `lua`.`uadevicefamilyid` = `ln`.`id`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`useragentid` = `lua`.`id`
+   GROUP BY `ln`.`id`
+   ORDER BY `ln`.`name`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_ua_os_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_ua_os_list` AS
+    SELECT `ln`.`name` AS `Operating System`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `access_log_ua_os` `ln`
+ INNER JOIN `access_log_useragent` `lua` 
+         ON `lua`.`uaosid` = `ln`.`id`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`useragentid` = `lua`.`id`
+   GROUP BY `ln`.`id`
+   ORDER BY `ln`.`name`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_ua_os_family_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_ua_os_family_list` AS
+     SELECT `ln`.`name` AS `Operating System Family`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `access_log_ua_os_family` `ln`
+ INNER JOIN `access_log_useragent` `lua` 
+         ON `lua`.`uaosfamilyid` = `ln`.`id`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`useragentid` = `lua`.`id`
+   GROUP BY `ln`.`id`
+   ORDER BY `ln`.`name`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_ua_os_version_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_ua_os_version_list` AS
+     SELECT `ln`.`name` AS `Operating System Version`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `access_log_ua_os_version` `ln`
+ INNER JOIN `access_log_useragent` `lua` 
+         ON `lua`.`uaosversionid` = `ln`.`id`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`useragentid` = `lua`.`id`
+   GROUP BY `ln`.`id`
+   ORDER BY `ln`.`name`;
+
+-- # Views associated with Client and IP Geolocation data tables below
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_client_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_client_list` AS
+     SELECT `ln`.`name` AS `Access Client Name`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `log_client` `ln`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`clientid` = `ln`.`id`
+   GROUP BY `ln`.`name`
+   ORDER BY `ln`.`name`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_clientcity_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_clientcity_list` AS
+     SELECT `ln`.`city` AS `Access Client City`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `log_client` `ln`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`clientid` = `ln`.`id`
+   GROUP BY `ln`.`city`
+   ORDER BY `ln`.`city`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_clientcountry_code_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_clientcountry_code_list` AS
+     SELECT `ln`.`country_code` AS `Access Client Country Code`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `log_client` `ln`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`clientid` = `ln`.`id`
+   GROUP BY `ln`.`country_code`
+   ORDER BY `ln`.`country_code`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_clientcountry_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_clientcountry_list` AS
+     SELECT `ln`.`country` AS `Access Client Country`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `log_client` `ln`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`clientid` = `ln`.`id`
+   GROUP BY `ln`.`country`
+   ORDER BY `ln`.`country`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_clientsubdivision_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_clientsubdivision_list` AS
+     SELECT `ln`.`subdivision` AS `Access Client Subdivision`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `log_client` `ln`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`clientid` = `ln`.`id`
+   GROUP BY `ln`.`subdivision`
+   ORDER BY `ln`.`subdivision`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_clientorganization_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_clientorganization_list` AS
+     SELECT `ln`.`organization` AS `Access Client Organization`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `log_client` `ln`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`clientid` = `ln`.`id`
+   GROUP BY `ln`.`organization`
+   ORDER BY `ln`.`organization`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_clientnetwork_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_clientnetwork_list` AS
+     SELECT `ln`.`network` AS `Access Client Network`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `log_client` `ln`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`clientid` = `ln`.`id`
+   GROUP BY `ln`.`network`
+   ORDER BY `ln`.`network`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_client_city_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_client_city_list` AS
+     SELECT `ca`.`name` AS `Access Client City`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `log_client_city` `ca`
+ INNER JOIN `log_client` `c` 
+         ON `c`.`cityid` = `ca`.`id`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`clientid` = `c`.`id`
+   GROUP BY `ca`.`name`
+   ORDER BY `ca`.`name`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_client_country_code_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_client_country_code_list` AS
+     SELECT `ca`.`country_code` AS `Access Client Country Code`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `log_client_country` `ca`
+ INNER JOIN `log_client` `c` 
+         ON `c`.`countryid` = `ca`.`id`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`clientid` = `c`.`id`
+   GROUP BY `ca`.`country_code`
+   ORDER BY `ca`.`country_code`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_client_country_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_client_country_list` AS
+     SELECT `ca`.`country` AS `Access Client Country`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `log_client_country` `ca`
+ INNER JOIN `log_client` `c` 
+         ON `c`.`countryid` = `ca`.`id`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`clientid` = `c`.`id`
+   GROUP BY `ca`.`country`
+   ORDER BY `ca`.`country`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_client_subdivision_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_client_subdivision_list` AS
+     SELECT `ca`.`name` AS `Access Client Subdivision`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `log_client_subdivision` `ca`
+ INNER JOIN `log_client` `c` 
+         ON `c`.`subdivisionid` = `ca`.`id`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`clientid` = `c`.`id`
+   GROUP BY `ca`.`name`
+   ORDER BY `ca`.`name`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_client_organization_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_client_organization_list` AS
+     SELECT `ca`.`name` AS `Access Client Organization`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `log_client_organization` `ca`
+ INNER JOIN `log_client` `c` 
+         ON `c`.`organizationid` = `ca`.`id`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`clientid` = `c`.`id`
+   GROUP BY `ca`.`name`
+   ORDER BY `ca`.`name`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `access_client_network_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `access_client_network_list` AS
+     SELECT `ca`.`name` AS `Access Client Network`,
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `log_client_network` `ca`
+ INNER JOIN `log_client` `c` 
+         ON `c`.`networkid` = `ca`.`id`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`clientid` = `c`.`id`
+   GROUP BY `ca`.`name`
+   ORDER BY `ca`.`name`;
+
+-- # Views associated with Import tables below
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `import_file_access_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `import_file_access_list` AS
+     SELECT `ln`.`name` AS `Import File`, 
+            COUNT(`l`.`id`) AS `Log Count`, 
+            SUM(`l`.`reqbytes`) AS `HTTP Bytes`, 
+            SUM(`l`.`bytes_sent`) AS `Bytes Sent`, 
+            SUM(`l`.`bytes_received`) AS `Bytes Received`,
+            SUM(`l`.`bytes_transferred`) AS `Bytes Transferred`,
+            MAX(`l`.`reqtime_milli`) AS `Max Request Time`,
+            MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
+            MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
+            MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
+       FROM `import_file` `ln`
+ INNER JOIN `access_log` `l` 
+         ON `l`.`importfileid` = `ln`.`id`
+   GROUP BY `ln`.`name`
+   ORDER BY `ln`.`name`;
+
+-- drop table -----------------------------------------------------------
+DROP VIEW IF EXISTS `import_file_error_list`;
+-- create table ---------------------------------------------------------
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `import_file_error_list` AS
+     SELECT `ln`.`name` AS `Import File`, 
+            COUNT(`l`.`id`) AS `Log Count`
+       FROM `import_file` `ln`
+ INNER JOIN `error_log` `l` 
+         ON `l`.`importfileid` = `ln`.`id`
+   GROUP BY `ln`.`name`
+   ORDER BY `ln`.`name`;
+
 -- # Stored Procedure Access Log parsing performed on LOAD TABLE below
 -- drop procedure -----------------------------------------------------------
 DROP PROCEDURE IF EXISTS `process_access_parse`;
@@ -4475,7 +4793,7 @@ BEGIN
   DECLARE importProcessID INTEGER DEFAULT NULL;
   DECLARE importLoad_ID INTEGER DEFAULT NULL;
   DECLARE importRecordID INTEGER DEFAULT NULL;
-  DECLARE importFile_ID INTEGER DEFAULT NULL;
+  DECLARE importFileCheck_ID INTEGER DEFAULT NULL;
   DECLARE importFile_common_ID INTEGER DEFAULT NULL;
   DECLARE recordsProcessed INTEGER DEFAULT 0;
   DECLARE filesProcessed INTEGER DEFAULT 0;
@@ -4706,22 +5024,22 @@ BEGIN
   END IF;	
   process_parse_file: LOOP
   	IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
-	  	FETCH csv2mysqlStatusFile INTO importFile_ID;
+	  	FETCH csv2mysqlStatusFile INTO importFileCheck_ID;
 	  ELSEIF in_processName = 'csv2mysql' THEN
-		  FETCH csv2mysqlLoadIDFile INTO importFile_ID;
+		  FETCH csv2mysqlLoadIDFile INTO importFileCheck_ID;
 	  ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
-		  FETCH vhostStatusFile INTO importFile_ID;
+		  FETCH vhostStatusFile INTO importFileCheck_ID;
   	ELSEIF in_processName = 'vhost' THEN
-	  	FETCH vhostLoadIDFile INTO importFile_ID;
+	  	FETCH vhostLoadIDFile INTO importFileCheck_ID;
 	  ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
-  		FETCH combinedStatusFile INTO importFile_ID;
+  		FETCH combinedStatusFile INTO importFileCheck_ID;
 	  ELSE
-		  FETCH combinedLoadIDFile INTO importFile_ID;
+		  FETCH combinedLoadIDFile INTO importFileCheck_ID;
     END IF;	
     IF done = true THEN 
       LEAVE process_parse_file;
     END IF;
-    IF apache_logs.importFileCheck(importFile_ID, importProcessID, 'parse') = 0 THEN
+    IF apache_logs.importFileCheck(importFileCheck_ID, importProcessID, 'parse') = 0 THEN
       ROLLBACK;
       LEAVE process_parse_file;
     END IF;
@@ -4880,7 +5198,6 @@ BEGIN
          processSeconds = TIME_TO_SEC(TIMEDIFF(now(), started)) 
    WHERE id = importProcessID;
   COMMIT;
-  -- close the cursor
   IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
     CLOSE csv2mysqlStatus;
   ELSEIF in_processName = 'csv2mysql' THEN
@@ -4914,6 +5231,7 @@ BEGIN
   DECLARE importProcessID INTEGER DEFAULT NULL;
   DECLARE importLoad_ID INTEGER DEFAULT NULL;
   DECLARE importRecordID INTEGER DEFAULT NULL;
+  DECLARE importFileCheck_ID INTEGER DEFAULT NULL;
   DECLARE importFile_ID INTEGER DEFAULT NULL;
   DECLARE recordsProcessed INTEGER DEFAULT 0;
   DECLARE filesProcessed INTEGER DEFAULT 0;
@@ -4987,7 +5305,8 @@ BEGIN
              l.log_cookie,
              l.server_name, 
              l.server_port, 
-             l.request_log_id, 
+             l.request_log_id,
+             l.importfileid,
              f.server_name server_name_file, 
              f.server_port server_port_file, 
              l.id 
@@ -5026,6 +5345,7 @@ BEGIN
              l.server_name, 
              l.server_port, 
              l.request_log_id, 
+             l.importfileid,
              f.server_name server_name_file, 
              f.server_port server_port_file, 
              l.id 
@@ -5058,6 +5378,7 @@ BEGIN
              l.log_useragent,
              l.server_name, 
              l.server_port, 
+             l.importfileid,
              f.server_name server_name_file, 
              f.server_port server_port_file, 
              l.id 
@@ -5088,6 +5409,7 @@ BEGIN
              l.log_useragent,
              l.server_name, 
              l.server_port, 
+             l.importfileid,
              f.server_name server_name_file, 
              f.server_port server_port_file, 
              l.id 
@@ -5120,6 +5442,7 @@ BEGIN
              l.log_useragent,
              l.server_name, 
              l.server_port, 
+             l.importfileid,
              f.server_name server_name_file, 
              f.server_port server_port_file, 
              l.id 
@@ -5150,6 +5473,7 @@ BEGIN
              l.log_useragent,
              l.server_name, 
              l.server_port, 
+             l.importfileid,
              f.server_name server_name_file, 
              f.server_port server_port_file, 
              l.id 
@@ -5210,76 +5534,72 @@ BEGIN
     END IF;	
   END IF;	
   SET importProcessID = apache_logs.importProcessID('access_import', in_processName);
-
-	START TRANSACTION;
--- process import_file TABLE first 
--- open the cursor
-	IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
-		OPEN csv2mysqlStatusFile;
-	ELSEIF in_processName = 'csv2mysql' THEN
-		OPEN csv2mysqlLoadIDFile;
-	ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
-		OPEN vhostStatusFile;
-	ELSEIF in_processName = 'vhost' THEN
-		OPEN vhostLoadIDFile;
-	ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
-		OPEN combinedStatusFile;
-	ELSE
-		OPEN combinedLoadIDFile;
-	END IF;	
-  process_import_file: LOOP
-  	IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
-	  	FETCH csv2mysqlStatusFile INTO importFile_ID; 
-	  ELSEIF in_processName = 'csv2mysql' THEN
-		  FETCH csv2mysqlLoadIDFile INTO importFile_ID;
-  	ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
-	  	FETCH vhostStatusFile INTO importFile_ID; 
-  	ELSEIF in_processName = 'vhost' THEN
-	  	FETCH vhostLoadIDFile INTO importFile_ID; 
-	  ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
-		  FETCH combinedStatusFile INTO importFile_ID; 
-	  ELSE
-		  FETCH combinedLoadIDFile INTO importFile_ID; 
-  	END IF;	
-		IF done = true THEN 
-			LEAVE process_import_file;
-		END IF;
-		IF apache_logs.importFileCheck(importFile_ID, importProcessID, 'import') = 0 THEN
-			ROLLBACK;
-			LEAVE process_import_file;
-    END IF;
-		SET filesProcessed = filesProcessed + 1;
-	END LOOP process_import_file;
-  -- close the cursor
+  START TRANSACTION;
+  -- process import_file TABLE first 
   IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
-		CLOSE csv2mysqlStatusFile;
-	ELSEIF in_processName = 'csv2mysql' THEN
-		CLOSE csv2mysqlLoadIDFile;
-	ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
-		CLOSE vhostStatusFile;
-	ELSEIF in_processName = 'vhost' THEN
-		CLOSE vhostLoadIDFile;
-	ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
-		CLOSE combinedStatusFile;
-	ELSE
-		CLOSE combinedLoadIDFile;
-	END IF;	
+    OPEN csv2mysqlStatusFile;
+  ELSEIF in_processName = 'csv2mysql' THEN
+    OPEN csv2mysqlLoadIDFile;
+  ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
+    OPEN vhostStatusFile;
+  ELSEIF in_processName = 'vhost' THEN
+    OPEN vhostLoadIDFile;
+  ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
+    OPEN combinedStatusFile;
+  ELSE
+    OPEN combinedLoadIDFile;
+  END IF;	
+  process_import_file: LOOP
+    IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
+      FETCH csv2mysqlStatusFile INTO importFileCheck_ID; 
+    ELSEIF in_processName = 'csv2mysql' THEN
+      FETCH csv2mysqlLoadIDFile INTO importFileCheck_ID;
+    ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
+      FETCH vhostStatusFile INTO importFileCheck_ID; 
+    ELSEIF in_processName = 'vhost' THEN
+      FETCH vhostLoadIDFile INTO importFileCheck_ID; 
+    ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
+      FETCH combinedStatusFile INTO importFileCheck_ID; 
+    ELSE
+      FETCH combinedLoadIDFile INTO importFileCheck_ID; 
+    END IF;	
+    IF done = true THEN 
+      LEAVE process_import_file;
+    END IF;
+    IF apache_logs.importFileCheck(importFileCheck_ID, importProcessID, 'import') = 0 THEN
+      ROLLBACK;
+      LEAVE process_import_file;
+    END IF;
+    SET filesProcessed = filesProcessed + 1;
+  END LOOP process_import_file;
+  IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
+    CLOSE csv2mysqlStatusFile;
+  ELSEIF in_processName = 'csv2mysql' THEN
+    CLOSE csv2mysqlLoadIDFile;
+  ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
+    CLOSE vhostStatusFile;
+  ELSEIF in_processName = 'vhost' THEN
+    CLOSE vhostLoadIDFile;
+  ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
+    CLOSE combinedStatusFile;
+  ELSE
+    CLOSE combinedLoadIDFile;
+  END IF;	
   -- process records 
   SET done = false;
-  -- open the cursor
-	IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
-		OPEN csv2mysqlStatus;
-	ELSEIF in_processName = 'csv2mysql' THEN
-		OPEN csv2mysqlLoadID;
-	ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
-		OPEN vhostStatus;
-	ELSEIF in_processName = 'vhost' THEN
-		OPEN vhostLoadID;
-	ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
-		OPEN combinedStatus;
-	ELSE
-		OPEN combinedLoadID;
-	END IF;	
+  IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
+    OPEN csv2mysqlStatus;
+  ELSEIF in_processName = 'csv2mysql' THEN
+    OPEN csv2mysqlLoadID;
+  ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
+    OPEN vhostStatus;
+  ELSEIF in_processName = 'vhost' THEN
+    OPEN vhostLoadID;
+  ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
+    OPEN combinedStatus;
+  ELSE
+    OPEN combinedLoadID;
+  END IF;	
   process_import: LOOP
     IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
       FETCH csv2mysqlStatus INTO 
@@ -5305,6 +5625,7 @@ BEGIN
             server, 
             serverPort, 
             requestLogID, 
+            importFile_ID,
             serverFile, 
             serverPortFile, 
             importRecordID; 
@@ -5332,6 +5653,7 @@ BEGIN
             server, 
             serverPort, 
             requestLogID, 
+            importFile_ID,
             serverFile, 
             serverPortFile, 
             importRecordID; 
@@ -5351,6 +5673,7 @@ BEGIN
             userAgent,
             server, 
             serverPort, 
+            importFile_ID,
             serverFile, 
             serverPortFile, 
             importRecordID; 
@@ -5370,6 +5693,7 @@ BEGIN
             userAgent,
             server, 
             serverPort, 
+            importFile_ID,
             serverFile, 
             serverPortFile, 
             importRecordID; 
@@ -5389,6 +5713,7 @@ BEGIN
             userAgent,
             server, 
             serverPort, 
+            importFile_ID,
             serverFile, 
             serverPortFile, 
             importRecordID; 
@@ -5408,6 +5733,7 @@ BEGIN
             userAgent,
             server, 
             serverPort, 
+            importFile_ID,
             serverFile, 
             serverPortFile, 
             importRecordID; 
@@ -5417,17 +5743,17 @@ BEGIN
     END IF;
     SET recordsProcessed = recordsProcessed + 1;
     SET remoteLogName_Id = null, 
-		    remoteUser_Id = null, 
-		    reqStatus_Id = null, 
-    		reqProtocol_Id = null, 
-    		reqMethod_Id = null, 
-		    reqUri_Id = null, 
-		    reqQuery_Id = null, 
-		    referer_Id = null, 
-		    userAgent_Id = null, 
-		    logCookie_Id = null, 
-		    client_Id = null, 
-		    server_Id = null, 
+        remoteUser_Id = null, 
+        reqStatus_Id = null, 
+        reqProtocol_Id = null, 
+        reqMethod_Id = null, 
+        reqUri_Id = null, 
+        reqQuery_Id = null, 
+        referer_Id = null, 
+        userAgent_Id = null, 
+        logCookie_Id = null, 
+        client_Id = null, 
+        server_Id = null, 
         serverPort_Id = null,
         requestLog_Id = null;
     -- any customizing for business needs should be done here before normalization functions called.
@@ -5454,7 +5780,7 @@ BEGIN
     ELSE
       SET logCookieConverted = logCookie;
     END IF;
--- normalize import staging table 
+    -- normalize import staging table 
     IF reqProtocol IS NOT NULL THEN
       SET reqProtocol_Id = apache_logs.access_reqProtocolID(reqProtocol);
     END IF;
@@ -5575,20 +5901,19 @@ BEGIN
          processSeconds = TIME_TO_SEC(TIMEDIFF(now(), started)) 
    WHERE id = importProcessID;
 	COMMIT;
-  -- close the cursor
   IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
-		CLOSE csv2mysqlStatus;
-	ELSEIF in_processName = 'csv2mysql' THEN
-		CLOSE csv2mysqlLoadID;
-	ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
-		CLOSE vhostStatus;
-	ELSEIF in_processName = 'vhost' THEN
-		CLOSE vhostLoadID;
-	ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
-		CLOSE combinedStatus;
-	ELSE
-		CLOSE combinedLoadID;
-	END IF;	
+    CLOSE csv2mysqlStatus;
+  ELSEIF in_processName = 'csv2mysql' THEN
+    CLOSE csv2mysqlLoadID;
+  ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
+    CLOSE vhostStatus;
+  ELSEIF in_processName = 'vhost' THEN
+    CLOSE vhostLoadID;
+  ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
+    CLOSE combinedStatus;
+  ELSE
+    CLOSE combinedLoadID;
+  END IF;	
 END//
 DELIMITER ;
 -- # Stored Procedure Error Log parsing performed on LOAD TABLE data below
@@ -5609,7 +5934,7 @@ BEGIN
   DECLARE importProcessID INTEGER DEFAULT NULL;
   DECLARE importLoad_ID INTEGER DEFAULT NULL;
   DECLARE importRecordID INTEGER DEFAULT NULL;
-  DECLARE importFile_ID INTEGER DEFAULT NULL;
+  DECLARE importFileCheck_ID INTEGER DEFAULT NULL;
   DECLARE importFile_vhost_ID INTEGER DEFAULT NULL;
   DECLARE recordsProcessed INTEGER DEFAULT 0;
   DECLARE filesProcessed INTEGER DEFAULT 0;
@@ -5617,8 +5942,7 @@ BEGIN
   DECLARE processError INTEGER DEFAULT 0;
   -- declare cursor for default format - single importLoadID
   DECLARE defaultByLoadID CURSOR FOR 
-      SELECT l.id,
-             l.importfileid
+      SELECT l.id
         FROM apache_logs.load_error_default l 
   INNER JOIN apache_logs.import_file f 
           ON l.importfileid = f.id
@@ -5632,8 +5956,7 @@ BEGIN
        WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
          AND l.process_status = 0;
   DECLARE defaultByStatus CURSOR FOR 
-      SELECT l.id,
-             l.importfileid
+      SELECT l.id
         FROM apache_logs.load_error_default l 
   INNER JOIN apache_logs.import_file f 
           ON l.importfileid = f.id
@@ -5734,14 +6057,14 @@ INNER JOIN apache_logs.import_load il
   END IF;
   process_parse_file: LOOP
     IF importLoad_ID IS NULL THEN
-      FETCH defaultByStatusFile INTO importFile_ID;
+      FETCH defaultByStatusFile INTO importFileCheck_ID;
     ELSE
-      FETCH defaultByLoadIDFile INTO importFile_ID;
+      FETCH defaultByLoadIDFile INTO importFileCheck_ID;
     END IF;
     IF done = true THEN 
       LEAVE process_parse_file;
     END IF;
-    IF apache_logs.importFileCheck(importFile_ID, importProcessID, 'parse') = 0 THEN
+    IF apache_logs.importFileCheck(importFileCheck_ID, importProcessID, 'parse') = 0 THEN
       ROLLBACK;
       LEAVE process_parse_file;
     END IF;
@@ -5761,9 +6084,9 @@ INNER JOIN apache_logs.import_load il
   END IF;
   process_parse: LOOP
     IF importLoad_ID IS NULL THEN
-      FETCH defaultByStatus INTO importRecordID, importFile_ID;
+      FETCH defaultByStatus INTO importRecordID;
     ELSE
-      FETCH defaultByLoadID INTO importRecordID, importFile_ID;
+      FETCH defaultByLoadID INTO importRecordID;
     END IF;
     IF done = true THEN 
       LEAVE process_parse;
@@ -5954,7 +6277,6 @@ INNER JOIN apache_logs.import_load il
          processSeconds = TIME_TO_SEC(TIMEDIFF(now(), started)) 
    WHERE id = importProcessID;
   COMMIT;
-  -- close the cursor
   IF importLoad_ID IS NULL THEN
     CLOSE defaultByStatus;
   ELSE
@@ -5981,6 +6303,7 @@ BEGIN
   DECLARE importLoad_ID INTEGER DEFAULT NULL;
   DECLARE importRecordID INTEGER DEFAULT NULL;
   DECLARE importFile_ID INTEGER DEFAULT NULL;
+  DECLARE importFileCheck_ID INTEGER DEFAULT NULL;
   DECLARE recordsProcessed INTEGER DEFAULT 0;
   DECLARE filesProcessed INTEGER DEFAULT 0;
   DECLARE loadsProcessed INTEGER DEFAULT 1;
@@ -6040,6 +6363,7 @@ BEGIN
              l.server_name, 
              l.server_port, 
              l.request_log_id, 
+             l.importfileid,
              f.server_name server_name_file, 
              f.server_port server_port_file, 
              l.id
@@ -6056,29 +6380,30 @@ BEGIN
        WHERE l.process_status = 1
          AND f.importloadid = CONVERT(in_importLoadID, UNSIGNED);
   DECLARE defaultByStatus CURSOR FOR 
-     SELECT l.logtime, 
-            l.loglevel, 
-            l.module, 
-            l.processid, 
-            l.threadid, 
-            l.apachecode, 
-            l.apachemessage, 
-            l.systemcode, 
-            l.systemmessage, 
-            l.logmessage, 
-            l.referer,
-            l.client_name, 
-            l.client_port, 
-            l.server_name, 
-            l.server_port, 
-            l.request_log_id, 
-            f.server_name server_name_file, 
-            f.server_port server_port_file, 
-            l.id
-       FROM apache_logs.load_error_default l 
- INNER JOIN apache_logs.import_file f 
-         ON l.importfileid = f.id
-      WHERE l.process_status = 1;
+      SELECT l.logtime, 
+             l.loglevel, 
+             l.module, 
+             l.processid, 
+             l.threadid, 
+             l.apachecode, 
+             l.apachemessage, 
+             l.systemcode, 
+             l.systemmessage, 
+             l.logmessage, 
+             l.referer,
+             l.client_name, 
+             l.client_port, 
+             l.server_name, 
+             l.server_port, 
+             l.request_log_id, 
+             l.importfileid,
+             f.server_name server_name_file, 
+             f.server_port server_port_file, 
+             l.id
+        FROM apache_logs.load_error_default l 
+  INNER JOIN apache_logs.import_file f 
+          ON l.importfileid = f.id
+       WHERE l.process_status = 1;
   DECLARE defaultByStatusFile CURSOR FOR 
      SELECT l.importfileid
        FROM apache_logs.load_error_default l 
@@ -6114,8 +6439,7 @@ INNER JOIN apache_logs.import_file f
   END IF;
   SET importProcessID = apache_logs.importProcessID('error_import', in_processName);
   START TRANSACTION;
--- process import_file TABLE first 
--- open the cursor
+  -- process import_file TABLE first 
   IF importLoad_ID IS NULL THEN
     OPEN defaultByStatusFile;
   ELSE
@@ -6123,20 +6447,19 @@ INNER JOIN apache_logs.import_file f
   END IF;
   process_import_file: LOOP
     IF importLoad_ID IS NULL THEN
-      FETCH defaultByStatusFile INTO importFile_ID; 
+      FETCH defaultByStatusFile INTO importFileCheck_ID; 
     ELSE
-      FETCH defaultByLoadIDFile INTO importFile_ID; 
+      FETCH defaultByLoadIDFile INTO importFileCheck_ID; 
     END IF;
     IF done = true THEN 
       LEAVE process_import_file;
     END IF;
-    IF apache_logs.importFileCheck(importFile_ID, importProcessID, 'import') = 0 THEN
+    IF apache_logs.importFileCheck(importFileCheck_ID, importProcessID, 'import') = 0 THEN
       ROLLBACK;
       LEAVE process_import_file;
     END IF;
     SET filesProcessed = filesProcessed + 1;
   END LOOP process_import_file;
-  -- close the cursor
   IF importLoad_ID IS NULL THEN
     CLOSE defaultByStatusFile;
   ELSE
@@ -6144,7 +6467,6 @@ INNER JOIN apache_logs.import_file f
   END IF;
   -- process records 
   SET done = false;
-  -- open the cursor
   IF importLoad_ID IS NULL THEN
     OPEN defaultByStatus;
   ELSE
@@ -6169,6 +6491,7 @@ INNER JOIN apache_logs.import_file f
             server, 
             serverPort, 
             requestLogID, 
+            importFile_ID,
             serverFile, 
             serverPortFile, 
             importRecordID; 
@@ -6190,6 +6513,7 @@ INNER JOIN apache_logs.import_file f
             server, 
             serverPort, 
             requestLogID, 
+            importFile_ID,
             serverFile, 
             serverPortFile, 
             importRecordID; 
@@ -6326,7 +6650,6 @@ INNER JOIN apache_logs.import_file f
          processSeconds = TIME_TO_SEC(TIMEDIFF(now(), started)) 
    WHERE id = importProcessID;
   COMMIT;
-  -- close the cursor
   IF importLoad_ID IS NULL THEN
     CLOSE defaultByStatus;
   ELSE
@@ -6344,78 +6667,78 @@ CREATE DEFINER = `root`@`localhost` PROCEDURE `normalize_useragent` (
   IN in_importLoadID VARCHAR(20)
 )
 BEGIN
-	-- standard variables for processes
-	DECLARE e1 INT UNSIGNED;
-	DECLARE e2, e3 VARCHAR(128);
-	DECLARE e4, e5 VARCHAR(64);
-	DECLARE done BOOL DEFAULT false;
-	DECLARE importProcessID INTEGER DEFAULT NULL;
-	DECLARE importLoad_ID INTEGER DEFAULT NULL;
-	DECLARE recordsProcessed INTEGER DEFAULT 0;
-	DECLARE filesProcessed INTEGER DEFAULT 1;
+  -- standard variables for processes
+  DECLARE e1 INT UNSIGNED;
+  DECLARE e2, e3 VARCHAR(128);
+  DECLARE e4, e5 VARCHAR(64);
+  DECLARE done BOOL DEFAULT false;
+  DECLARE importProcessID INTEGER DEFAULT NULL;
+  DECLARE importLoad_ID INTEGER DEFAULT NULL;
+  DECLARE recordsProcessed INTEGER DEFAULT 0;
+  DECLARE filesProcessed INTEGER DEFAULT 1;
   DECLARE processError INTEGER DEFAULT 0;
   -- LOAD DATA staging table column variables
-	DECLARE v_ua VARCHAR(200) DEFAULT NULL;
-	DECLARE v_ua_browser VARCHAR(200) DEFAULT NULL;
-	DECLARE v_ua_browser_family VARCHAR(200) DEFAULT NULL;
-	DECLARE v_ua_browser_version VARCHAR(200) DEFAULT NULL;
-	DECLARE v_ua_os VARCHAR(200) DEFAULT NULL;
-	DECLARE v_ua_os_family VARCHAR(200) DEFAULT NULL;
-	DECLARE v_ua_os_version VARCHAR(200) DEFAULT NULL;
-	DECLARE v_ua_device VARCHAR(200) DEFAULT NULL;
-	DECLARE v_ua_device_family VARCHAR(200) DEFAULT NULL;
-	DECLARE v_ua_device_brand VARCHAR(200) DEFAULT NULL;
-	DECLARE v_ua_device_model VARCHAR(200) DEFAULT NULL;
-	DECLARE userAgent_id INTEGER DEFAULT NULL;
-	-- Primary IDs for the normalized Attribute tables
-	DECLARE ua_id,
-    uabrowser_id,
-    uabrowserfamily_id,
-    uabrowserversion_id,
-    uaos_id,
-    uaosfamily_id,
-    uaosversion_id,
-    uadevice_id,
-    uadevicefamily_id,
-    uadevicebrand_id,
-    uadevicemodel_id INTEGER DEFAULT NULL;
-	-- declare cursor for userAgent format
+  DECLARE v_ua VARCHAR(200) DEFAULT NULL;
+  DECLARE v_ua_browser VARCHAR(200) DEFAULT NULL;
+  DECLARE v_ua_browser_family VARCHAR(200) DEFAULT NULL;
+  DECLARE v_ua_browser_version VARCHAR(200) DEFAULT NULL;
+  DECLARE v_ua_os VARCHAR(200) DEFAULT NULL;
+  DECLARE v_ua_os_family VARCHAR(200) DEFAULT NULL;
+  DECLARE v_ua_os_version VARCHAR(200) DEFAULT NULL;
+  DECLARE v_ua_device VARCHAR(200) DEFAULT NULL;
+  DECLARE v_ua_device_family VARCHAR(200) DEFAULT NULL;
+  DECLARE v_ua_device_brand VARCHAR(200) DEFAULT NULL;
+  DECLARE v_ua_device_model VARCHAR(200) DEFAULT NULL;
+  DECLARE userAgent_id INTEGER DEFAULT NULL;
+  -- Primary IDs for the normalized Attribute tables
+  DECLARE ua_id,
+          uabrowser_id,
+          uabrowserfamily_id,
+          uabrowserversion_id,
+          uaos_id,
+          uaosfamily_id,
+          uaosversion_id,
+          uadevice_id,
+          uadevicefamily_id,
+          uadevicebrand_id,
+          uadevicemodel_id INTEGER DEFAULT NULL;
+  -- declare cursor for userAgent format
   DECLARE userAgent CURSOR FOR 
-   SELECT ua,
-         	ua_browser,
-          ua_browser_family,
-         	ua_browser_version,
-          ua_os,
-       	  ua_os_family,
-          ua_os_version,
-         	ua_device,
-          ua_device_family,
-         	ua_device_brand,
-          ua_device_model,
-          id
-     FROM apache_logs.access_log_useragent
-    WHERE uaid IS NULL;
-	-- declare NOT FOUND handler
-	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-		BEGIN
-			GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME; 
- 			CALL apache_logs.errorProcess('normalize_useragent', e1, e2, e3, e4, e5, importLoad_ID, importProcessID);
+    SELECT ua,
+           ua_browser,
+           ua_browser_family,
+           ua_browser_version,
+           ua_os,
+           ua_os_family,
+           ua_os_version,
+           ua_device,
+           ua_device_family,
+           ua_device_brand,
+           ua_device_model,
+           id
+      FROM apache_logs.access_log_useragent
+     WHERE uaid IS NULL;
+  -- declare NOT FOUND handler
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN
+      GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME; 
+      CALL apache_logs.errorProcess('normalize_useragent', e1, e2, e3, e4, e5, importLoad_ID, importProcessID);
       SET processError = processError + 1;
- 			ROLLBACK;
-		END;
-	-- check parameters for valid values
+      ROLLBACK;
+    END;
+  -- check parameters for valid values
   IF CONVERT(in_importLoadID, UNSIGNED) = 0 AND in_importLoadID != 'ALL' THEN
     SIGNAL SQLSTATE '22003' SET MESSAGE_TEXT = 'Invalid parameter value for in_importLoadID. Must be convert to number or be ALL';
   END IF;
   IF LENGTH(in_processName) < 8 THEN
     SIGNAL SQLSTATE '22003' SET MESSAGE_TEXT = 'Invalid parameter value for in_processName. Must be minimum of 8 characters';
   END IF;
-	IF NOT CONVERT(in_importLoadID, UNSIGNED) = 0 THEN
-		SET importLoad_ID = CONVERT(in_importLoadID, UNSIGNED);
-	END IF;
+  IF NOT CONVERT(in_importLoadID, UNSIGNED) = 0 THEN
+    SET importLoad_ID = CONVERT(in_importLoadID, UNSIGNED);
+  END IF;
   SET importProcessID = apache_logs.importProcessID('normalize_useragent', in_processName);
-	OPEN userAgent;
+  OPEN userAgent;
   START TRANSACTION;	
   process_normalize: LOOP
     FETCH userAgent

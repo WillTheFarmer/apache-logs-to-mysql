@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# version 3.2.8 - 03/05/2025 - revamped 4 process_*, importProcessID, importServerID Procedures - see changelog
+# version 3.2.9 - 03/07/2025 - process_access_import & process_error_import importfileid fix, added client GeoIP views - see changelog
 #
 # Copyright 2024-2025 Will Raymond <farmfreshsoftware@gmail.com>
 #
