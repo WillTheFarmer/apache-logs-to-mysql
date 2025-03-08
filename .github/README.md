@@ -307,7 +307,7 @@ Database `apache_logs` schema currently has 55 Tables, 1040 Columns, 190 Indexes
 
 Database normalization is a critical process in database design with objectives of optimizing data storage, improving data integrity, and reducing data anomalies.
 Organizing data into normalized tables greatly enhances efficiency and maintainability of a database system.
-## The 85 Views in apache_logs schema
+## 85 Views in apache_logs schema
 ![apache_logs_view_list.png](./assets/apache_logs_view_list.png)
 
 The schema has many useful views of Import, Access and Error primary attribute tables created in normalization process with simple aggregate values. These are primitive data presentations of the data warehouse. More complex data Slicing and Dicing is done in [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts).
