@@ -307,16 +307,17 @@ Database `apache_logs` schema currently has 55 Tables, 1040 Columns, 190 Indexes
 
 Database normalization is a critical process in database design with objectives of optimizing data storage, improving data integrity, and reducing data anomalies.
 Organizing data into normalized tables greatly enhances efficiency and maintainability of a database system.
-### Database Access Log View by Browser - 1 of 85 schema views
-Current schema views are Access and Error primary attribute tables created in normalization process with simple aggregate values. 
-These are primitive access and error data presentations of the log data warehouse. The complex data Slicing and Dicing is done in [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts).
+## The 85 Views in apache_logs schema
+![apache_logs_view_list.png](./assets/apache_logs_view_list.png)
 
+The schema has many useful views of Import, Access and Error primary attribute tables created in normalization process with simple aggregate values. These are primitive data presentations of the data warehouse. More complex data Slicing and Dicing is done in [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts).
+#### Access Log View by Browser
 Database View - apache_logs.access_ua_browser_family_list - data from LogFormat: combined & csv2mysql
 ![view-access_ua_browser_family_list.png](./assets/access_ua_browser_list.png)
-### Database Access Log View by URI
+#### Access Log View by URI
 Database View - apache_logs.access_requri_list - data from LogFormat: combined & csv2mysql
 ![view-access_requri_list](./assets/access_requri_list.png)
-### Database Error Log Views
+#### Error Log Views
 Error logs consist of three different data formats for error types. 
 Application harmonizes the 3 formats into a single standardized format and normalizes primary attributes.
 Error log attribute is name of first column or first and second column.
