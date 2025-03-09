@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# version 3.2.9 - 03/07/2025 - process_access_import & process_error_import importfileid fix, added client GeoIP views - see changelog
+# version 3.3.0 - 03/09/2025 - process_access_import & process_error_import - replace l.importfileid with DISTINCT(l.importfileid) - see changelog
 #
 # Copyright 2024-2025 Will Raymond <farmfreshsoftware@gmail.com>
 #

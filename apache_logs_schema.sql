@@ -10,7 +10,7 @@
 -- # See the License for the specific language governing permissions and
 -- # limitations under the License.
 -- #
--- # version 3.2.9 - 03/07/2025 - process_access_import & process_error_import importfileid fix, added client GeoIP views - see changelog
+-- # version 3.3.0 - 03/09/2025 - process_access_import & process_error_import - replace l.importfileid with DISTINCT(l.importfileid) - see changelog
 -- #
 -- # Copyright 2024-2025 Will Raymond <farmfreshsoftware@gmail.com>
 -- #
@@ -4934,7 +4934,7 @@ BEGIN
       GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME; 
       CALL apache_logs.errorProcess('process_access_parse', e1, e2, e3, e4, e5, importLoad_ID, importProcessID);
       SET processError = processError + 1;
- 			ROLLBACK;
+      ROLLBACK;
     END;
   -- check parameters for valid values
   IF CONVERT(in_importLoadID, UNSIGNED) = 0 AND in_importLoadID != 'ALL' THEN
@@ -5315,14 +5315,14 @@ BEGIN
           ON l.importfileid = f.id
        WHERE l.process_status=1 FOR UPDATE;
   -- declare cursor for csv2mysql format - All importloadIDs not processed
-	DECLARE csv2mysqlStatusFile CURSOR FOR 
-      SELECT l.importfileid
+  DECLARE csv2mysqlStatusFile CURSOR FOR 
+      SELECT DISTINCT(l.importfileid)
         FROM apache_logs.load_access_csv2mysql l
   INNER JOIN apache_logs.import_file f 
           ON l.importfileid = f.id
        WHERE l.process_status=1;
   -- declare cursor for csv2mysql format - single importLoadID
-	DECLARE csv2mysqlLoadID CURSOR FOR 
+  DECLARE csv2mysqlLoadID CURSOR FOR 
       SELECT l.remote_host, 
              l.remote_logname, 
              l.remote_user, 
@@ -5355,15 +5355,15 @@ BEGIN
        WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
          AND l.process_status=1 FOR UPDATE;
   -- declare cursor for csv2mysql format - single importLoadID
-	DECLARE csv2mysqlLoadIDFile CURSOR FOR 
-      SELECT l.importfileid
+  DECLARE csv2mysqlLoadIDFile CURSOR FOR 
+      SELECT DISTINCT(l.importfileid)
   	    FROM apache_logs.load_access_csv2mysql l
   INNER JOIN apache_logs.import_file f 
           ON l.importfileid = f.id
        WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
          AND l.process_status=1;
   -- declare cursor for combined format - All importloadIDs not processed
-	DECLARE vhostStatus CURSOR FOR 
+  DECLARE vhostStatus CURSOR FOR 
       SELECT l.remote_host, 
              l.remote_logname, 
              l.remote_user, 
@@ -5387,14 +5387,14 @@ BEGIN
           ON l.importfileid = f.id
        WHERE l.process_status=1 FOR UPDATE;
   -- declare cursor for combined format - All importloadIDs not processed
-	DECLARE vhostStatusFile CURSOR FOR 
-      SELECT l.importfileid
+  DECLARE vhostStatusFile CURSOR FOR 
+      SELECT DISTINCT(l.importfileid)
   	    FROM apache_logs.load_access_vhost l
   INNER JOIN apache_logs.import_file f 
           ON l.importfileid = f.id
        WHERE l.process_status=1;
   -- declare cursor for combined format - single importLoadID
-	DECLARE vhostLoadID CURSOR FOR 
+  DECLARE vhostLoadID CURSOR FOR 
       SELECT l.remote_host, 
              l.remote_logname, 
              l.remote_user, 
@@ -5419,15 +5419,15 @@ BEGIN
        WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
          AND l.process_status=1 FOR UPDATE;
   -- declare cursor for combined format - single importLoadID
-	DECLARE vhostLoadIDFile CURSOR FOR 
-      SELECT l.importfileid
+  DECLARE vhostLoadIDFile CURSOR FOR 
+      SELECT DISTINCT(l.importfileid)
 	      FROM apache_logs.load_access_vhost l
   INNER JOIN apache_logs.import_file f 
           ON l.importfileid = f.id
        WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
          AND l.process_status=1;
   -- declare cursor for combined format - All importloadIDs not processed
-	DECLARE combinedStatus CURSOR FOR 
+  DECLARE combinedStatus CURSOR FOR 
       SELECT l.remote_host, 
              l.remote_logname, 
              l.remote_user, 
@@ -5451,14 +5451,14 @@ BEGIN
           ON l.importfileid = f.id
        WHERE l.process_status=1 FOR UPDATE;
   -- declare cursor for combined format - All importloadIDs not processed
-	DECLARE combinedStatusFile CURSOR FOR 
-      SELECT l.importfileid
+  DECLARE combinedStatusFile CURSOR FOR 
+      SELECT DISTINCT(l.importfileid)
         FROM apache_logs.load_access_combined l
   INNER JOIN apache_logs.import_file f 
           ON l.importfileid = f.id
        WHERE l.process_status=1;
   -- declare cursor for combined format - single importLoadID
-	DECLARE combinedLoadID CURSOR FOR 
+  DECLARE combinedLoadID CURSOR FOR 
       SELECT l.remote_host, 
              l.remote_logname, 
              l.remote_user, 
@@ -5483,22 +5483,22 @@ BEGIN
        WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
          AND l.process_status=1 FOR UPDATE;
   -- declare cursor for combined format - single importLoadID
-	DECLARE combinedLoadIDFile CURSOR FOR 
-      SELECT l.importfileid
+  DECLARE combinedLoadIDFile CURSOR FOR 
+      SELECT DISTINCT(l.importfileid)
         FROM apache_logs.load_access_combined l
   INNER JOIN apache_logs.import_file f 
           ON l.importfileid = f.id
        WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
          AND l.process_status=1;
   -- declare NOT FOUND handler
-	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-		BEGIN
-			GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME; 
- 			CALL apache_logs.errorProcess('process_access_import', e1, e2, e3, e4, e5, importLoad_ID, importProcessID);
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN
+      GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME; 
+      CALL apache_logs.errorProcess('process_access_import', e1, e2, e3, e4, e5, importLoad_ID, importProcessID);
       SET processError = processError + 1;
- 			ROLLBACK;
-		END;
+      ROLLBACK;
+    END;
   -- check parameters for valid values
   IF CONVERT(in_importLoadID, UNSIGNED) = 0 AND in_importLoadID != 'ALL' THEN
     SIGNAL SQLSTATE '22003' SET MESSAGE_TEXT = 'Invalid parameter value for in_importLoadID. Must be convert to number or be ALL';
@@ -5506,9 +5506,9 @@ BEGIN
   IF FIND_IN_SET(in_processName, "csv2mysql,vhost,combined") = 0 THEN
     SIGNAL SQLSTATE '22003' SET MESSAGE_TEXT = 'Invalid parameter value for in_processName. Must be csv2mysql, vhost OR combined';
   END IF;
-	IF NOT CONVERT(in_importLoadID, UNSIGNED) = 0 THEN
-		SET importLoad_ID = CONVERT(in_importLoadID, UNSIGNED);
-	END IF;
+  IF NOT CONVERT(in_importLoadID, UNSIGNED) = 0 THEN
+    SET importLoad_ID = CONVERT(in_importLoadID, UNSIGNED);
+  END IF;
   IF importLoad_ID IS NULL THEN
     IF in_processName = 'csv2mysql' THEN
       SELECT COUNT(DISTINCT(f.importloadid))
@@ -5900,7 +5900,7 @@ BEGIN
          errorOccurred = processError,
          processSeconds = TIME_TO_SEC(TIMEDIFF(now(), started)) 
    WHERE id = importProcessID;
-	COMMIT;
+  COMMIT;
   IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
     CLOSE csv2mysqlStatus;
   ELSEIF in_processName = 'csv2mysql' THEN
@@ -6373,7 +6373,7 @@ BEGIN
        WHERE l.process_status = 1
          AND f.importloadid = CONVERT(in_importLoadID, UNSIGNED);
   DECLARE defaultByLoadIDFile CURSOR FOR 
-      SELECT l.importfileid
+      SELECT DISTINCT(l.importfileid)
         FROM apache_logs.load_error_default l 
   INNER JOIN apache_logs.import_file f 
           ON l.importfileid = f.id
@@ -6405,7 +6405,7 @@ BEGIN
           ON l.importfileid = f.id
        WHERE l.process_status = 1;
   DECLARE defaultByStatusFile CURSOR FOR 
-     SELECT l.importfileid
+     SELECT DISTINCT(l.importfileid)
        FROM apache_logs.load_error_default l 
  INNER JOIN apache_logs.import_file f 
          ON l.importfileid = f.id
