@@ -17,6 +17,7 @@
 - version 3.2.8 - 03/05/2025 - revamped 4 process_*, importProcessID, importServerID Procedures
 - version 3.2.9 - 03/07/2025 - process_access_import & process_error_import importfileid fix, added client GeoIP views
 - version 3.3.0 - 03/09/2025 - process_access_import & process_error_import - replace l.importfileid with DISTINCT(l.importfileid)
+- version 3.3.1 - 03/12/2025 - schema name removed from all objects, MySQL/MariaDB improvements, increased column widths
 - [1.0.1] apache_logs.error_systemCodeID corrected line - INTO logsystemCode to INTO logsystemCodeID
 - [1.0.1] remove debugging - SELECT statement from apache_logs.process_access_import, process_error_import & normalize_useragent.
 - [1.0.1] remove whitespace and commented out old code on all stored programs
@@ -138,3 +139,7 @@
 - [3.2.9] add views - `access_client_city_list`, `access_client_country_code_list`, `access_client_country_list`, `access_client_subdivision_list`, `access_client_organization_list`, `access_client_network_list`
 - [3.3.0] modify of `process_access_import` changed `l.importfileid` to `DISTINCT(l.importfileid)` for cursors csv2mysqlStatusFile, csv2mysqlLoadIDFile, vhostStatusFile, vhostLoadIDFile, combinedStatusFile, combinedLoadIDFile
 - [3.3.0] modify of `process_error_import` changed `l.importfileid` to `DISTINCT(l.importfileid)` for cursors defaultByLoadIDFile and defaultByStatusFile
+- [3.3.1] stripped schema name from all qualified database object names in `apache_logs_schema.sql` to minimize code and make transition to different schema name if required easier.
+- [3.3.1] MariaDB and MySQL version-specific code implementation using - /*M!100500 and /*!50700 for index creation and adding system variables MySQL @@server_uuid and MariaDB @@server_uid.
+- [3.3.1] increased column widths for LOAD TABLES - `first_line_request`, `req_uri`, `req_query` and decreased `useragent` to handle LimitRequestLine 8190 - https://httpd.apache.org/docs/2.2/mod/core.html#limitrequestline' 
+- [3.3.1] increased column width from 2000 to 5000 for TABLE `access_log_reqquery` and modified FUNCTION `access_reqQueryID` increased in_ReqQuery VARCHAR(2000) to VARCHAR(5000)

@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# version 3.3.0 - 03/09/2025 - process_access_import & process_error_import - replace l.importfileid with DISTINCT(l.importfileid) - see changelog
+# version 3.3.1 - 03/12/2025 - schema name removed from all objects, MySQL/MariaDB improvements, increased column widths - see changelog
 #
 # Copyright 2024-2025 Will Raymond <farmfreshsoftware@gmail.com>
 #
@@ -356,7 +356,7 @@ def processLogs():
                     print('*','*','Importing Error Logs Complete | Executed in %s seconds' % round((perf_counter() - errorlog_import_start),2))
         errorlog_duration = perf_counter() - errorlog_start            
         if errorlog_log >= 1:
-            print(fg.MAGENTA + style.DIM + 'Completed Error Logs processing | ' + str(errorFilesLoaded) + ' files loaded | Executed in %s seconds' % round(errorlog_duration,2) + style.END)
+            print(fg.LIGHT_GREEN + style.BRIGHT + 'Completed Error Logs processing | ' + str(errorFilesLoaded) + ' files loaded | Executed in %s seconds' % round(errorlog_duration,2) + style.END)
     if combined == 1:
         combined_start = perf_counter()
         if combined_log >= 1:
@@ -461,7 +461,7 @@ def processLogs():
                     print('*','*','Importing Combined Access Logs Complete | Executed in %s seconds' % round((perf_counter() - combined_import_start),2))
         combined_duration = perf_counter() - combined_start            
         if combined_log >= 1:
-            print(fg.MAGENTA + style.DIM + 'Completed Combined Access Logs processing | '+ str(combinedFilesLoaded) + ' files loaded | Executed in %s seconds' % round(combined_duration,4) + style.END)
+            print(fg.LIGHT_GREEN + style.BRIGHT + 'Completed Combined Access Logs processing | '+ str(combinedFilesLoaded) + ' files loaded | Executed in %s seconds' % round(combined_duration,4) + style.END)
     if vhost == 1:
         vhost_start = perf_counter()
         if vhost_log >= 1:
@@ -561,7 +561,7 @@ def processLogs():
                     print('*','*','Importing Vhost Access Logs Complete | Executed in %s seconds' % round((perf_counter() - vhost_import_start),2))
         vhost_duration = perf_counter() - vhost_start            
         if vhost_log >= 1:
-            print(fg.MAGENTA + style.DIM + 'Completed Vhost Access Logs processing | Loaded '+ str(vhostFilesLoaded) + ' files | Executed in %s seconds' % round(vhost_duration,2) + style.END)
+            print(fg.LIGHT_GREEN + style.BRIGHT + 'Completed Vhost Access Logs processing | Loaded '+ str(vhostFilesLoaded) + ' files | Executed in %s seconds' % round(vhost_duration,2) + style.END)
     if csv2mysql == 1:
         csv2mysql_start = perf_counter()
         if csv2mysql_log >= 1:
@@ -659,7 +659,7 @@ def processLogs():
                     print('*','*','Importing Csv2mysql Access Logs Complete | Executed in %s seconds' % round((perf_counter() - csv2mysql_import_start),2))
         csv2mysql_duration = perf_counter() - csv2mysql_start            
         if csv2mysql_log >= 1:
-            print(fg.MAGENTA + style.DIM + 'Completed Csv2mysql Access Logs processing | Loaded '+ str(csv2mysqlFilesLoaded) + ' files | Executed in %s seconds' % round(csv2mysql_duration,2) + style.END)
+            print(fg.LIGHT_GREEN + style.BRIGHT + 'Completed Csv2mysql Access Logs processing | Loaded '+ str(csv2mysqlFilesLoaded) + ' files | Executed in %s seconds' % round(csv2mysql_duration,2) + style.END)
     # SECONDARY PROCESSES BELOW: Client Module UPLOAD is done with load, parse and import processes of access and error logs. The below processes enhance User Agent and Client IP log data.
     # Initially UserAgent and GeoIP processes were each in separate files. After much design consideration and application experience and Code Redundancy being problematic
     # the decision was made to encapsulate all processes within the same "Import Load" which captures and logs all execution metrics, notifications and errors
@@ -756,7 +756,7 @@ def processLogs():
                 print('*','*','Normalizing User Agent data Complete | Executed in %s seconds' % round((perf_counter() - useragent_normalize_start),2))
         useragent_duration = perf_counter() - useragent_start            
         if useragent_log >= 1:
-            print(fg.MAGENTA + style.DIM + 'Completed User Agent data processing | ' + str(userAgentRecordsParsed) + ' records | Executed in %s seconds' % round(useragent_duration,2) + style.END)
+            print(fg.LIGHT_GREEN + style.BRIGHT + 'Completed User Agent data processing | ' + str(userAgentRecordsParsed) + ' records | Executed in %s seconds' % round(useragent_duration,2) + style.END)
     geoip_city_file_exists = True
     geoip_asn_file_exists = True
     if geoip == 1:
@@ -894,7 +894,7 @@ def processLogs():
                 print('*','*','Normalizing IP Address data Complete | Executed in %s seconds' % round((perf_counter() - geoip_normalize_start),2))
         geoip_duration = perf_counter() - geoip_start            
         if geoip_log >= 1:
-            print(fg.MAGENTA + style.DIM + 'Completed IP Address data processing | '+ str(ipAddressRecordsParsed) + ' records | Executed in %s seconds' % round(geoip_duration,2) + style.END)
+            print(fg.LIGHT_GREEN + style.BRIGHT + 'Completed IP Address data processing | '+ str(ipAddressRecordsParsed) + ' records | Executed in %s seconds' % round(geoip_duration,2) + style.END)
     processLogs_duration = perf_counter() - processLogs_start            
     loadUpdateSQL = ('UPDATE import_load SET errorFilesFound=' + str(errorFilesFound) + 
                   ', errorFilesLoaded=' + str(errorFilesLoaded) + 

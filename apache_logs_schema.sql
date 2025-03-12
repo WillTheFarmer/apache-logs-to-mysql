@@ -10,7 +10,7 @@
 -- # See the License for the specific language governing permissions and
 -- # limitations under the License.
 -- #
--- # version 3.3.0 - 03/09/2025 - process_access_import & process_error_import - replace l.importfileid with DISTINCT(l.importfileid) - see changelog
+-- # version 3.3.1 - 03/12/2025 - schema name removed from all objects, MySQL/MariaDB improvements, increased column widths - see changelog
 -- #
 -- # Copyright 2024-2025 Will Raymond <farmfreshsoftware@gmail.com>
 -- #
@@ -48,9 +48,9 @@ CREATE TABLE `load_access_csv2mysql` (
     req_protocol VARCHAR(30) DEFAULT NULL,
     req_method VARCHAR(50) DEFAULT NULL,
     req_uri VARCHAR(2000) DEFAULT NULL COMMENT 'URLs under 2000 characters work in any combination of client and server software and search engines.',
-    req_query VARCHAR(2000) DEFAULT NULL COMMENT 'URLs under 2000 characters work in any combination of client and server software and search engines.',
+    req_query VARCHAR(5000) DEFAULT NULL COMMENT 'The %q query string can get long with AJAX REST database updates passing recordsets can get BIG but 2000 to 3000 should be MAX used.',
     log_referer VARCHAR(750) DEFAULT NULL COMMENT '1000 characters should be more than enough for domain.',
-    log_useragent VARCHAR(2000) DEFAULT NULL COMMENT 'No strict size limit of User-Agent string is defined by official standards or specifications. 2 years of production logs found useragents longer than 1000 are hack attempts.',
+    log_useragent VARCHAR(1000) DEFAULT NULL COMMENT 'No strict size limit of User-Agent string is defined by official standards or specifications. 2 years of production logs found useragents longer than 1000 are hack attempts.',
     log_cookie VARCHAR(400) DEFAULT NULL COMMENT 'Use to store any Cookie VARNAME. ie - session ID in application cookie to relate with login tables on server.',
     request_log_id VARCHAR(50) DEFAULT NULL COMMENT 'The request log ID from the error log (or - if nothing has been logged to the error log for this request). Look for the matching error log line to see what request caused what error.',
     load_error VARCHAR(10) DEFAULT NULL COMMENT 'This column should always be NULL. Added to catch lines larger than designed for.',
@@ -69,17 +69,17 @@ CREATE TABLE `load_access_combined` (
     remote_user VARCHAR(150) DEFAULT NULL COMMENT 'Remote user if the request was authenticated. May be bogus if return status (%s) is 401 (unauthorized).',
     log_time_a VARCHAR(21) DEFAULT NULL COMMENT 'due to MySQL LOAD DATA LOCAL INFILE limitations can not have 2 OPTIONALLY ENCLOSED BY "" and []. It is easier with 2 columns for this data',
     log_time_b VARCHAR(6) DEFAULT NULL COMMENT 'to simplify import and use MySQL LOAD DATA LOCAL INFILE. I have python script to import standard combined but this keeps it all in MySQL',
-	  first_line_request VARCHAR(4000) DEFAULT NULL COMMENT 'contains req_method, req_uri, req_query, req_protocol',
+	  first_line_request VARCHAR(8190) DEFAULT NULL COMMENT 'contains req_method, req_uri, req_query, req_protocol - Default:	LimitRequestLine 8190 - https://httpd.apache.org/docs/2.2/mod/core.html#limitrequestline',
     req_status INT DEFAULT NULL,
     req_bytes INT DEFAULT NULL,
     log_referer VARCHAR(750) DEFAULT NULL COMMENT '1000 characters should be more than enough for domain.',
-    log_useragent VARCHAR(2000) DEFAULT NULL COMMENT 'No strict size limit of User-Agent string is defined by official standards or specifications. 2 years of production logs found useragents longer than 1000 are hack attempts.',
+    log_useragent VARCHAR(1000) DEFAULT NULL COMMENT 'No strict size limit of User-Agent string is defined by official standards or specifications. 2 years of production logs found useragents longer than 1000 are hack attempts.',
     load_error VARCHAR(50) DEFAULT NULL COMMENT 'This column should always be NULL. Added to catch lines larger than designed for.',
     log_time VARCHAR(28) DEFAULT NULL,
     req_protocol VARCHAR(30) DEFAULT NULL COMMENT 'parsed from first_line_request in import',
     req_method VARCHAR(50) DEFAULT NULL COMMENT 'parsed from first_line_request in import',
     req_uri VARCHAR(2000) DEFAULT NULL COMMENT 'parsed from first_line_request in import. URLs under 2000 characters work in any combination of client and server software and search engines.',
-    req_query VARCHAR(2000) DEFAULT NULL COMMENT 'parsed from first_line_request in import. URLs under 2000 characters work in any combination of client and server software and search engines.',
+    req_query VARCHAR(3390) DEFAULT NULL COMMENT 'parsed from first_line_request in import. Can not make 5000 due to table max length. From reviewing 3 years of production logs no query strings were over 2165.',
     server_name VARCHAR(253) DEFAULT NULL COMMENT 'Common & Combined logs. Added to populate Server for multiple domains import. Must be poulated before import process.',
     server_port INT DEFAULT NULL COMMENT 'Common & Combined logs. Added to populate ServerPort for multiple domains import. Must be poulated before import process.',
     importfileid INT DEFAULT NULL COMMENT 'used in import process to indicate file record extractedd from',
@@ -97,11 +97,11 @@ CREATE TABLE `load_access_vhost` (
     remote_user VARCHAR(150) DEFAULT NULL COMMENT 'Remote user if the request was authenticated. May be bogus if return status (%s) is 401 (unauthorized).',
     log_time_a VARCHAR(21) DEFAULT NULL COMMENT 'due to MySQL LOAD DATA LOCAL INFILE limitations can not have 2 OPTIONALLY ENCLOSED BY "" and []. It is easier with 2 columns for this data',
     log_time_b VARCHAR(6) DEFAULT NULL COMMENT 'to simplify import and use MySQL LOAD DATA LOCAL INFILE. I have python script to import standard combined but this keeps it all in MySQL',
-	  first_line_request VARCHAR(4000) DEFAULT NULL COMMENT 'contains req_method, req_uri, req_query, req_protocol',
+	  first_line_request VARCHAR(8190) DEFAULT NULL COMMENT 'contains req_method, req_uri, req_query, req_protocol - Default:	LimitRequestLine 8190 - https://httpd.apache.org/docs/2.2/mod/core.html#limitrequestline',
     req_status INT DEFAULT NULL,
     req_bytes INT DEFAULT NULL,
     log_referer VARCHAR(750) DEFAULT NULL COMMENT '1000 characters should be more than enough for domain.',
-    log_useragent VARCHAR(2000) DEFAULT NULL COMMENT 'No strict size limit of User-Agent string is defined by official standards or specifications. 2 years of production logs found useragents longer than 1000 are hack attempts.',
+    log_useragent VARCHAR(1000) DEFAULT NULL COMMENT 'No strict size limit of User-Agent string is defined by official standards or specifications. 2 years of production logs found useragents longer than 1000 are hack attempts.',
     load_error VARCHAR(50) DEFAULT NULL COMMENT 'This column should always be NULL. Added to catch lines larger than designed for.',
     log_time VARCHAR(28) DEFAULT NULL,
     server_name VARCHAR(253) DEFAULT NULL COMMENT '253 characters is the maximum length of full domain name, including dots: e.g. www.example.com = 15 characters.',
@@ -109,7 +109,7 @@ CREATE TABLE `load_access_vhost` (
     req_protocol VARCHAR(30) DEFAULT NULL COMMENT 'parsed from first_line_request in import',
     req_method VARCHAR(50) DEFAULT NULL COMMENT 'parsed from first_line_request in import',
     req_uri VARCHAR(2000) DEFAULT NULL COMMENT 'parsed from first_line_request in import. URLs under 2000 characters work in any combination of client and server software and search engines.',
-    req_query VARCHAR(2000) DEFAULT NULL COMMENT 'parsed from first_line_request in import. URLs under 2000 characters work in any combination of client and server software and search engines.',
+    req_query VARCHAR(3090) DEFAULT NULL COMMENT 'parsed from first_line_request in import. Can not make 5000 due to table max length. From reviewing 3 years of production logs no query strings were over 2165.',
     importfileid INT DEFAULT NULL COMMENT 'used in import process to indicate file record extractedd from',
     process_status INT NOT NULL DEFAULT 0 COMMENT 'used in parse and import processes to indicate record processed - 1=parsed, 2=imported',
     id INT AUTO_INCREMENT PRIMARY KEY
@@ -151,7 +151,7 @@ DROP TABLE IF EXISTS `access_log_reqquery`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `access_log_reqquery` (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(2000) NOT NULL,
+    name VARCHAR(5000) NOT NULL,
     added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- drop table -----------------------------------------------------------
@@ -175,7 +175,7 @@ DROP TABLE IF EXISTS `access_log_useragent`;
 -- create table ---------------------------------------------------------
 CREATE TABLE `access_log_useragent` (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(2000) NOT NULL,
+    name VARCHAR(1000) NOT NULL,
     ua VARCHAR(300) DEFAULT NULL,
     ua_browser VARCHAR(300) DEFAULT NULL,
     ua_browser_family VARCHAR(300) DEFAULT NULL,
@@ -331,6 +331,8 @@ CREATE TABLE `access_log` (
 -- drop table -----------------------------------------------------------
 DROP TABLE IF EXISTS `load_error_default`;
 -- create table ---------------------------------------------------------
+-- default format - ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i"
+-- additional format - ErrorLogFormat "[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i ,%v ,%L"
 CREATE TABLE `load_error_default` (
     log_time VARCHAR(50) DEFAULT NULL,
     log_mod_level VARCHAR(200) DEFAULT NULL,
@@ -533,6 +535,7 @@ CREATE TABLE `import_server` (
   dbversion VARCHAR(55) NOT NULL,
   dbsystem VARCHAR(55) NOT NULL,
   dbmachine VARCHAR(55) NOT NULL,
+  dbserverid VARCHAR(75) NOT NULL,
   dbcomment VARCHAR(75) NOT NULL,
   added DATETIME NOT NULL DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Table for keeping track of log processing servers and login information.';
@@ -724,10 +727,10 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_reqProtocolID';
     SELECT id
       INTO reqProtocol_ID
-      FROM apache_logs.access_log_reqprotocol
+      FROM access_log_reqprotocol
      WHERE name = in_ReqProtocol;
     IF reqProtocol_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_reqprotocol (name) VALUES (in_ReqProtocol);
+        INSERT INTO access_log_reqprotocol (name) VALUES (in_ReqProtocol);
         SET reqProtocol_ID = LAST_INSERT_ID();
     END IF;
     RETURN reqProtocol_ID;
@@ -746,10 +749,10 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_reqMethodID';
     SELECT id
       INTO reqMethod_ID
-      FROM apache_logs.access_log_reqmethod
+      FROM access_log_reqmethod
      WHERE name = in_ReqMethod;
     IF reqMethod_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_reqmethod (name) VALUES (in_ReqMethod);
+        INSERT INTO access_log_reqmethod (name) VALUES (in_ReqMethod);
         SET reqMethod_ID = LAST_INSERT_ID();
     END IF;
     RETURN reqMethod_ID;
@@ -768,10 +771,10 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_reqStatusID';
     SELECT id
       INTO reqStatus_ID
-      FROM apache_logs.access_log_reqstatus
+      FROM access_log_reqstatus
      WHERE name = in_ReqStatus;
     IF reqStatus_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_reqstatus (name) VALUES (in_ReqStatus);
+        INSERT INTO access_log_reqstatus (name) VALUES (in_ReqStatus);
         SET reqStatus_ID = LAST_INSERT_ID();
     END IF;
     RETURN reqStatus_ID;
@@ -790,10 +793,10 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_reqUriID';
     SELECT id
       INTO reqUri_ID
-      FROM apache_logs.access_log_requri
+      FROM access_log_requri
      WHERE name = in_ReqUri;
     IF reqUri_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_requri (name) VALUES (in_ReqUri);
+        INSERT INTO access_log_requri (name) VALUES (in_ReqUri);
         SET reqUri_ID = LAST_INSERT_ID();
     END IF;
     RETURN reqUri_ID;
@@ -804,7 +807,7 @@ DROP FUNCTION IF EXISTS `access_reqQueryID`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` FUNCTION `access_reqQueryID`
-    (in_ReqQuery VARCHAR(2000))
+    (in_ReqQuery VARCHAR(5000))
     RETURNS INTEGER
     READS SQL DATA
 BEGIN
@@ -812,10 +815,10 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_reqQueryID';
     SELECT id
       INTO reqQuery_ID
-      FROM apache_logs.access_log_reqquery
+      FROM access_log_reqquery
      WHERE name = in_ReqQuery;
     IF reqQuery_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_reqquery (name) VALUES (in_ReqQuery);
+        INSERT INTO access_log_reqquery (name) VALUES (in_ReqQuery);
         SET reqQuery_ID = LAST_INSERT_ID();
     END IF;
     RETURN reqQuery_ID;
@@ -834,10 +837,10 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_remoteLogNameID';
     SELECT id
       INTO remoteLogName_ID
-      FROM apache_logs.access_log_remotelogname
+      FROM access_log_remotelogname
      WHERE name = in_RemoteLogName;
     IF remoteLogName_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_remotelogname (name) VALUES (in_RemoteLogName);
+        INSERT INTO access_log_remotelogname (name) VALUES (in_RemoteLogName);
         SET remoteLogName_ID = LAST_INSERT_ID();
     END IF;
     RETURN remoteLogName_ID;
@@ -856,10 +859,10 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_remoteUserID';
     SELECT id
       INTO remoteUser_ID
-      FROM apache_logs.access_log_remoteuser
+      FROM access_log_remoteuser
      WHERE name = in_RemoteUser;
     IF remoteUser_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_remoteuser (name) VALUES (in_RemoteUser);
+        INSERT INTO access_log_remoteuser (name) VALUES (in_RemoteUser);
         SET remoteUser_ID = LAST_INSERT_ID();
     END IF;
     RETURN remoteUser_ID;
@@ -878,10 +881,10 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_userAgentID';
     SELECT id
       INTO userAgent_ID
-      FROM apache_logs.access_log_useragent
+      FROM access_log_useragent
      WHERE name = in_UserAgent;
     IF userAgent_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_useragent (name) VALUES (in_UserAgent);
+        INSERT INTO access_log_useragent (name) VALUES (in_UserAgent);
         SET userAgent_ID = LAST_INSERT_ID();
     END IF;
     RETURN userAgent_ID;
@@ -900,10 +903,10 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_uaID';
     SELECT id
       INTO ua_ID
-      FROM apache_logs.access_log_ua
+      FROM access_log_ua
      WHERE name = in_ua;
     IF ua_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_ua (name) VALUES (in_ua);
+        INSERT INTO access_log_ua (name) VALUES (in_ua);
         SET ua_ID = LAST_INSERT_ID();
     END IF;
     RETURN ua_ID;
@@ -922,10 +925,10 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_uaBrowserID';
     SELECT id
       INTO ua_browser_ID
-      FROM apache_logs.access_log_ua_browser
+      FROM access_log_ua_browser
      WHERE name = in_ua_browser;
     IF ua_browser_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_ua_browser (name) VALUES (in_ua_browser);
+        INSERT INTO access_log_ua_browser (name) VALUES (in_ua_browser);
         SET ua_browser_ID = LAST_INSERT_ID();
     END IF;
     RETURN ua_browser_ID;
@@ -944,10 +947,10 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_uaBrowserFamilyID';
     SELECT id
       INTO ua_browser_family_ID
-      FROM apache_logs.access_log_ua_browser_family
+      FROM access_log_ua_browser_family
      WHERE name = in_ua_browser_family;
     IF ua_browser_family_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_ua_browser_family (name) VALUES (in_ua_browser_family);
+        INSERT INTO access_log_ua_browser_family (name) VALUES (in_ua_browser_family);
         SET ua_browser_family_ID = LAST_INSERT_ID();
     END IF;
     RETURN ua_browser_family_ID;
@@ -966,10 +969,10 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_uaBrowserVersionID';
     SELECT id
       INTO ua_browser_version_ID
-      FROM apache_logs.access_log_ua_browser_version
+      FROM access_log_ua_browser_version
      WHERE name = in_ua_browser_version;
     IF ua_browser_version_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_ua_browser_version (name) VALUES (in_ua_browser_version);
+        INSERT INTO access_log_ua_browser_version (name) VALUES (in_ua_browser_version);
         SET ua_browser_version_ID = LAST_INSERT_ID();
     END IF;
     RETURN ua_browser_version_ID;
@@ -988,10 +991,10 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_uaOsID'; 
     SELECT id
       INTO ua_os_ID
-      FROM apache_logs.access_log_ua_os
+      FROM access_log_ua_os
      WHERE name = in_ua_os;
     IF ua_os_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_ua_os (name) VALUES (in_ua_os);
+        INSERT INTO access_log_ua_os (name) VALUES (in_ua_os);
         SET ua_os_ID = LAST_INSERT_ID();
     END IF;
     RETURN ua_os_ID;
@@ -1010,10 +1013,10 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_uaOsFamilyID';
     SELECT id
       INTO ua_os_family_ID
-      FROM apache_logs.access_log_ua_os_family
+      FROM access_log_ua_os_family
      WHERE name = in_ua_os_family;
     IF ua_os_family_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_ua_os_family (name) VALUES (in_ua_os_family);
+        INSERT INTO access_log_ua_os_family (name) VALUES (in_ua_os_family);
         SET ua_os_family_ID = LAST_INSERT_ID();
     END IF;
     RETURN ua_os_family_ID;
@@ -1032,10 +1035,10 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_uaOsVersionID';
     SELECT id
       INTO ua_os_version_ID
-      FROM apache_logs.access_log_ua_os_version
+      FROM access_log_ua_os_version
      WHERE name = in_ua_os_version;
     IF ua_os_version_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_ua_os_version (name) VALUES (in_ua_os_version);
+        INSERT INTO access_log_ua_os_version (name) VALUES (in_ua_os_version);
         SET ua_os_version_ID = LAST_INSERT_ID();
     END IF;
     RETURN ua_os_version_ID;
@@ -1054,10 +1057,10 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_uaDeviceID'; 
     SELECT id
       INTO ua_device_ID
-      FROM apache_logs.access_log_ua_device
+      FROM access_log_ua_device
      WHERE name = in_ua_device;
     IF ua_device_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_ua_device (name) VALUES (in_ua_device);
+        INSERT INTO access_log_ua_device (name) VALUES (in_ua_device);
         SET ua_device_ID = LAST_INSERT_ID();
     END IF;
     RETURN ua_device_ID;
@@ -1076,10 +1079,10 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_uaDeviceFamilyID';
     SELECT id
       INTO ua_device_family_ID
-      FROM apache_logs.access_log_ua_device_family
+      FROM access_log_ua_device_family
      WHERE name = in_ua_device_family;
     IF ua_device_family_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_ua_device_family (name) VALUES (in_ua_device_family);
+        INSERT INTO access_log_ua_device_family (name) VALUES (in_ua_device_family);
         SET ua_device_family_ID = LAST_INSERT_ID();
     END IF;
     RETURN ua_device_family_ID;
@@ -1098,10 +1101,10 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_uaDeviceBrandID';
     SELECT id
       INTO ua_device_brand_ID
-      FROM apache_logs.access_log_ua_device_brand
+      FROM access_log_ua_device_brand
      WHERE name = in_ua_device_brand;
     IF ua_device_brand_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_ua_device_brand (name) VALUES (in_ua_device_brand);
+        INSERT INTO access_log_ua_device_brand (name) VALUES (in_ua_device_brand);
         SET ua_device_brand_ID = LAST_INSERT_ID();
     END IF;
     RETURN ua_device_brand_ID;
@@ -1120,10 +1123,10 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_uaDeviceModelID';
     SELECT id
       INTO ua_device_model_ID
-      FROM apache_logs.access_log_ua_device_model
+      FROM access_log_ua_device_model
      WHERE name = in_ua_device_model;
     IF ua_device_model_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_ua_device_model (name) VALUES (in_ua_device_model);
+        INSERT INTO access_log_ua_device_model (name) VALUES (in_ua_device_model);
         SET ua_device_model_ID = LAST_INSERT_ID();
     END IF;
     RETURN ua_device_model_ID;
@@ -1142,10 +1145,10 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_cookieID';
     SELECT id
       INTO cookie_ID
-      FROM apache_logs.access_log_cookie
+      FROM access_log_cookie
      WHERE name = in_Cookie;
     IF cookie_ID IS NULL THEN
-        INSERT INTO apache_logs.access_log_cookie (name) VALUES (in_Cookie);
+        INSERT INTO access_log_cookie (name) VALUES (in_Cookie);
         SET cookie_ID = LAST_INSERT_ID();
     END IF;
     RETURN cookie_ID;
@@ -1165,7 +1168,7 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_reqProtocol';
     SELECT name
       INTO reqProtocol
-      FROM apache_logs.access_log_reqprotocol
+      FROM access_log_reqprotocol
      WHERE id = in_ReqProtocolID;
     RETURN reqProtocol;
 END //
@@ -1183,7 +1186,7 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_reqMethod';
     SELECT name
       INTO reqMethod
-      FROM apache_logs.access_log_reqmethod
+      FROM access_log_reqmethod
      WHERE id = in_ReqMethodID;
     RETURN reqMethod;
 END //
@@ -1201,7 +1204,7 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_reqStatus';
     SELECT name
       INTO reqStatus
-      FROM apache_logs.access_log_reqstatus
+      FROM access_log_reqstatus
      WHERE id = in_ReqStatusID;
     RETURN reqStatus;
 END //
@@ -1219,7 +1222,7 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_reqUri';
     SELECT name
       INTO reqUri
-      FROM apache_logs.access_log_requri
+      FROM access_log_requri
      WHERE id = in_ReqUriID;
     RETURN reqUri;
 END //
@@ -1237,7 +1240,7 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_reqQuery';
     SELECT name
       INTO reqQuery
-      FROM apache_logs.access_log_reqquery
+      FROM access_log_reqquery
      WHERE id = in_ReqQueryID;
     RETURN reqQuery;
 END //
@@ -1255,7 +1258,7 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_remoteLogName';
     SELECT name
       INTO remoteLogName
-      FROM apache_logs.access_log_remotelogname
+      FROM access_log_remotelogname
      WHERE id = in_RemoteLogNameID;
     RETURN remoteLogName;
 END //
@@ -1273,7 +1276,7 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_remoteUser';
     SELECT name
       INTO remoteUser
-      FROM apache_logs.access_log_remoteuser
+      FROM access_log_remoteuser
      WHERE id = in_RemoteUserID;
     RETURN remoteUser;
 END //
@@ -1291,7 +1294,7 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_userAgent';
     SELECT name
       INTO userAgent
-      FROM apache_logs.access_log_useragent
+      FROM access_log_useragent
      WHERE id = in_UserAgentID;
     RETURN userAgent;
 END //
@@ -1309,7 +1312,7 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_ua';
     SELECT name
       INTO ua
-      FROM apache_logs.access_log_ua
+      FROM access_log_ua
      WHERE id = in_uaID;
     RETURN ua;
 END //
@@ -1327,7 +1330,7 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_uaBrowser';
     SELECT name
       INTO ua_browser
-      FROM apache_logs.access_log_ua_browser
+      FROM access_log_ua_browser
      WHERE id = in_ua_browserID;
     RETURN ua_browser;
 END //
@@ -1345,7 +1348,7 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_uaBrowserFamily';
     SELECT name
       INTO ua_browser_family
-      FROM apache_logs.access_log_ua_browser_family
+      FROM access_log_ua_browser_family
      WHERE id = in_ua_browser_familyID;
     RETURN ua_browser_family;
 END //
@@ -1363,7 +1366,7 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_uaBrowserVersion';
     SELECT name
       INTO ua_browser_version
-      FROM apache_logs.access_log_ua_browser_version
+      FROM access_log_ua_browser_version
      WHERE id = in_ua_browser_versionID;
     RETURN ua_browser_version;
 END //
@@ -1381,7 +1384,7 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_uaOs';
     SELECT name
       INTO ua_os
-      FROM apache_logs.access_log_ua_os
+      FROM access_log_ua_os
      WHERE id = in_ua_osID;
     RETURN ua_os;
 END //
@@ -1399,7 +1402,7 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_uaOsFamily';
     SELECT name
       INTO ua_os_family
-      FROM apache_logs.access_log_ua_os_family
+      FROM access_log_ua_os_family
      WHERE id = in_ua_os_familyID;
     RETURN ua_os_family;
 END //
@@ -1417,7 +1420,7 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_uaOsVersion';
     SELECT name
       INTO ua_os_version
-      FROM apache_logs.access_log_ua_os_version
+      FROM access_log_ua_os_version
      WHERE id = in_ua_os_versionID;
     RETURN ua_os_version;
 END //
@@ -1435,7 +1438,7 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_uaDevice';
     SELECT name
       INTO ua_device
-      FROM apache_logs.access_log_ua_device
+      FROM access_log_ua_device
      WHERE id = in_ua_deviceID;
     RETURN ua_device;
 END //
@@ -1453,7 +1456,7 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_uaDeviceFamily';
     SELECT name
       INTO ua_device_family
-      FROM apache_logs.access_log_ua_device_family
+      FROM access_log_ua_device_family
      WHERE id = in_ua_device_familyID;
     RETURN ua_device_family;
 END //
@@ -1471,7 +1474,7 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_uaDeviceBrand';
     SELECT name
       INTO ua_device_brand
-      FROM apache_logs.access_log_ua_device_brand
+      FROM access_log_ua_device_brand
      WHERE name = in_ua_device_brandID;
     RETURN ua_device_brand;
 END //
@@ -1489,7 +1492,7 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_uaDeviceModel';
     SELECT name
       INTO ua_device_model
-      FROM apache_logs.access_log_ua_device_model
+      FROM access_log_ua_device_model
      WHERE id = in_ua_device_modelID;
     RETURN ua_device_model;
 END //
@@ -1507,7 +1510,7 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'access_cookie';
     SELECT name
       INTO cookie
-      FROM apache_logs.access_log_cookie
+      FROM access_log_cookie
      WHERE id = in_CookieID;
     RETURN cookie;
 END //
@@ -1526,10 +1529,10 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'error_logLevelID';
   SELECT id
     INTO logLevelID
-    FROM apache_logs.error_log_level
+    FROM error_log_level
     WHERE name = in_loglevel;
   IF logLevelID IS NULL THEN
-      INSERT INTO apache_logs.error_log_level (name) VALUES (in_loglevel);
+      INSERT INTO error_log_level (name) VALUES (in_loglevel);
       SET logLevelID = LAST_INSERT_ID();
   END IF;
   RETURN logLevelID;
@@ -1548,10 +1551,10 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'error_moduleID';
   SELECT id
     INTO moduleID
-    FROM apache_logs.error_log_module
+    FROM error_log_module
     WHERE name = in_module;
   IF moduleID IS NULL THEN
-      INSERT INTO apache_logs.error_log_module (name) VALUES (in_module);
+      INSERT INTO error_log_module (name) VALUES (in_module);
       SET moduleID = LAST_INSERT_ID();
   END IF;
   RETURN moduleID;
@@ -1570,10 +1573,10 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'error_processID';
   SELECT id
     INTO process_ID
-    FROM apache_logs.error_log_processid
+    FROM error_log_processid
     WHERE name = in_processid;
   IF process_ID IS NULL THEN
-      INSERT INTO apache_logs.error_log_processid (name) VALUES (in_processid);
+      INSERT INTO error_log_processid (name) VALUES (in_processid);
       SET process_ID = LAST_INSERT_ID();
   END IF;
   RETURN process_ID;
@@ -1592,10 +1595,10 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'error_threadID';
   SELECT id
     INTO thread_ID
-    FROM apache_logs.error_log_threadid
+    FROM error_log_threadid
     WHERE name = in_threadid;
   IF thread_ID IS NULL THEN
-      INSERT INTO apache_logs.error_log_threadid (name) VALUES (in_threadid);
+      INSERT INTO error_log_threadid (name) VALUES (in_threadid);
       SET thread_ID = LAST_INSERT_ID();
   END IF;
   RETURN thread_ID;
@@ -1614,10 +1617,10 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'error_apacheCodeID';
   SELECT id
     INTO apacheCodeID
-    FROM apache_logs.error_log_apachecode
+    FROM error_log_apachecode
     WHERE name = in_apacheCode;
   IF apacheCodeID IS NULL THEN
-      INSERT INTO apache_logs.error_log_apachecode (name) VALUES (in_apacheCode);
+      INSERT INTO error_log_apachecode (name) VALUES (in_apacheCode);
       SET apacheCodeID = LAST_INSERT_ID();
   END IF;
   RETURN apacheCodeID;
@@ -1636,10 +1639,10 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'error_apacheMessageID';
   SELECT id
     INTO apacheMessageID
-    FROM apache_logs.error_log_apachemessage
+    FROM error_log_apachemessage
     WHERE name = in_apacheMessage;
   IF apacheMessageID IS NULL THEN
-      INSERT INTO apache_logs.error_log_apachemessage (name) VALUES (in_apacheMessage);
+      INSERT INTO error_log_apachemessage (name) VALUES (in_apacheMessage);
       SET apacheMessageID = LAST_INSERT_ID();
   END IF;
   RETURN apacheMessageID;
@@ -1658,10 +1661,10 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'error_systemCodeID';
   SELECT id
     INTO systemCodeID
-    FROM apache_logs.error_log_systemcode
+    FROM error_log_systemcode
     WHERE name = in_systemCode;
   IF systemCodeID IS NULL THEN
-      INSERT INTO apache_logs.error_log_systemcode (name) VALUES (in_systemCode);
+      INSERT INTO error_log_systemcode (name) VALUES (in_systemCode);
       SET systemCodeID = LAST_INSERT_ID();
   END IF;
   RETURN systemCodeID;
@@ -1680,10 +1683,10 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'error_systemMessageID';
   SELECT id
     INTO systemMessageID
-    FROM apache_logs.error_log_systemmessage
+    FROM error_log_systemmessage
     WHERE name = in_systemMessage;
   IF systemMessageID IS NULL THEN
-      INSERT INTO apache_logs.error_log_systemmessage (name) VALUES (in_systemMessage);
+      INSERT INTO error_log_systemmessage (name) VALUES (in_systemMessage);
       SET systemMessageID = LAST_INSERT_ID();
   END IF;
   RETURN systemMessageID;
@@ -1702,10 +1705,10 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'error_logMessageID';
   SELECT id
     INTO messageID
-    FROM apache_logs.error_log_message
+    FROM error_log_message
     WHERE name = in_message;
   IF messageID IS NULL THEN
-      INSERT INTO apache_logs.error_log_message (name) VALUES (in_message);
+      INSERT INTO error_log_message (name) VALUES (in_message);
       SET messageID = LAST_INSERT_ID();
   END IF;
   RETURN messageID;
@@ -1725,7 +1728,7 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'error_logLevel';
   SELECT name
     INTO logLevel
-    FROM apache_logs.error_log_level
+    FROM error_log_level
     WHERE id = in_loglevelID;
   RETURN logLevel;
 END //
@@ -1743,7 +1746,7 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'error_module';
   SELECT name
     INTO module
-    FROM apache_logs.error_log_module
+    FROM error_log_module
     WHERE id = in_moduleID;
   RETURN module;
 END //
@@ -1761,7 +1764,7 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'error_process';
   SELECT name
     INTO process
-    FROM apache_logs.error_log_processid
+    FROM error_log_processid
     WHERE id = in_processidID;
   RETURN process;
 END //
@@ -1779,7 +1782,7 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'error_thread';
   SELECT name
     INTO thread
-    FROM apache_logs.error_log_threadid
+    FROM error_log_threadid
     WHERE id = in_threadidID;
   RETURN thread;
 END //
@@ -1797,7 +1800,7 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'error_apacheCode';
   SELECT name
     INTO apacheCode
-    FROM apache_logs.error_log_apachecode
+    FROM error_log_apachecode
     WHERE id = in_apacheCodeID;
   RETURN apacheCode;
 END //
@@ -1815,7 +1818,7 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'error_apacheMessage';
   SELECT name
     INTO apacheMessage
-    FROM apache_logs.error_log_apachemessage
+    FROM error_log_apachemessage
     WHERE id = in_apacheMessageID;
   RETURN apacheMessage;
 END //
@@ -1833,7 +1836,7 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'error_systemCode';
   SELECT name
     INTO systemCode
-    FROM apache_logs.error_log_systemcode
+    FROM error_log_systemcode
     WHERE id = in_systemCodeID;
   RETURN systemCode;
 END //
@@ -1851,7 +1854,7 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'error_systemMessage';
   SELECT name
     INTO systemMessage
-    FROM apache_logs.error_log_systemmessage
+    FROM error_log_systemmessage
     WHERE id = in_systemMessageID;
   RETURN systemMessage;
 END //
@@ -1869,7 +1872,7 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'error_logMessage';
   SELECT name
     INTO logMessage
-    FROM apache_logs.error_log_message
+    FROM error_log_message
     WHERE id = in_messageID;
   RETURN logMessage;
 END //
@@ -1888,10 +1891,10 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'log_refererID';
   SELECT id
     INTO referer_ID
-    FROM apache_logs.log_referer
+    FROM log_referer
    WHERE name = in_Referer;
   IF referer_ID IS NULL THEN
-    INSERT INTO apache_logs.log_referer (name) VALUES (in_Referer);
+    INSERT INTO log_referer (name) VALUES (in_Referer);
     SET referer_ID = LAST_INSERT_ID();
   END IF;
   RETURN referer_ID;
@@ -1910,10 +1913,10 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'log_serverID';
   SELECT id
     INTO server_ID
-    FROM apache_logs.log_server
+    FROM log_server
    WHERE name = in_Server;
   IF server_ID IS NULL THEN
-    INSERT INTO apache_logs.log_server (name) VALUES (in_Server);
+    INSERT INTO log_server (name) VALUES (in_Server);
     SET server_ID = LAST_INSERT_ID();
   END IF;
   RETURN server_ID;
@@ -1932,10 +1935,10 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'log_serverPortID';
   SELECT id
     INTO serverPort_ID
-    FROM apache_logs.log_serverport
+    FROM log_serverport
    WHERE name = in_ServerPort;
   IF serverPort_ID IS NULL THEN
-    INSERT INTO apache_logs.log_serverport (name) VALUES (in_ServerPort);
+    INSERT INTO log_serverport (name) VALUES (in_ServerPort);
     SET serverPort_ID = LAST_INSERT_ID();
   END IF;
   RETURN serverPort_ID;
@@ -1954,10 +1957,10 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'log_clientID';
   SELECT id
     INTO client_ID
-    FROM apache_logs.log_client
+    FROM log_client
    WHERE name = in_client;
   IF client_ID IS NULL THEN
-    INSERT INTO apache_logs.log_client (name) VALUES (in_client);
+    INSERT INTO log_client (name) VALUES (in_client);
     SET client_ID = LAST_INSERT_ID();
   END IF;
   RETURN client_ID;
@@ -1978,11 +1981,11 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'log_clientCountryID';
   SELECT id
     INTO clientCountry_ID
-    FROM apache_logs.log_client_country
+    FROM log_client_country
    WHERE country = in_country
      AND country_code = in_country_code;
   IF clientCountry_ID IS NULL THEN
-    INSERT INTO apache_logs.log_client_country (country, country_code) VALUES (in_country, in_country_code);
+    INSERT INTO log_client_country (country, country_code) VALUES (in_country, in_country_code);
     SET clientCountry_ID = LAST_INSERT_ID();
   END IF;
   RETURN clientCountry_ID;
@@ -2001,10 +2004,10 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'log_clientSubdivisionID';
   SELECT id
     INTO clientSubdivision_ID
-    FROM apache_logs.log_client_subdivision
+    FROM log_client_subdivision
    WHERE name = in_subdivision;
   IF clientSubdivision_ID IS NULL THEN
-    INSERT INTO apache_logs.log_client_subdivision (name) VALUES (in_subdivision);
+    INSERT INTO log_client_subdivision (name) VALUES (in_subdivision);
     SET clientSubdivision_ID = LAST_INSERT_ID();
   END IF;
   RETURN clientSubdivision_ID;
@@ -2023,10 +2026,10 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'log_clientCityID';
   SELECT id
     INTO clientCity_ID
-    FROM apache_logs.log_client_city
+    FROM log_client_city
    WHERE name = in_city;
   IF clientCity_ID IS NULL THEN
-    INSERT INTO apache_logs.log_client_city (name) VALUES (in_city);
+    INSERT INTO log_client_city (name) VALUES (in_city);
     SET clientCity_ID = LAST_INSERT_ID();
   END IF;
   RETURN clientCity_ID;
@@ -2047,11 +2050,11 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'log_clientCoordinateID';
   SELECT id
     INTO clientCoordinate_ID
-    FROM apache_logs.log_client_coordinate
+    FROM log_client_coordinate
    WHERE latitude = in_latitude
      AND longitude = in_longitude;
   IF clientCoordinate_ID IS NULL THEN
-    INSERT INTO apache_logs.log_client_coordinate (latitude, longitude) VALUES (in_latitude, in_longitude);
+    INSERT INTO log_client_coordinate (latitude, longitude) VALUES (in_latitude, in_longitude);
     SET clientCoordinate_ID = LAST_INSERT_ID();
   END IF;
   RETURN clientCoordinate_ID;
@@ -2070,10 +2073,10 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'log_clientOrganizationID';
   SELECT id
     INTO clientOrganization_ID
-    FROM apache_logs.log_client_organization
+    FROM log_client_organization
    WHERE name = in_organization;
   IF clientOrganization_ID IS NULL THEN
-    INSERT INTO apache_logs.log_client_organization (name) VALUES (in_organization);
+    INSERT INTO log_client_organization (name) VALUES (in_organization);
     SET clientOrganization_ID = LAST_INSERT_ID();
   END IF;
   RETURN clientOrganization_ID;
@@ -2092,10 +2095,10 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'log_clientNetworkID';
   SELECT id
     INTO clientNetwork_ID
-    FROM apache_logs.log_client_network
+    FROM log_client_network
    WHERE name = in_network;
   IF clientNetwork_ID IS NULL THEN
-    INSERT INTO apache_logs.log_client_network (name) VALUES (in_network);
+    INSERT INTO log_client_network (name) VALUES (in_network);
     SET clientNetwork_ID = LAST_INSERT_ID();
   END IF;
   RETURN clientNetwork_ID;
@@ -2114,10 +2117,10 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'log_clientPortID';
   SELECT id
     INTO clientPort_ID
-    FROM apache_logs.log_clientport
+    FROM log_clientport
    WHERE name = in_ClientPort;
   IF clientPort_ID IS NULL THEN
-    INSERT INTO apache_logs.log_clientport (name) VALUES (in_ClientPort);
+    INSERT INTO log_clientport (name) VALUES (in_ClientPort);
     SET clientPort_ID = LAST_INSERT_ID();
   END IF;
   RETURN clientPort_ID;
@@ -2136,10 +2139,10 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'log_requestLogID';
   SELECT id
     INTO requestLog_ID
-    FROM apache_logs.log_requestlogid
+    FROM log_requestlogid
    WHERE name = in_RequestLog;
   IF requestLog_ID IS NULL THEN
-    INSERT INTO apache_logs.log_requestlogid (name) VALUES (in_RequestLog);
+    INSERT INTO log_requestlogid (name) VALUES (in_RequestLog);
     SET requestLog_ID = LAST_INSERT_ID();
   END IF;
   RETURN requestLog_ID;
@@ -2160,12 +2163,12 @@ BEGIN
   IF in_Log = 'A' THEN
     SELECT COUNT(id)
       INTO logCount
-      FROM apache_logs.access_log
+      FROM access_log
      WHERE clientID = in_clientID;
   ELSEIF in_Log = 'E' THEN
     SELECT COUNT(id)
       INTO logCount
-      FROM apache_logs.error_log
+      FROM error_log
      WHERE clientID = in_clientID;
   END IF;
   RETURN logCount;
@@ -2186,12 +2189,12 @@ BEGIN
   IF in_Log = 'A' THEN
     SELECT COUNT(id)
       INTO logCount
-      FROM apache_logs.access_log
+      FROM access_log
      WHERE clientPortID = in_clientPortID;
   ELSEIF in_Log = 'E' THEN
     SELECT COUNT(id)
       INTO logCount
-      FROM apache_logs.error_log
+      FROM error_log
      WHERE clientPortID = in_clientPortID;
   END IF;
   RETURN logCount;
@@ -2212,12 +2215,12 @@ BEGIN
   IF in_Log = 'A' THEN
     SELECT COUNT(id)
       INTO logCount
-      FROM apache_logs.access_log
+      FROM access_log
      WHERE refererID = in_refererID;
   ELSEIF in_Log = 'E' THEN
     SELECT COUNT(id)
       INTO logCount
-      FROM apache_logs.error_log
+      FROM error_log
      WHERE refererID = in_refererID;
   END IF;
   RETURN logCount;
@@ -2238,12 +2241,12 @@ BEGIN
   IF in_Log = 'A' THEN
     SELECT COUNT(id)
       INTO logCount
-      FROM apache_logs.access_log
+      FROM access_log
      WHERE requestLogID = in_requestLogID;
   ELSEIF in_Log = 'E' THEN
     SELECT COUNT(id)
       INTO logCount
-      FROM apache_logs.error_log
+      FROM error_log
      WHERE requestLogID = in_requestLogID;
   END IF;
   RETURN logCount;
@@ -2264,12 +2267,12 @@ BEGIN
   IF in_Log = 'A' THEN
     SELECT COUNT(id)
       INTO logCount
-      FROM apache_logs.access_log
+      FROM access_log
      WHERE serverID = in_ServerID;
   ELSEIF in_Log = 'E' THEN
     SELECT COUNT(id)
       INTO logCount
-      FROM apache_logs.error_log
+      FROM error_log
      WHERE serverID = in_ServerID;
   END IF;
   RETURN logCount;
@@ -2290,12 +2293,12 @@ BEGIN
   IF in_Log = 'A' THEN
     SELECT COUNT(id)
       INTO logCount
-      FROM apache_logs.access_log
+      FROM access_log
      WHERE serverPortID = in_serverPortID;
   ELSEIF in_Log = 'E' THEN
     SELECT COUNT(id)
       INTO logCount
-      FROM apache_logs.error_log
+      FROM error_log
      WHERE serverPortID = in_serverPortID;
   END IF;
   RETURN logCount;
@@ -2315,7 +2318,7 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'log_referer';
   SELECT name
     INTO referer
-    FROM apache_logs.log_referer
+    FROM log_referer
    WHERE id = in_RefererID;
   RETURN referer;
 END //
@@ -2333,7 +2336,7 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'log_server';
   SELECT name
     INTO server
-    FROM apache_logs.log_server
+    FROM log_server
    WHERE id = in_ServerID;
   RETURN server;
 END //
@@ -2351,7 +2354,7 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'log_serverPort';
   SELECT name
     INTO serverPort
-    FROM apache_logs.log_serverport
+    FROM log_serverport
    WHERE id = in_ServerPortID;
   RETURN serverPort;
 END //
@@ -2369,7 +2372,7 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'log_client';
   SELECT name
     INTO client
-    FROM apache_logs.log_client
+    FROM log_client
    WHERE id = in_clientID;
   RETURN client;
 END //
@@ -2387,7 +2390,7 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'log_clientPort';
   SELECT name
     INTO clientPort
-    FROM apache_logs.log_clientport
+    FROM log_clientport
    WHERE id = in_ClientPortID;
   RETURN clientPort;
 END //
@@ -2405,7 +2408,7 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'log_requestLog';
   SELECT name
     INTO requestLog
-    FROM apache_logs.log_requestlogid
+    FROM log_requestlogid
    WHERE name = in_RequestLogID;
   RETURN requestLog;
 END //
@@ -2431,18 +2434,18 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION 
   BEGIN
     GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
-    CALL apache_logs.errorProcess('importdeviceID', e1, e2, e3, 'apache_logs', 'logs2mysql.py', null, null);
+    CALL errorProcess('importdeviceID', e1, e2, e3, 'apache_logs', 'logs2mysql.py', null, null);
   END;
   SELECT id
     INTO importDevice_ID
-    FROM apache_logs.import_device
+    FROM import_device
    WHERE deviceid = in_deviceid
      AND platformNode = in_platformNode
      AND platformSystem = in_platformSystem
      AND platformMachine = in_platformMachine
      AND platformProcessor = in_platformProcessor;
   IF importDevice_ID IS NULL THEN
-  	INSERT INTO apache_logs.import_device 
+  	INSERT INTO import_device 
       (deviceid,
        platformNode,
        platformSystem,
@@ -2481,14 +2484,14 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION 
   BEGIN
     GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
-    CALL apache_logs.errorProcess('importclientID', e1, e2, e3, 'apache_logs', 'logs2mysql.py', null, null);
+    CALL errorProcess('importclientID', e1, e2, e3, 'apache_logs', 'logs2mysql.py', null, null);
   END;
   IF NOT CONVERT(in_importdevice_id, UNSIGNED) = 0 THEN
     SET importDevice_ID = CONVERT(in_importdevice_id, UNSIGNED);
   END IF;
   SELECT id
     INTO importClient_ID
-    FROM apache_logs.import_client
+    FROM import_client
    WHERE ipaddress = in_ipaddress
      AND login = in_login
      AND expandUser = in_expandUser
@@ -2496,7 +2499,7 @@ BEGIN
      AND platformVersion = in_platformVersion
      AND importdeviceid = importDevice_ID;
   IF importClient_ID IS NULL THEN
-  	INSERT INTO apache_logs.import_client 
+  	INSERT INTO import_client 
       (ipaddress,
        login,
        expandUser,
@@ -2531,12 +2534,12 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION 
   BEGIN
     GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
-    CALL apache_logs.errorProcess('importLoadID', e1, e2, e3, 'apache_logs', 'logs2mysql.py', importLoad_ID, null );
+    CALL errorProcess('importLoadID', e1, e2, e3, 'apache_logs', 'logs2mysql.py', importLoad_ID, null );
   END;
   IF NOT CONVERT(in_importclient_id, UNSIGNED) = 0 THEN
     SET importclient_ID = CONVERT(in_importclient_id, UNSIGNED);
   END IF;
-  INSERT INTO apache_logs.import_load (importclientid) VALUES (importclient_ID);
+  INSERT INTO import_load (importclientid) VALUES (importclient_ID);
   SET importLoad_ID = LAST_INSERT_ID();
   RETURN importLoad_ID;
 END //
@@ -2561,7 +2564,7 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION 
   BEGIN
     GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
-    CALL apache_logs.errorProcess('importFileExists', e1, e2, e3, 'apache_logs', 'logs2mysql.py', null, null );
+    CALL errorProcess('importFileExists', e1, e2, e3, 'apache_logs', 'logs2mysql.py', null, null );
   END;
   IF NOT CONVERT(in_importdevice_id, UNSIGNED) = 0 THEN
     SET importDevice_ID = CONVERT(in_importdevice_id, UNSIGNED);
@@ -2570,7 +2573,7 @@ BEGIN
          added
     INTO importFileID,
          importDate
-    FROM apache_logs.import_file
+    FROM import_file
    WHERE name = in_importFile
      AND importdeviceid = importDevice_ID;
   IF NOT ISNULL(importFileID) THEN
@@ -2604,14 +2607,14 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION 
   BEGIN
     GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE; 
-    CALL apache_logs.errorProcess('importFileID', e1, e2, e3, 'apache_logs', 'logs2mysql.py', importload_id, null );
+    CALL errorProcess('importFileID', e1, e2, e3, 'apache_logs', 'logs2mysql.py', importload_id, null );
   END;
   IF NOT CONVERT(in_importdevice_id, UNSIGNED) = 0 THEN
     SET importDevice_ID = CONVERT(in_importdevice_id, UNSIGNED);
   END IF;
   SELECT id
     INTO importFile_ID
-    FROM apache_logs.import_file
+    FROM import_file
    WHERE name = importFile
      AND importdeviceid = importDevice_ID;
   IF importFile_ID IS NULL THEN
@@ -2621,7 +2624,7 @@ BEGIN
     IF NOT CONVERT(fileformat, UNSIGNED) = 0 THEN
   	  SET formatFile_ID = CONVERT(fileformat, UNSIGNED);
     END IF;
-    INSERT INTO apache_logs.import_file 
+    INSERT INTO import_file 
        (name,
         filesize,
         filecreated,
@@ -2652,6 +2655,7 @@ CREATE DEFINER=`root`@`localhost` FUNCTION `importServerID`
    in_version VARCHAR(55),
    in_system VARCHAR(55),
    in_machine VARCHAR(55),
+   in_serverid VARCHAR(75),
    in_comment VARCHAR(75)
   )
   RETURNS INTEGER
@@ -2665,20 +2669,21 @@ BEGIN
   END;
   SELECT id
 	  INTO importServer_ID
-	  FROM apache_logs.import_server
+	  FROM import_server
    WHERE dbuser = in_user
      AND dbhost = in_host
      AND dbversion = in_version
      AND dbsystem = in_system
      AND dbmachine = in_machine
-     AND dbcomment = in_comment;
+     AND dbserverid = in_serverid;
   IF importServer_ID IS NULL THEN
-    INSERT INTO apache_logs.import_server 
+    INSERT INTO import_server 
        (dbuser,
         dbhost,
         dbversion,
         dbsystem,
         dbmachine,
+        dbserverid,
         dbcomment)
     VALUES
        (in_user,
@@ -2686,6 +2691,7 @@ BEGIN
         in_version,
         in_system,
         in_machine,
+        in_serverid,
         in_comment);
     SET importServer_ID = LAST_INSERT_ID();
   END IF;
@@ -2711,17 +2717,15 @@ BEGIN
   DECLARE db_system VARCHAR(55) DEFAULT NULL;
   DECLARE db_machine VARCHAR(55) DEFAULT NULL;
   DECLARE db_comment VARCHAR(75) DEFAULT NULL;
-  -- DECLARE db_server VARCHAR(75) DEFAULT NULL;
+  DECLARE db_serverid VARCHAR(75) DEFAULT NULL;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION
   BEGIN
     IF @error_count=1 THEN RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'importServerID called from importProcessID'; ELSE RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'importProcessID'; END IF;
   END;
   SET @error_count = 0;
--- 03/04/2025 - @@server_uuid and UUID() - these 2 are not the same - changed in version 3.2.0 on 02/01/2025 release - since then records are added to import_server TABLE as different servers
--- UUUID() - unique per execution. everytime called the value is different. My fault thinking it was the same functionality as @server_uid. Changed and never tested due to workig on another project at time.
--- @@server_uuid - Introduced MySQL 5.7 - the server generates a true UUID in addition to the server_id value supplied by the user. This is available as the global, read-only server_uuid system variable.
--- @@server_uid - Introduced MariaDB 10.5.26 - Automatically calculated server unique id hash. Added to the error log to allow one to verify if error reports are from the same server. continued on next line.
--- UID is a base64-encoded SHA1 hash of the MAC address of one of the interfaces, and the tcp port that the server is listening on.
+-- 03/04/2025 - @@server_uuid and UUID() - these 2 are not the same - changed in version 3.2.0 on 02/01/2025 for MariaDB compatibility. Caused records added to import_server TABLE every execution.
+-- UUID() - unique per execution. I thought UUID() was same functionality as @server_uid when substituting and never tested due to working on another project at time.
+-- got rid of @@server_uuid and added @@version_comment which is compatible with both MariaDB and MySQL.
   SELECT user(),
     @@hostname,
     @@version,
@@ -2735,15 +2739,14 @@ BEGIN
     db_system,
     db_machine,
     db_comment;
--- this does not work due to MariaDB ERRORS on script execution on @@server_uuid. scraping server_uuid and server_uid. renamed import_table TABLE column uuidserver to comment.    
---  IF LOCATE('mysql', db_comment) THEN
---    SELECT @@server_uuid INTO db_server;
---  ELSE
---    SELECT @@server_uid INTO db_server;
---  END IF;
---	SET importServer_ID = importServerID(db_user, db_host, db_version, db_system, db_machine, db_server, db_comment);
-	SET importServer_ID = importServerID(db_user, db_host, db_version, db_system, db_machine, db_comment);
-	INSERT INTO apache_logs.import_process
+-- 03/11/2025 - MariaDB and MySQL version-specific code - /*M!100500 and /*!50700 are used here and to create indexes in MariaDB not available in MySQL.
+-- @@server_uuid - Introduced MySQL 5.7 - the server generates a true UUID in addition to the server_id value supplied by the user. This is available as the global, read-only server_uuid system variable.
+-- @@server_uid - Introduced MariaDB 10.5.26 - Automatically calculated server unique id hash. Added to the error log to allow one to verify if error reports are from the same server. continued on next line.
+-- UID is a base64-encoded SHA1 hash of the MAC address of one of the interfaces, and the tcp port that the server is listening on.
+/*M!100500  SELECT @@server_uid INTO db_serverid;*/
+/*!50700  SELECT @@server_uuid INTO db_serverid;*/
+  SET importServer_ID = importServerID(db_user, db_host, db_version, db_system, db_machine, db_serverid, db_comment);
+  INSERT INTO import_process
       (type,
        name,
        importserverid)
@@ -2767,7 +2770,6 @@ CREATE DEFINER=`root`@`localhost` FUNCTION `importFileCheck`
   RETURNS INTEGER
   READS SQL DATA
 BEGIN
-  -- replaced ER_SIGNAL_EXCEPTION with errno
   DECLARE errno SMALLINT UNSIGNED DEFAULT 1644;
   DECLARE importFileName VARCHAR(300) DEFAULT null;
   DECLARE parseProcess_ID INTEGER DEFAULT null;
@@ -2780,7 +2782,7 @@ BEGIN
     INTO importFileName,
          parseProcess_ID,
          importProcess_ID
-    FROM apache_logs.import_file
+    FROM import_file
    WHERE id = importfileid;
   -- IF none of these things happen all is well. processing records from same file.
   IF importFileName IS NULL THEN
@@ -2801,7 +2803,7 @@ BEGIN
       MYSQL_ERRNO = errno;
   ELSEIF processType = 'parse' AND parseProcess_ID IS NULL THEN
   -- First time and first record in file being processed. This will happen one time for each file.
-    UPDATE apache_logs.import_file SET parseprocessid = processid WHERE id = importFileID;
+    UPDATE import_file SET parseprocessid = processid WHERE id = importFileID;
   ELSEIF  processType = 'parse' AND processid != parseProcess_ID THEN
   -- This is an error. This function is only called when import processing. only ONE ProcessID must be used for each file.
     SET processFile = 0;
@@ -2812,7 +2814,7 @@ BEGIN
       MYSQL_ERRNO = errno;
   ELSEIF processType = 'import' AND importProcess_ID IS NULL THEN
   -- First time and first record in file being processed. This will happen one time for each file.
-    UPDATE apache_logs.import_file SET importprocessid = processid WHERE id = importFileID;
+    UPDATE import_file SET importprocessid = processid WHERE id = importFileID;
   ELSEIF  processType = 'import' AND processid != importProcess_ID THEN
   -- This is an error. This function is only called when import processing. only ONE ProcessID must be used for each file.
     SET processFile = 0;
@@ -3204,7 +3206,7 @@ VIEW `access_period_year_list` AS
             MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
             MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
             MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM apache_logs.access_log l
+       FROM access_log l
    GROUP BY YEAR(l.logged)
    ORDER BY 'Year'; 
 
@@ -3227,7 +3229,7 @@ VIEW `access_period_month_list` AS
             MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
             MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
             MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM apache_logs.access_log l
+       FROM access_log l
    GROUP BY YEAR(l.logged),
             MONTH(l.logged)
    ORDER BY 'Year',
@@ -3253,7 +3255,7 @@ VIEW `access_period_week_list` AS
             MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
             MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
             MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM apache_logs.access_log l
+       FROM access_log l
    GROUP BY YEAR(l.logged),
             MONTH(l.logged),
             WEEK(l.logged)
@@ -3281,7 +3283,7 @@ VIEW `access_period_day_list` AS
             MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
             MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
             MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM apache_logs.access_log l
+       FROM access_log l
    GROUP BY YEAR(l.logged),
             MONTH(l.logged),
             DAY(l.logged)
@@ -3310,7 +3312,7 @@ VIEW `access_period_hour_list` AS
             MIN(`l`.`reqtime_milli`) AS `Min Request Time`,
             MAX(`l`.`reqdelay_milli`) AS `Max Delay Time`,
             MIN(`l`.`reqdelay_milli`) AS `Min Delay Time`
-       FROM apache_logs.access_log l
+       FROM access_log l
    GROUP BY YEAR(l.logged),
             MONTH(l.logged),
             DAY(l.logged),
@@ -3635,7 +3637,7 @@ CREATE
 VIEW `error_period_year_list` AS
      SELECT YEAR(l.logged) 'Year',
             COUNT(`l`.`id`) AS `Log Count`
-       FROM apache_logs.error_log l
+       FROM `error_log` `l`
    GROUP BY YEAR(l.logged)
    ORDER BY 'Year'; 
 
@@ -3650,7 +3652,7 @@ VIEW `error_period_month_list` AS
     SELECT YEAR(l.logged) 'Year',
            MONTH(l.logged) 'Month',
            COUNT(`l`.`id`) AS `Log Count`
-      FROM apache_logs.error_log l
+      FROM `error_log` `l`
   GROUP BY YEAR(l.logged),
            MONTH(l.logged)
   ORDER BY 'Year',
@@ -3668,7 +3670,7 @@ VIEW `error_period_week_list` AS
             MONTH(l.logged) 'Month',
             WEEK(l.logged) 'Week',
             COUNT(`l`.`id`) AS `Log Count`
-       FROM apache_logs.error_log l
+       FROM `error_log` `l`
    GROUP BY YEAR(l.logged),
             MONTH(l.logged),
             WEEK(l.logged)
@@ -3688,7 +3690,7 @@ VIEW `error_period_day_list` AS
             MONTH(l.logged) 'Month',
             DAY(l.logged) 'Day',
             COUNT(`l`.`id`) AS `Log Count`
-       FROM apache_logs.error_log l
+       FROM `error_log` `l`
    GROUP BY YEAR(l.logged),
             MONTH(l.logged),
             DAY(l.logged)
@@ -3709,7 +3711,7 @@ VIEW `error_period_hour_list` AS
             DAY(l.logged) 'Day',
             HOUR(l.logged) 'Hour',
             COUNT(`l`.`id`) AS `Log Count`
-       FROM apache_logs.error_log l
+       FROM `error_log` `l`
    GROUP BY YEAR(l.logged),
             MONTH(l.logged),
             DAY(l.logged),
@@ -4780,7 +4782,8 @@ VIEW `import_file_error_list` AS
 DROP PROCEDURE IF EXISTS `process_access_parse`;
 -- create procedure ---------------------------------------------------------
 DELIMITER //
-CREATE DEFINER = `root`@`localhost` PROCEDURE `process_access_parse` (
+CREATE DEFINER = `root`@`localhost` PROCEDURE `process_access_parse`
+(
   IN in_processName VARCHAR(100),
   IN in_importLoadID VARCHAR(20)
 )
@@ -4800,139 +4803,139 @@ BEGIN
   DECLARE loadsProcessed INTEGER DEFAULT 1;
   DECLARE processError INTEGER DEFAULT 0;
   -- declare cursor for csv2mysql format - All importloadIDs not processed
-  DECLARE csv2mysqlStatus CURSOR FOR 
+  DECLARE csv2mysqlStatus CURSOR FOR
       SELECT l.id
-        FROM apache_logs.load_access_csv2mysql l
-  INNER JOIN apache_logs.import_file f 
+        FROM load_access_csv2mysql l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-  INNER JOIN apache_logs.import_load il 
+  INNER JOIN import_load il
           ON f.importloadid = il.id
-       WHERE il.completed IS NOT NULL 
-         AND l.process_status = 0 FOR UPDATE;
+       WHERE l.process_status = 0
+         AND il.completed IS NOT NULL;
   -- declare cursor for csv2mysql format - All importloadIDs not processed
-  DECLARE csv2mysqlStatusFile CURSOR FOR 
+  DECLARE csv2mysqlStatusFile CURSOR FOR
       SELECT DISTINCT(l.importfileid)
-        FROM apache_logs.load_access_csv2mysql l
-  INNER JOIN apache_logs.import_file f 
+        FROM load_access_csv2mysql l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-  INNER JOIN apache_logs.import_load il 
+  INNER JOIN import_load il
           ON f.importloadid = il.id
-       WHERE il.completed IS NOT NULL 
-         AND l.process_status = 0;
+       WHERE l.process_status = 0
+         AND il.completed IS NOT NULL;
   -- declare cursor for csv2mysql format - single importLoadID
-  DECLARE csv2mysqlLoadID CURSOR FOR 
+  DECLARE csv2mysqlLoadID CURSOR FOR
       SELECT l.id
-  	    FROM apache_logs.load_access_csv2mysql l
-  INNER JOIN apache_logs.import_file f 
+  	    FROM load_access_csv2mysql l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
-         AND l.process_status=0 FOR UPDATE;
+       WHERE l.process_status = 0
+         AND f.importloadid = importLoad_ID;
   -- declare cursor for csv2mysql format - single importLoadID
-  DECLARE csv2mysqlLoadIDFile CURSOR FOR 
+  DECLARE csv2mysqlLoadIDFile CURSOR FOR
       SELECT DISTINCT(l.importfileid)
-  	    FROM apache_logs.load_access_csv2mysql l
-  INNER JOIN apache_logs.import_file f 
+  	    FROM load_access_csv2mysql l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
-         AND l.process_status=0;
+       WHERE l.process_status = 0
+         AND f.importloadid = importLoad_ID;
   -- declare cursor for combined format - All importloadIDs not processed
-  DECLARE vhostStatus CURSOR FOR 
+  DECLARE vhostStatus CURSOR FOR
       SELECT l.id
-  	    FROM apache_logs.load_access_vhost l
-  INNER JOIN apache_logs.import_file f 
+  	    FROM load_access_vhost l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-  INNER JOIN apache_logs.import_load il 
+  INNER JOIN import_load il
           ON f.importloadid = il.id
-       WHERE il.completed IS NOT NULL 
-         AND l.process_status = 0 FOR UPDATE;
+       WHERE l.process_status = 0
+         AND il.completed IS NOT NULL;
   -- declare cursor for combined format - All importloadIDs not processed
-  DECLARE vhostStatusFile CURSOR FOR 
+  DECLARE vhostStatusFile CURSOR FOR
       SELECT DISTINCT(l.importfileid)
-  	    FROM apache_logs.load_access_vhost l
-  INNER JOIN apache_logs.import_file f 
+  	    FROM load_access_vhost l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-  INNER JOIN apache_logs.import_load il 
+  INNER JOIN import_load il
           ON f.importloadid = il.id
-       WHERE il.completed IS NOT NULL 
-         AND l.process_status = 0;
+       WHERE l.process_status = 0
+         AND il.completed IS NOT NULL;
   -- declare cursor for combined format - single importLoadID
-  DECLARE vhostLoadID CURSOR FOR 
+  DECLARE vhostLoadID CURSOR FOR
       SELECT l.id
-	      FROM apache_logs.load_access_vhost l
-  INNER JOIN apache_logs.import_file f 
+	      FROM load_access_vhost l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
-         AND l.process_status=0 FOR UPDATE;
+       WHERE l.process_status = 0
+         AND f.importloadid = importLoad_ID;
   -- declare cursor for combined format - single importLoadID
-  DECLARE vhostLoadIDFile CURSOR FOR 
+  DECLARE vhostLoadIDFile CURSOR FOR
       SELECT DISTINCT(l.importfileid)
-	      FROM apache_logs.load_access_vhost l
-  INNER JOIN apache_logs.import_file f 
+	      FROM load_access_vhost l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
-         AND l.process_status=0;
+       WHERE l.process_status = 0
+         AND f.importloadid = importLoad_ID;
   -- declare cursor for combined format - All importloadIDs not processed
-  DECLARE combinedStatus CURSOR FOR 
+  DECLARE combinedStatus CURSOR FOR
       SELECT l.id
-        FROM apache_logs.load_access_combined l
-  INNER JOIN apache_logs.import_file f 
+        FROM load_access_combined l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-  INNER JOIN apache_logs.import_load il 
+  INNER JOIN import_load il
           ON f.importloadid = il.id
-       WHERE il.completed IS NOT NULL 
-         AND l.process_status = 0 FOR UPDATE;
+       WHERE l.process_status = 0
+         AND il.completed IS NOT NULL;
   -- declare cursor for combined format - All importloadIDs not processed
-  DECLARE combinedStatusFile CURSOR FOR 
+  DECLARE combinedStatusFile CURSOR FOR
       SELECT DISTINCT(l.importfileid)
-        FROM apache_logs.load_access_combined l
-  INNER JOIN apache_logs.import_file f 
+        FROM load_access_combined l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-  INNER JOIN apache_logs.import_load il 
+  INNER JOIN import_load il
           ON f.importloadid = il.id
-       WHERE il.completed IS NOT NULL 
-         AND l.process_status = 0;
+       WHERE l.process_status = 0
+         AND il.completed IS NOT NULL;
   -- declare cursor for combined format - single importLoadID
-  DECLARE combinedLoadID CURSOR FOR 
+  DECLARE combinedLoadID CURSOR FOR
       SELECT l.id
-        FROM apache_logs.load_access_combined l
-  INNER JOIN apache_logs.import_file f 
+        FROM load_access_combined l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
-         AND l.process_status=0 FOR UPDATE;
+       WHERE l.process_status = 0
+         AND f.importloadid = importLoad_ID;
   -- declare cursor for combined format - single importLoadID
-  DECLARE combinedLoadIDFile CURSOR FOR 
+  DECLARE combinedLoadIDFile CURSOR FOR
       SELECT DISTINCT(l.importfileid)
-        FROM apache_logs.load_access_combined l
-  INNER JOIN apache_logs.import_file f 
+        FROM load_access_combined l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
-         AND l.process_status=0;
+       WHERE l.process_status = 0
+         AND f.importloadid = importLoad_ID;
   -- declare cursor for importformatid SET=2 in Python check if common format
-  DECLARE commonStatusFile CURSOR FOR 
+  DECLARE commonStatusFile CURSOR FOR
       SELECT DISTINCT(l.importfileid)
-        FROM apache_logs.load_access_combined l
-  INNER JOIN apache_logs.import_file f 
+        FROM load_access_combined l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-  INNER JOIN apache_logs.import_load il 
+  INNER JOIN import_load il
           ON f.importloadid = il.id
-       WHERE il.completed IS NOT NULL 
-         AND l.process_status = 0
+       WHERE l.process_status = 0
+         AND il.completed IS NOT NULL
          AND l.log_useragent IS NULL;
   -- declare cursor for importformatid SET=2 in Python check if common format
-  DECLARE commonLoadIDFile CURSOR FOR 
+  DECLARE commonLoadIDFile CURSOR FOR
       SELECT DISTINCT(l.importfileid)
-        FROM apache_logs.load_access_combined l
-  INNER JOIN apache_logs.import_file f 
+        FROM load_access_combined l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-       WHERE f.importloadid = importLoad_ID
-         AND l.process_status = 0
+       WHERE l.process_status = 0
+         AND f.importloadid = importLoad_ID
          AND l.log_useragent IS NULL;
   -- declare NOT FOUND handler
   DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
-  DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-      GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME; 
-      CALL apache_logs.errorProcess('process_access_parse', e1, e2, e3, e4, e5, importLoad_ID, importProcessID);
+      GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME;
+      CALL errorProcess('process_access_parse', e1, e2, e3, e4, e5, importLoad_ID, importProcessID);
       SET processError = processError + 1;
       ROLLBACK;
     END;
@@ -4950,55 +4953,55 @@ BEGIN
   	IF in_processName = 'csv2mysql' THEN
       SELECT COUNT(DISTINCT(f.importloadid))
         INTO loadsProcessed
-        FROM apache_logs.load_access_csv2mysql l
-  INNER JOIN apache_logs.import_file f 
+        FROM load_access_csv2mysql l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-  INNER JOIN apache_logs.import_load il 
+  INNER JOIN import_load il
           ON f.importloadid = il.id
-       WHERE il.completed IS NOT NULL 
-         AND l.process_status = 0;
+       WHERE l.process_status = 0
+         AND il.completed IS NOT NULL;
     ELSEIF in_processName = 'vhost' THEN
       SELECT COUNT(DISTINCT(f.importloadid))
         INTO loadsProcessed
-        FROM apache_logs.load_access_vhost l
-  INNER JOIN apache_logs.import_file f 
+        FROM load_access_vhost l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-  INNER JOIN apache_logs.import_load il 
+  INNER JOIN import_load il
           ON f.importloadid = il.id
-       WHERE il.completed IS NOT NULL 
-         AND l.process_status = 0;
+       WHERE l.process_status = 0
+         AND il.completed IS NOT NULL;
     ELSEIF in_processName = 'combined' THEN
       SELECT COUNT(DISTINCT(f.importloadid))
         INTO loadsProcessed
-        FROM apache_logs.load_access_combined l
-  INNER JOIN apache_logs.import_file f 
+        FROM load_access_combined l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-  INNER JOIN apache_logs.import_load il 
+  INNER JOIN import_load il
           ON f.importloadid = il.id
-       WHERE il.completed IS NOT NULL 
-         AND l.process_status = 0;
+       WHERE l.process_status = 0
+         AND il.completed IS NOT NULL;
     END IF;
   END IF;	
-  SET importProcessID = apache_logs.importProcessID('access_parse', in_processName);
+  SET importProcessID = importProcessID('access_parse', in_processName);
 	START TRANSACTION;
-	IF in_processName = 'combined' THEN 
+	IF in_processName = 'combined' THEN
     -- importformatid SET=2 in Python check if common format - 'Import File Format - 1=common,2=combined,3=vhost,4=csv2mysql,5=error_default,6=error_vhost'
     IF importLoad_ID IS NULL THEN
       OPEN commonStatusFile;
     ELSE
       OPEN commonLoadIDFile;
-	  END IF;	
+	  END IF;
     set_commonformat: LOOP
       IF importLoad_ID IS NULL THEN
         FETCH commonStatusFile INTO importFile_common_ID;
       ELSE
         FETCH commonLoadIDFile INTO importFile_common_ID;
       END IF;
-      IF done = true THEN 
+      IF done = true THEN
         LEAVE set_commonformat;
       END IF;
-      UPDATE apache_logs.import_file 
-         SET importformatid=1 
+      UPDATE import_file
+         SET importformatid=1
        WHERE id = importFile_common_ID;
     END LOOP set_commonformat;
     IF importLoad_ID IS NULL THEN
@@ -5007,8 +5010,8 @@ BEGIN
       CLOSE commonLoadIDFile;
 	  END IF;
     SET done = false;
-	END IF;	
-  -- process import_file TABLE first 
+	END IF;
+  -- process import_file TABLE first
   IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
     OPEN csv2mysqlStatusFile;
   ELSEIF in_processName = 'csv2mysql' THEN
@@ -5021,7 +5024,7 @@ BEGIN
     OPEN combinedStatusFile;
 	ELSE
     OPEN combinedLoadIDFile;
-  END IF;	
+  END IF;
   process_parse_file: LOOP
   	IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
 	  	FETCH csv2mysqlStatusFile INTO importFileCheck_ID;
@@ -5035,11 +5038,11 @@ BEGIN
   		FETCH combinedStatusFile INTO importFileCheck_ID;
 	  ELSE
 		  FETCH combinedLoadIDFile INTO importFileCheck_ID;
-    END IF;	
-    IF done = true THEN 
+    END IF;
+    IF done = true THEN
       LEAVE process_parse_file;
     END IF;
-    IF apache_logs.importFileCheck(importFileCheck_ID, importProcessID, 'parse') = 0 THEN
+    IF importFileCheck(importFileCheck_ID, importProcessID, 'parse') = 0 THEN
       ROLLBACK;
       LEAVE process_parse_file;
     END IF;
@@ -5057,8 +5060,8 @@ BEGIN
 		CLOSE combinedStatusFile;
 	ELSE
 		CLOSE combinedLoadIDFile;
-	END IF;	
-  -- process records 
+	END IF;
+  -- process records
   SET done = false;
   IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
     OPEN csv2mysqlStatus;
@@ -5072,7 +5075,7 @@ BEGIN
     OPEN combinedStatus;
 	ELSE
     OPEN combinedLoadID;
-  END IF;	
+  END IF;
   process_parse: LOOP
     IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
       FETCH csv2mysqlStatus INTO importRecordID;
@@ -5086,116 +5089,116 @@ BEGIN
       FETCH combinedStatus INTO importRecordID;
     ELSE
       FETCH combinedLoadID INTO importRecordID;
-    END IF;	
-    IF done = true THEN 
+    END IF;
+    IF done = true THEN
       LEAVE process_parse;
     END IF;
     SET recordsProcessed = recordsProcessed + 1;
     -- IF in_processName = 'csv2mysql' THEN
-    -- by default, no parsing required for csv2mysql format 
+    -- by default, no parsing required for csv2mysql format
     IF in_processName = 'vhost' THEN
-      UPDATE apache_logs.load_access_vhost 
-      SET server_name = SUBSTR(log_server, 1, LOCATE(':', log_server)-1) 
+      UPDATE load_access_vhost
+      SET server_name = SUBSTR(log_server, 1, LOCATE(':', log_server)-1)
       WHERE id=importRecordID AND LOCATE(':', log_server)>0;
       
-      UPDATE apache_logs.load_access_vhost 
-      SET server_port = SUBSTR(log_server, LOCATE(':', log_server)+1) 
+      UPDATE load_access_vhost
+      SET server_port = SUBSTR(log_server, LOCATE(':', log_server)+1)
       WHERE id=importRecordID AND LOCATE(':', log_server)>0;
       
-      UPDATE apache_logs.load_access_vhost 
-      SET req_method = SUBSTR(first_line_request, 1, LOCATE(' ', first_line_request)-1) 
+      UPDATE load_access_vhost
+      SET req_method = SUBSTR(first_line_request, 1, LOCATE(' ', first_line_request)-1)
       WHERE id=importRecordID AND LEFT(first_line_request, 1) RLIKE '^[A-Z]';
       
-      UPDATE apache_logs.load_access_vhost 
-      SET req_uri = SUBSTR(first_line_request,LOCATE(' ', first_line_request)+1,LOCATE(' ', first_line_request, LOCATE(' ', first_line_request)+1)-LOCATE(' ', first_line_request)-1) 
+      UPDATE load_access_vhost
+      SET req_uri = SUBSTR(first_line_request,LOCATE(' ', first_line_request)+1,LOCATE(' ', first_line_request, LOCATE(' ', first_line_request)+1)-LOCATE(' ', first_line_request)-1)
       WHERE id=importRecordID AND LEFT(first_line_request, 1) RLIKE '^[A-Z]';
       
-      UPDATE apache_logs.load_access_vhost 
-      SET req_protocol = SUBSTR(first_line_request, LOCATE(' ', first_line_request, LOCATE(' ', first_line_request)+1)) 
+      UPDATE load_access_vhost
+      SET req_protocol = SUBSTR(first_line_request, LOCATE(' ', first_line_request, LOCATE(' ', first_line_request)+1))
       WHERE id=importRecordID AND LEFT(first_line_request, 1) RLIKE '^[A-Z]';
       
-      UPDATE apache_logs.load_access_vhost 
-      SET req_query = SUBSTR(req_uri, LOCATE('?', req_uri)) 
+      UPDATE load_access_vhost
+      SET req_query = SUBSTR(req_uri, LOCATE('?', req_uri))
       WHERE id=importRecordID AND LOCATE('?', req_uri)>0;
       
-      UPDATE apache_logs.load_access_vhost 
-      SET req_uri = SUBSTR(req_uri, 1, LOCATE('?', req_uri)-1) 
+      UPDATE load_access_vhost
+      SET req_uri = SUBSTR(req_uri, 1, LOCATE('?', req_uri)-1)
       WHERE id=importRecordID AND LOCATE('?', req_uri)>0;
       
-      UPDATE apache_logs.load_access_vhost 
-      SET req_protocol = 'Invalid Request', req_method = 'Invalid Request', req_uri = 'Invalid Request' 
+      UPDATE load_access_vhost
+      SET req_protocol = 'Invalid Request', req_method = 'Invalid Request', req_uri = 'Invalid Request'
       WHERE id=importRecordID AND LEFT(first_line_request, 1) NOT RLIKE '^[A-Z]|-';
       
-      UPDATE apache_logs.load_access_vhost 
-      SET req_protocol = 'Empty Request', req_method = 'Empty Request', req_uri = 'Empty Request' 
+      UPDATE load_access_vhost
+      SET req_protocol = 'Empty Request', req_method = 'Empty Request', req_uri = 'Empty Request'
       WHERE id=importRecordID AND LEFT(first_line_request, 1) RLIKE '^-';
       
-      UPDATE apache_logs.load_access_vhost 
+      UPDATE load_access_vhost
       SET req_protocol = TRIM(req_protocol)
       WHERE id=importRecordID;
       
-      UPDATE apache_logs.load_access_vhost 
+      UPDATE load_access_vhost
       SET log_time = CONCAT(log_time_a, ' ', log_time_b)
       WHERE id=importRecordID;
 
     ELSEIF in_processName = 'combined' THEN
-      UPDATE apache_logs.load_access_combined 
-      SET req_method = SUBSTR(first_line_request, 1, LOCATE(' ', first_line_request)-1) 
+      UPDATE load_access_combined
+      SET req_method = SUBSTR(first_line_request, 1, LOCATE(' ', first_line_request)-1)
       WHERE id=importRecordID AND LEFT(first_line_request, 1) RLIKE '^[A-Z]';
       
-      UPDATE apache_logs.load_access_combined 
-      SET req_uri = SUBSTR(first_line_request, LOCATE(' ', first_line_request)+1, LOCATE(' ', first_line_request, LOCATE(' ', first_line_request)+1)-LOCATE(' ', first_line_request)-1) 
+      UPDATE load_access_combined
+      SET req_uri = SUBSTR(first_line_request, LOCATE(' ', first_line_request)+1, LOCATE(' ', first_line_request, LOCATE(' ', first_line_request)+1)-LOCATE(' ', first_line_request)-1)
       WHERE id=importRecordID AND LEFT(first_line_request, 1) RLIKE '^[A-Z]';
       
-      UPDATE apache_logs.load_access_combined 
-      SET req_protocol = SUBSTR(first_line_request, LOCATE(' ', first_line_request, LOCATE(' ', first_line_request)+1)) 
+      UPDATE load_access_combined
+      SET req_protocol = SUBSTR(first_line_request, LOCATE(' ', first_line_request, LOCATE(' ', first_line_request)+1))
       WHERE id=importRecordID AND LEFT(first_line_request, 1) RLIKE '^[A-Z]';
       
-      UPDATE apache_logs.load_access_combined 
-      SET req_query = SUBSTR(req_uri,LOCATE('?', req_uri)) 
+      UPDATE load_access_combined
+      SET req_query = SUBSTR(req_uri,LOCATE('?', req_uri))
       WHERE id=importRecordID AND LOCATE('?', req_uri)>0;
       
-      UPDATE apache_logs.load_access_combined 
-      SET req_uri = SUBSTR(req_uri, 1, LOCATE('?', req_uri)-1) 
+      UPDATE load_access_combined
+      SET req_uri = SUBSTR(req_uri, 1, LOCATE('?', req_uri)-1)
       WHERE id=importRecordID AND LOCATE('?', req_uri)>0;
       
-      UPDATE apache_logs.load_access_combined 
-      SET req_protocol = 'Invalid Request', req_method = 'Invalid Request', req_uri = 'Invalid Request' 
+      UPDATE load_access_combined
+      SET req_protocol = 'Invalid Request', req_method = 'Invalid Request', req_uri = 'Invalid Request'
       WHERE id=importRecordID AND LEFT(first_line_request, 1) NOT RLIKE '^[A-Z]|-';
       
-      UPDATE apache_logs.load_access_combined 
-      SET req_protocol = 'Empty Request', req_method = 'Empty Request', req_uri = 'Empty Request' 
+      UPDATE load_access_combined
+      SET req_protocol = 'Empty Request', req_method = 'Empty Request', req_uri = 'Empty Request'
       WHERE id=importRecordID AND LEFT(first_line_request, 1) RLIKE '^-';
       
-      UPDATE apache_logs.load_access_combined 
-      SET req_protocol = TRIM(req_protocol) 
+      UPDATE load_access_combined
+      SET req_protocol = TRIM(req_protocol)
       WHERE id=importRecordID;
       
-      UPDATE apache_logs.load_access_combined 
-      SET log_time = CONCAT(log_time_a, ' ', log_time_b) 
+      UPDATE load_access_combined
+      SET log_time = CONCAT(log_time_a, ' ', log_time_b)
       WHERE id=importRecordID;
     END IF;
     IF in_processName = 'csv2mysql' THEN
-      UPDATE apache_logs.load_access_csv2mysql SET process_status=1 WHERE id=importRecordID;
+      UPDATE load_access_csv2mysql SET process_status=1 WHERE id=importRecordID;
     ELSEIF in_processName = 'vhost' THEN
-      UPDATE apache_logs.load_access_vhost SET process_status=1 WHERE id=importRecordID;
+      UPDATE load_access_vhost SET process_status=1 WHERE id=importRecordID;
     ELSE
-      UPDATE apache_logs.load_access_combined SET process_status=1 WHERE id=importRecordID;
-    END IF;	
+      UPDATE load_access_combined SET process_status=1 WHERE id=importRecordID;
+    END IF;
   END LOOP process_parse;
   -- to remove SQL calculating loadsProcessed when importLoad_ID is passed. Set=1 by default.
   IF importLoad_ID IS NOT NULL AND recordsProcessed=0 THEN
     SET loadsProcessed = 0;
   END IF;
   -- update import process table
- 	UPDATE apache_logs.import_process 
-     SET records = recordsProcessed, 
-         files = filesProcessed, 
-         loads = loadsProcessed, 
+ 	UPDATE import_process
+     SET records = recordsProcessed,
+         files = filesProcessed,
+         loads = loadsProcessed,
          importloadid = importLoad_ID,
-         completed = now(), 
+         completed = now(),
          errorOccurred = processError,
-         processSeconds = TIME_TO_SEC(TIMEDIFF(now(), started)) 
+         processSeconds = TIME_TO_SEC(TIMEDIFF(now(), started))
    WHERE id = importProcessID;
   COMMIT;
   IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
@@ -5210,7 +5213,7 @@ BEGIN
     CLOSE combinedStatus;
   ELSE
     CLOSE combinedLoadID;
-  END IF;	
+  END IF;
 END//
 DELIMITER ;
 -- # Stored Procedure Access Log import from LOAD TABLE and normalization below
@@ -5218,7 +5221,8 @@ DELIMITER ;
 DROP PROCEDURE IF EXISTS `process_access_import`;
 -- create procedure ---------------------------------------------------------
 DELIMITER //
-CREATE DEFINER = `root`@`localhost` PROCEDURE `process_access_import` (
+CREATE DEFINER = `root`@`localhost` PROCEDURE `process_access_import`
+(
   IN in_processName VARCHAR(100),
   IN in_importLoadID VARCHAR(20)
 )
@@ -5253,11 +5257,11 @@ BEGIN
   DECLARE reqProtocol VARCHAR(30) DEFAULT NULL;
   DECLARE reqMethod VARCHAR(50) DEFAULT NULL;
   DECLARE reqUri VARCHAR(2000) DEFAULT NULL;
-  DECLARE reqQuery VARCHAR(2000) DEFAULT NULL;
-  DECLARE reqQueryConverted VARCHAR(2000) DEFAULT NULL;
+  DECLARE reqQuery VARCHAR(5000) DEFAULT NULL;
+  DECLARE reqQueryConverted VARCHAR(5000) DEFAULT NULL;
   DECLARE referer VARCHAR(1000) DEFAULT NULL;
-  DECLARE refererConverted VARCHAR(2000) DEFAULT NULL;
-  DECLARE userAgent VARCHAR(2000) DEFAULT NULL;
+  DECLARE refererConverted VARCHAR(1000) DEFAULT NULL;
+  DECLARE userAgent VARCHAR(1000) DEFAULT NULL;
   DECLARE logCookie VARCHAR(400) DEFAULT NULL;
   DECLARE logCookieConverted VARCHAR(400) DEFAULT NULL;
   DECLARE client VARCHAR(253) DEFAULT NULL;
@@ -5268,234 +5272,234 @@ BEGIN
   DECLARE requestLogID VARCHAR(50) DEFAULT NULL;
   DECLARE importFile VARCHAR(300) DEFAULT NULL;
   -- Primary IDs for the normalized Attribute tables
-  DECLARE remoteLogName_Id, 
-          remoteUser_Id, 
-          reqStatus_Id, 
-          reqProtocol_Id, 
-          reqMethod_Id, 
-          reqUri_Id, 
-          reqQuery_Id, 
-          referer_Id, 
-          userAgent_Id, 
-          logCookie_Id, 
-          client_Id, 
-          server_Id, 
-          serverPort_Id, 
+  DECLARE remoteLogName_Id,
+          remoteUser_Id,
+          reqStatus_Id,
+          reqProtocol_Id,
+          reqMethod_Id,
+          reqUri_Id,
+          reqQuery_Id,
+          referer_Id,
+          userAgent_Id,
+          logCookie_Id,
+          client_Id,
+          server_Id,
+          serverPort_Id,
           requestLog_Id INTEGER DEFAULT NULL;
   -- declare cursor for csv2mysql format - All importloadIDs not processed
-  DECLARE csv2mysqlStatus CURSOR FOR 
-      SELECT l.remote_host, 
-             l.remote_logname, 
-             l.remote_user, 
-             l.log_time, 
-             l.bytes_received, 
-             l.bytes_sent, 
-             l.bytes_transferred, 
-             l.reqtime_milli, 
-             l.reqtime_micro, 
-             l.reqdelay_milli, 
-             l.req_bytes, 
-             l.req_status, 
-             l.req_protocol, 
-             l.req_method, 
-             l.req_uri, 
-             l.req_query, 
-             l.log_referer, 
+  DECLARE csv2mysqlStatus CURSOR FOR
+      SELECT l.remote_host,
+             l.remote_logname,
+             l.remote_user,
+             l.log_time,
+             l.bytes_received,
+             l.bytes_sent,
+             l.bytes_transferred,
+             l.reqtime_milli,
+             l.reqtime_micro,
+             l.reqdelay_milli,
+             l.req_bytes,
+             l.req_status,
+             l.req_protocol,
+             l.req_method,
+             l.req_uri,
+             l.req_query,
+             l.log_referer,
              l.log_useragent,
              l.log_cookie,
-             l.server_name, 
-             l.server_port, 
+             l.server_name,
+             l.server_port,
              l.request_log_id,
              l.importfileid,
-             f.server_name server_name_file, 
-             f.server_port server_port_file, 
-             l.id 
-        FROM apache_logs.load_access_csv2mysql l
-  INNER JOIN apache_logs.import_file f 
+             f.server_name server_name_file,
+             f.server_port server_port_file,
+             l.id
+        FROM load_access_csv2mysql l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-       WHERE l.process_status=1 FOR UPDATE;
+       WHERE l.process_status = 1;
   -- declare cursor for csv2mysql format - All importloadIDs not processed
-  DECLARE csv2mysqlStatusFile CURSOR FOR 
+  DECLARE csv2mysqlStatusFile CURSOR FOR
       SELECT DISTINCT(l.importfileid)
-        FROM apache_logs.load_access_csv2mysql l
-  INNER JOIN apache_logs.import_file f 
+        FROM load_access_csv2mysql l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-       WHERE l.process_status=1;
+       WHERE l.process_status = 1;
   -- declare cursor for csv2mysql format - single importLoadID
-  DECLARE csv2mysqlLoadID CURSOR FOR 
-      SELECT l.remote_host, 
-             l.remote_logname, 
-             l.remote_user, 
-             l.log_time, 
-             l.bytes_received, 
-             l.bytes_sent, 
-             l.bytes_transferred, 
-             l.reqtime_milli, 
-             l.reqtime_micro, 
-             l.reqdelay_milli, 
-             l.req_bytes, 
-             l.req_status, 
-             l.req_protocol, 
-             l.req_method, 
-             l.req_uri, 
-             l.req_query, 
-             l.log_referer, 
+  DECLARE csv2mysqlLoadID CURSOR FOR
+      SELECT l.remote_host,
+             l.remote_logname,
+             l.remote_user,
+             l.log_time,
+             l.bytes_received,
+             l.bytes_sent,
+             l.bytes_transferred,
+             l.reqtime_milli,
+             l.reqtime_micro,
+             l.reqdelay_milli,
+             l.req_bytes,
+             l.req_status,
+             l.req_protocol,
+             l.req_method,
+             l.req_uri,
+             l.req_query,
+             l.log_referer,
              l.log_useragent,
              l.log_cookie,
-             l.server_name, 
-             l.server_port, 
-             l.request_log_id, 
+             l.server_name,
+             l.server_port,
+             l.request_log_id,
              l.importfileid,
-             f.server_name server_name_file, 
-             f.server_port server_port_file, 
-             l.id 
-  	    FROM apache_logs.load_access_csv2mysql l
-  INNER JOIN apache_logs.import_file f 
+             f.server_name server_name_file,
+             f.server_port server_port_file,
+             l.id
+  	    FROM load_access_csv2mysql l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
-         AND l.process_status=1 FOR UPDATE;
+       WHERE l.process_status = 1
+         AND f.importloadid = importLoad_ID;
   -- declare cursor for csv2mysql format - single importLoadID
-  DECLARE csv2mysqlLoadIDFile CURSOR FOR 
+  DECLARE csv2mysqlLoadIDFile CURSOR FOR
       SELECT DISTINCT(l.importfileid)
-  	    FROM apache_logs.load_access_csv2mysql l
-  INNER JOIN apache_logs.import_file f 
+  	    FROM load_access_csv2mysql l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
-         AND l.process_status=1;
+       WHERE l.process_status = 1
+         AND f.importloadid = importLoad_ID;
   -- declare cursor for combined format - All importloadIDs not processed
-  DECLARE vhostStatus CURSOR FOR 
-      SELECT l.remote_host, 
-             l.remote_logname, 
-             l.remote_user, 
-             l.log_time, 
-             l.req_bytes, 
-             l.req_status, 
-             l.req_protocol, 
-             l.req_method, 
-             l.req_uri, 
-             l.req_query, 
-             l.log_referer, 
+  DECLARE vhostStatus CURSOR FOR
+      SELECT l.remote_host,
+             l.remote_logname,
+             l.remote_user,
+             l.log_time,
+             l.req_bytes,
+             l.req_status,
+             l.req_protocol,
+             l.req_method,
+             l.req_uri,
+             l.req_query,
+             l.log_referer,
              l.log_useragent,
-             l.server_name, 
-             l.server_port, 
+             l.server_name,
+             l.server_port,
              l.importfileid,
-             f.server_name server_name_file, 
-             f.server_port server_port_file, 
-             l.id 
-  	    FROM apache_logs.load_access_vhost l
-  INNER JOIN apache_logs.import_file f 
+             f.server_name server_name_file,
+             f.server_port server_port_file,
+             l.id
+  	    FROM load_access_vhost l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-       WHERE l.process_status=1 FOR UPDATE;
+       WHERE l.process_status = 1;
   -- declare cursor for combined format - All importloadIDs not processed
-  DECLARE vhostStatusFile CURSOR FOR 
+  DECLARE vhostStatusFile CURSOR FOR
       SELECT DISTINCT(l.importfileid)
-  	    FROM apache_logs.load_access_vhost l
-  INNER JOIN apache_logs.import_file f 
+  	    FROM load_access_vhost l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-       WHERE l.process_status=1;
+       WHERE l.process_status = 1;
   -- declare cursor for combined format - single importLoadID
-  DECLARE vhostLoadID CURSOR FOR 
-      SELECT l.remote_host, 
-             l.remote_logname, 
-             l.remote_user, 
-             l.log_time, 
-             l.req_bytes, 
-             l.req_status, 
-             l.req_protocol, 
-             l.req_method, 
-             l.req_uri, 
-             l.req_query, 
-             l.log_referer, 
+  DECLARE vhostLoadID CURSOR FOR
+      SELECT l.remote_host,
+             l.remote_logname,
+             l.remote_user,
+             l.log_time,
+             l.req_bytes,
+             l.req_status,
+             l.req_protocol,
+             l.req_method,
+             l.req_uri,
+             l.req_query,
+             l.log_referer,
              l.log_useragent,
-             l.server_name, 
-             l.server_port, 
+             l.server_name,
+             l.server_port,
              l.importfileid,
-             f.server_name server_name_file, 
-             f.server_port server_port_file, 
-             l.id 
-	      FROM apache_logs.load_access_vhost l
-  INNER JOIN apache_logs.import_file f 
+             f.server_name server_name_file,
+             f.server_port server_port_file,
+             l.id
+	      FROM load_access_vhost l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
-         AND l.process_status=1 FOR UPDATE;
+       WHERE l.process_status = 1
+         AND f.importloadid = importLoad_ID;
   -- declare cursor for combined format - single importLoadID
-  DECLARE vhostLoadIDFile CURSOR FOR 
+  DECLARE vhostLoadIDFile CURSOR FOR
       SELECT DISTINCT(l.importfileid)
-	      FROM apache_logs.load_access_vhost l
-  INNER JOIN apache_logs.import_file f 
+	      FROM load_access_vhost l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
-         AND l.process_status=1;
+       WHERE l.process_status = 1
+         AND f.importloadid = importLoad_ID;
   -- declare cursor for combined format - All importloadIDs not processed
-  DECLARE combinedStatus CURSOR FOR 
-      SELECT l.remote_host, 
-             l.remote_logname, 
-             l.remote_user, 
-             l.log_time, 
-             l.req_bytes, 
-             l.req_status, 
-             l.req_protocol, 
-             l.req_method, 
-             l.req_uri, 
-             l.req_query, 
-             l.log_referer, 
+  DECLARE combinedStatus CURSOR FOR
+      SELECT l.remote_host,
+             l.remote_logname,
+             l.remote_user,
+             l.log_time,
+             l.req_bytes,
+             l.req_status,
+             l.req_protocol,
+             l.req_method,
+             l.req_uri,
+             l.req_query,
+             l.log_referer,
              l.log_useragent,
-             l.server_name, 
-             l.server_port, 
+             l.server_name,
+             l.server_port,
              l.importfileid,
-             f.server_name server_name_file, 
-             f.server_port server_port_file, 
-             l.id 
-        FROM apache_logs.load_access_combined l
-  INNER JOIN apache_logs.import_file f 
+             f.server_name server_name_file,
+             f.server_port server_port_file,
+             l.id
+        FROM load_access_combined l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-       WHERE l.process_status=1 FOR UPDATE;
+       WHERE l.process_status = 1;
   -- declare cursor for combined format - All importloadIDs not processed
-  DECLARE combinedStatusFile CURSOR FOR 
+  DECLARE combinedStatusFile CURSOR FOR
       SELECT DISTINCT(l.importfileid)
-        FROM apache_logs.load_access_combined l
-  INNER JOIN apache_logs.import_file f 
+        FROM load_access_combined l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-       WHERE l.process_status=1;
+       WHERE l.process_status = 1;
   -- declare cursor for combined format - single importLoadID
-  DECLARE combinedLoadID CURSOR FOR 
-      SELECT l.remote_host, 
-             l.remote_logname, 
-             l.remote_user, 
-             l.log_time, 
-             l.req_bytes, 
-             l.req_status, 
-             l.req_protocol, 
-             l.req_method, 
-             l.req_uri, 
-             l.req_query, 
-             l.log_referer, 
+  DECLARE combinedLoadID CURSOR FOR
+      SELECT l.remote_host,
+             l.remote_logname,
+             l.remote_user,
+             l.log_time,
+             l.req_bytes,
+             l.req_status,
+             l.req_protocol,
+             l.req_method,
+             l.req_uri,
+             l.req_query,
+             l.log_referer,
              l.log_useragent,
-             l.server_name, 
-             l.server_port, 
+             l.server_name,
+             l.server_port,
              l.importfileid,
-             f.server_name server_name_file, 
-             f.server_port server_port_file, 
-             l.id 
-        FROM apache_logs.load_access_combined l
-  INNER JOIN apache_logs.import_file f 
+             f.server_name server_name_file,
+             f.server_port server_port_file,
+             l.id
+        FROM load_access_combined l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
-         AND l.process_status=1 FOR UPDATE;
+       WHERE l.process_status = 1
+         AND f.importloadid = importLoad_ID;
   -- declare cursor for combined format - single importLoadID
-  DECLARE combinedLoadIDFile CURSOR FOR 
+  DECLARE combinedLoadIDFile CURSOR FOR
       SELECT DISTINCT(l.importfileid)
-        FROM apache_logs.load_access_combined l
-  INNER JOIN apache_logs.import_file f 
+        FROM load_access_combined l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
-         AND l.process_status=1;
+       WHERE l.process_status = 1
+         AND f.importloadid = importLoad_ID;
   -- declare NOT FOUND handler
   DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
-  DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-      GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME; 
-      CALL apache_logs.errorProcess('process_access_import', e1, e2, e3, e4, e5, importLoad_ID, importProcessID);
+      GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME;
+      CALL errorProcess('process_access_import', e1, e2, e3, e4, e5, importLoad_ID, importProcessID);
       SET processError = processError + 1;
       ROLLBACK;
     END;
@@ -5513,29 +5517,29 @@ BEGIN
     IF in_processName = 'csv2mysql' THEN
       SELECT COUNT(DISTINCT(f.importloadid))
         INTO loadsProcessed
-        FROM apache_logs.load_access_csv2mysql l
-  INNER JOIN apache_logs.import_file f 
+        FROM load_access_csv2mysql l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
        WHERE l.process_status = 1;
       ELSEIF in_processName = 'vhost' THEN
       SELECT COUNT(DISTINCT(f.importloadid))
         INTO loadsProcessed
-        FROM apache_logs.load_access_vhost l
-  INNER JOIN apache_logs.import_file f 
+        FROM load_access_vhost l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
        WHERE l.process_status = 1;
     ELSEIF in_processName = 'combined' THEN
       SELECT COUNT(DISTINCT(f.importloadid))
         INTO loadsProcessed
-        FROM apache_logs.load_access_combined l
-  INNER JOIN apache_logs.import_file f 
+        FROM load_access_combined l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
        WHERE l.process_status = 1;
-    END IF;	
-  END IF;	
-  SET importProcessID = apache_logs.importProcessID('access_import', in_processName);
+    END IF;
+  END IF;
+  SET importProcessID = importProcessID('access_import', in_processName);
   START TRANSACTION;
-  -- process import_file TABLE first 
+  -- process import_file TABLE first
   IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
     OPEN csv2mysqlStatusFile;
   ELSEIF in_processName = 'csv2mysql' THEN
@@ -5548,25 +5552,25 @@ BEGIN
     OPEN combinedStatusFile;
   ELSE
     OPEN combinedLoadIDFile;
-  END IF;	
+  END IF;
   process_import_file: LOOP
     IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
-      FETCH csv2mysqlStatusFile INTO importFileCheck_ID; 
+      FETCH csv2mysqlStatusFile INTO importFileCheck_ID;
     ELSEIF in_processName = 'csv2mysql' THEN
       FETCH csv2mysqlLoadIDFile INTO importFileCheck_ID;
     ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
-      FETCH vhostStatusFile INTO importFileCheck_ID; 
+      FETCH vhostStatusFile INTO importFileCheck_ID;
     ELSEIF in_processName = 'vhost' THEN
-      FETCH vhostLoadIDFile INTO importFileCheck_ID; 
+      FETCH vhostLoadIDFile INTO importFileCheck_ID;
     ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
-      FETCH combinedStatusFile INTO importFileCheck_ID; 
+      FETCH combinedStatusFile INTO importFileCheck_ID;
     ELSE
-      FETCH combinedLoadIDFile INTO importFileCheck_ID; 
-    END IF;	
-    IF done = true THEN 
+      FETCH combinedLoadIDFile INTO importFileCheck_ID;
+    END IF;
+    IF done = true THEN
       LEAVE process_import_file;
     END IF;
-    IF apache_logs.importFileCheck(importFileCheck_ID, importProcessID, 'import') = 0 THEN
+    IF importFileCheck(importFileCheck_ID, importProcessID, 'import') = 0 THEN
       ROLLBACK;
       LEAVE process_import_file;
     END IF;
@@ -5584,8 +5588,8 @@ BEGIN
     CLOSE combinedStatusFile;
   ELSE
     CLOSE combinedLoadIDFile;
-  END IF;	
-  -- process records 
+  END IF;
+  -- process records
   SET done = false;
   IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
     OPEN csv2mysqlStatus;
@@ -5599,161 +5603,161 @@ BEGIN
     OPEN combinedStatus;
   ELSE
     OPEN combinedLoadID;
-  END IF;	
+  END IF;
   process_import: LOOP
     IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
-      FETCH csv2mysqlStatus INTO 
-            client, 
-            remoteLogName, 
-            remoteUser, 
-            logTime, 
-            bytesReceived, 
-            bytesSent, 
-            bytesTransferred, 
-            reqTimeMilli, 
-            reqTimeMicro, 
-            reqDelayMilli, 
-            reqBytes, 
-            reqStatus, 
-            reqProtocol, 
-            reqMethod, 
-            reqUri, 
-            reqQuery, 
-            referer, 
+      FETCH csv2mysqlStatus INTO
+            client,
+            remoteLogName,
+            remoteUser,
+            logTime,
+            bytesReceived,
+            bytesSent,
+            bytesTransferred,
+            reqTimeMilli,
+            reqTimeMicro,
+            reqDelayMilli,
+            reqBytes,
+            reqStatus,
+            reqProtocol,
+            reqMethod,
+            reqUri,
+            reqQuery,
+            referer,
             userAgent,
             logCookie,
-            server, 
-            serverPort, 
-            requestLogID, 
+            server,
+            serverPort,
+            requestLogID,
             importFile_ID,
-            serverFile, 
-            serverPortFile, 
-            importRecordID; 
+            serverFile,
+            serverPortFile,
+            importRecordID;
     ELSEIF in_processName = 'csv2mysql' THEN
-      FETCH csv2mysqlLoadID INTO 
-            client, 
-            remoteLogName, 
-            remoteUser, 
-            logTime, 
-            bytesReceived, 
-            bytesSent, 
-            bytesTransferred, 
-            reqTimeMilli, 
-            reqTimeMicro, 
-            reqDelayMilli, 
-            reqBytes, 
-            reqStatus, 
-            reqProtocol, 
-            reqMethod, 
-            reqUri, 
-            reqQuery, 
-            referer, 
+      FETCH csv2mysqlLoadID INTO
+            client,
+            remoteLogName,
+            remoteUser,
+            logTime,
+            bytesReceived,
+            bytesSent,
+            bytesTransferred,
+            reqTimeMilli,
+            reqTimeMicro,
+            reqDelayMilli,
+            reqBytes,
+            reqStatus,
+            reqProtocol,
+            reqMethod,
+            reqUri,
+            reqQuery,
+            referer,
             userAgent,
             logCookie,
-            server, 
-            serverPort, 
-            requestLogID, 
+            server,
+            serverPort,
+            requestLogID,
             importFile_ID,
-            serverFile, 
-            serverPortFile, 
-            importRecordID; 
+            serverFile,
+            serverPortFile,
+            importRecordID;
     ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
-      FETCH vhostStatus INTO 
-            client, 
-            remoteLogName, 
-            remoteUser, 
-            logTime, 
-            reqBytes, 
-            reqStatus, 
-            reqProtocol, 
-            reqMethod, 
-            reqUri, 
-            reqQuery, 
-            referer, 
+      FETCH vhostStatus INTO
+            client,
+            remoteLogName,
+            remoteUser,
+            logTime,
+            reqBytes,
+            reqStatus,
+            reqProtocol,
+            reqMethod,
+            reqUri,
+            reqQuery,
+            referer,
             userAgent,
-            server, 
-            serverPort, 
+            server,
+            serverPort,
             importFile_ID,
-            serverFile, 
-            serverPortFile, 
-            importRecordID; 
+            serverFile,
+            serverPortFile,
+            importRecordID;
     ELSEIF in_processName = 'vhost' THEN
-      FETCH vhostLoadID INTO 
-            client, 
-            remoteLogName, 
-            remoteUser, 
-            logTime, 
-            reqBytes, 
-            reqStatus, 
-            reqProtocol, 
-            reqMethod, 
-            reqUri, 
-            reqQuery, 
-            referer, 
+      FETCH vhostLoadID INTO
+            client,
+            remoteLogName,
+            remoteUser,
+            logTime,
+            reqBytes,
+            reqStatus,
+            reqProtocol,
+            reqMethod,
+            reqUri,
+            reqQuery,
+            referer,
             userAgent,
-            server, 
-            serverPort, 
+            server,
+            serverPort,
             importFile_ID,
-            serverFile, 
-            serverPortFile, 
-            importRecordID; 
+            serverFile,
+            serverPortFile,
+            importRecordID;
     ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
-      FETCH combinedStatus INTO 
-            client, 
-            remoteLogName, 
-            remoteUser, 
-            logTime, 
-            reqBytes, 
-            reqStatus, 
-            reqProtocol, 
-            reqMethod, 
-            reqUri, 
-            reqQuery, 
-            referer, 
+      FETCH combinedStatus INTO
+            client,
+            remoteLogName,
+            remoteUser,
+            logTime,
+            reqBytes,
+            reqStatus,
+            reqProtocol,
+            reqMethod,
+            reqUri,
+            reqQuery,
+            referer,
             userAgent,
-            server, 
-            serverPort, 
+            server,
+            serverPort,
             importFile_ID,
-            serverFile, 
-            serverPortFile, 
+            serverFile,
+            serverPortFile,
             importRecordID; 
     ELSE
-      FETCH combinedLoadID INTO 
-            client, 
-            remoteLogName, 
-            remoteUser, 
-            logTime, 
-            reqBytes, 
-            reqStatus, 
-            reqProtocol, 
-            reqMethod, 
-            reqUri, 
-            reqQuery, 
-            referer, 
+      FETCH combinedLoadID INTO
+            client,
+            remoteLogName,
+            remoteUser,
+            logTime,
+            reqBytes,
+            reqStatus,
+            reqProtocol,
+            reqMethod,
+            reqUri,
+            reqQuery,
+            referer,
             userAgent,
-            server, 
-            serverPort, 
+            server,
+            serverPort,
             importFile_ID,
-            serverFile, 
-            serverPortFile, 
-            importRecordID; 
-    END IF;	
-    IF done = true THEN 
+            serverFile,
+            serverPortFile,
+            importRecordID;
+    END IF;
+    IF done = true THEN
       LEAVE process_import;
     END IF;
     SET recordsProcessed = recordsProcessed + 1;
-    SET remoteLogName_Id = null, 
-        remoteUser_Id = null, 
-        reqStatus_Id = null, 
-        reqProtocol_Id = null, 
-        reqMethod_Id = null, 
-        reqUri_Id = null, 
-        reqQuery_Id = null, 
-        referer_Id = null, 
-        userAgent_Id = null, 
-        logCookie_Id = null, 
-        client_Id = null, 
-        server_Id = null, 
+    SET remoteLogName_Id = null,
+        remoteUser_Id = null,
+        reqStatus_Id = null,
+        reqProtocol_Id = null,
+        reqMethod_Id = null,
+        reqUri_Id = null,
+        reqQuery_Id = null,
+        referer_Id = null,
+        userAgent_Id = null,
+        logCookie_Id = null,
+        client_Id = null,
+        server_Id = null,
         serverPort_Id = null,
         requestLog_Id = null;
     -- any customizing for business needs should be done here before normalization functions called.
@@ -5780,58 +5784,58 @@ BEGIN
     ELSE
       SET logCookieConverted = logCookie;
     END IF;
-    -- normalize import staging table 
+    -- normalize import staging table
     IF reqProtocol IS NOT NULL THEN
-      SET reqProtocol_Id = apache_logs.access_reqProtocolID(reqProtocol);
+      SET reqProtocol_Id = access_reqProtocolID(reqProtocol);
     END IF;
     IF reqMethod IS NOT NULL THEN
-      SET reqMethod_Id = apache_logs.access_reqMethodID(reqMethod);
+      SET reqMethod_Id = access_reqMethodID(reqMethod);
     END IF;
     IF reqStatus IS NOT NULL THEN
-      SET reqStatus_Id = apache_logs.access_reqStatusID(reqStatus);
+      SET reqStatus_Id = access_reqStatusID(reqStatus);
     END IF;
     IF reqUri IS NOT NULL THEN
-      SET reqUri_Id = apache_logs.access_reqUriID(reqUri);
+      SET reqUri_Id = access_reqUriID(reqUri);
     END IF;
     IF reqQueryConverted IS NOT NULL THEN
-      SET reqQuery_Id = apache_logs.access_reqQueryID(reqQueryConverted);
+      SET reqQuery_Id = access_reqQueryID(reqQueryConverted);
     END IF;
     IF remoteLogName IS NOT NULL AND remoteLogName != '-' THEN
-      SET remoteLogName_Id = apache_logs.access_remoteLogNameID(remoteLogName);
+      SET remoteLogName_Id = access_remoteLogNameID(remoteLogName);
     END IF;
     IF remoteUser IS NOT NULL AND remoteUser != '-' THEN
-      SET remoteUser_Id = apache_logs.access_remoteUserID(remoteUser);
+      SET remoteUser_Id = access_remoteUserID(remoteUser);
     END IF;
     IF userAgent IS NOT NULL THEN
-      SET userAgent_Id = apache_logs.access_userAgentID(userAgent);
+      SET userAgent_Id = access_userAgentID(userAgent);
     END IF;
     IF logCookieConverted IS NOT NULL THEN
-      SET logCookie_Id = apache_logs.access_cookieID(logCookieConverted);
+      SET logCookie_Id = access_cookieID(logCookieConverted);
     END IF;
     IF refererConverted IS NOT NULL AND refererConverted != '-' THEN
-      SET referer_Id = apache_logs.log_refererID(refererConverted);
+      SET referer_Id = log_refererID(refererConverted);
     END IF;
     IF client IS NOT NULL THEN
-      SET client_Id = apache_logs.log_clientID(client);
+      SET client_Id = log_clientID(client);
     END IF;
     IF server IS NOT NULL THEN
-      SET server_Id = apache_logs.log_serverID(server);
+      SET server_Id = log_serverID(server);
     ELSEIF serverFile IS NOT NULL THEN
-      SET server_Id = apache_logs.log_serverID(serverFile);
+      SET server_Id = log_serverID(serverFile);
     END IF;
     IF serverPort IS NOT NULL THEN
-      SET serverPort_Id = apache_logs.log_serverPortID(serverPort);
+      SET serverPort_Id = log_serverPortID(serverPort);
     ELSEIF serverPortFile IS NOT NULL THEN
-      SET serverPort_Id = apache_logs.log_serverPortID(serverPortFile);
+      SET serverPort_Id = log_serverPortID(serverPortFile);
     END IF;
     IF requestLogID IS NOT NULL AND requestLogID != '-' THEN
       IF server_Id IS NOT NULL THEN
         SET requestLogID = CONCAT(requestLogID, '_', CONVERT(server_Id, CHAR));
       END IF;
-      SET requestLog_Id = apache_logs.log_requestLogID(requestLogID);
+      SET requestLog_Id = log_requestLogID(requestLogID);
     END IF;
-    INSERT INTO apache_logs.access_log 
-      (logged, 
+    INSERT INTO access_log
+      (logged,
        bytes_received,
        bytes_sent,
        bytes_transferred,
@@ -5839,21 +5843,21 @@ BEGIN
        reqtime_micro,
        reqdelay_milli,
        reqbytes,
-       reqstatusid, 
-       reqprotocolid, 
-       reqmethodid, 
-       requriid, 
-       reqqueryid, 
+       reqstatusid,
+       reqprotocolid,
+       reqmethodid,
+       requriid,
+       reqqueryid,
        remotelognameid,
-       remoteuserid, 
+       remoteuserid,
        useragentid,
        cookieid,
-       refererid, 
+       refererid,
        clientid,
-       serverid, 
-       serverportid, 
-       requestlogid, 
-       importfileid) 
+       serverid,
+       serverportid,
+       requestlogid,
+       importfileid)
     VALUES
       (logTimeConverted,
        bytesReceived,
@@ -5874,31 +5878,31 @@ BEGIN
        logCookie_Id,
        referer_Id,
        client_Id,
-       server_Id, 
-       serverPort_Id, 
-       requestLog_Id, 
+       server_Id,
+       serverPort_Id,
+       requestLog_Id,
        importFile_ID);
     IF in_processName = 'csv2mysql' THEN
-      UPDATE apache_logs.load_access_csv2mysql SET process_status=2 WHERE id=importRecordID;
+      UPDATE load_access_csv2mysql SET process_status=2 WHERE id=importRecordID;
     ELSEIF in_processName = 'vhost' THEN
-      UPDATE apache_logs.load_access_vhost SET process_status=2 WHERE id=importRecordID;
+      UPDATE load_access_vhost SET process_status=2 WHERE id=importRecordID;
     ELSE
-      UPDATE apache_logs.load_access_combined SET process_status=2 WHERE id=importRecordID;
-    END IF;	
+      UPDATE load_access_combined SET process_status=2 WHERE id=importRecordID;
+    END IF;
   END LOOP process_import;
   -- to remove SQL calculating loadsProcessed when importLoad_ID is passed. Set=1 by default.
   IF importLoad_ID IS NOT NULL AND recordsProcessed=0 THEN
     SET loadsProcessed = 0;
   END IF;
   -- update import process table
-  UPDATE apache_logs.import_process 
-     SET records = recordsProcessed, 
-         files = filesProcessed, 
-         loads = loadsProcessed, 
-         importloadid = importLoad_ID, 
-         completed = now(), 
+  UPDATE import_process
+     SET records = recordsProcessed,
+         files = filesProcessed,
+         loads = loadsProcessed,
+         importloadid = importLoad_ID,
+         completed = now(),
          errorOccurred = processError,
-         processSeconds = TIME_TO_SEC(TIMEDIFF(now(), started)) 
+         processSeconds = TIME_TO_SEC(TIMEDIFF(now(), started))
    WHERE id = importProcessID;
   COMMIT;
   IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
@@ -5913,7 +5917,7 @@ BEGIN
     CLOSE combinedStatus;
   ELSE
     CLOSE combinedLoadID;
-  END IF;	
+  END IF;
 END//
 DELIMITER ;
 -- # Stored Procedure Error Log parsing performed on LOAD TABLE data below
@@ -5921,7 +5925,8 @@ DELIMITER ;
 DROP PROCEDURE IF EXISTS `process_error_parse`;
 -- create procedure ---------------------------------------------------------
 DELIMITER //
-CREATE DEFINER = `root`@`localhost` PROCEDURE `process_error_parse` (
+CREATE DEFINER = `root`@`localhost` PROCEDURE `process_error_parse`
+(
   IN in_processName VARCHAR(100),
   IN in_importLoadID VARCHAR(20)
 )
@@ -5941,62 +5946,62 @@ BEGIN
   DECLARE loadsProcessed INTEGER DEFAULT 1;
   DECLARE processError INTEGER DEFAULT 0;
   -- declare cursor for default format - single importLoadID
-  DECLARE defaultByLoadID CURSOR FOR 
+  DECLARE defaultByLoadID CURSOR FOR
       SELECT l.id
-        FROM apache_logs.load_error_default l 
-  INNER JOIN apache_logs.import_file f 
+        FROM load_error_default l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
-         AND l.process_status = 0 FOR UPDATE;
-  DECLARE defaultByLoadIDFile CURSOR FOR 
+       WHERE l.process_status = 0
+         AND f.importloadid = importLoad_ID;
+  DECLARE defaultByLoadIDFile CURSOR FOR
       SELECT DISTINCT(l.importfileid)
-        FROM apache_logs.load_error_default l 
-  INNER JOIN apache_logs.import_file f 
+        FROM load_error_default l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
-         AND l.process_status = 0;
-  DECLARE defaultByStatus CURSOR FOR 
+       WHERE l.process_status = 0
+         AND f.importloadid = importLoad_ID;
+  DECLARE defaultByStatus CURSOR FOR
       SELECT l.id
-        FROM apache_logs.load_error_default l 
-  INNER JOIN apache_logs.import_file f 
+        FROM load_error_default l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-  INNER JOIN apache_logs.import_load il 
+  INNER JOIN import_load il
           ON f.importloadid = il.id
-       WHERE il.completed IS NOT NULL 
-         AND l.process_status = 0 FOR UPDATE;
-  DECLARE defaultByStatusFile CURSOR FOR 
+       WHERE l.process_status = 0
+         AND il.completed IS NOT NULL;
+  DECLARE defaultByStatusFile CURSOR FOR
       SELECT DISTINCT(l.importfileid)
-        FROM apache_logs.load_error_default l 
-  INNER JOIN apache_logs.import_file f 
+        FROM load_error_default l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-  INNER JOIN apache_logs.import_load il 
+  INNER JOIN import_load il
           ON f.importloadid = il.id
-       WHERE il.completed IS NOT NULL 
-         AND l.process_status = 0;
-  DECLARE vhostByLoadIDFile CURSOR FOR 
+       WHERE l.process_status = 0
+         AND il.completed IS NOT NULL;
+  DECLARE vhostByLoadIDFile CURSOR FOR
       SELECT DISTINCT(l.importfileid)
-        FROM apache_logs.load_error_default l 
-  INNER JOIN apache_logs.import_file f 
+        FROM load_error_default l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-       WHERE f.importloadid = CONVERT(in_importLoadID, UNSIGNED)
-         AND l.process_status = 0
+       WHERE l.process_status = 0
+         AND f.importloadid = importLoad_ID
          AND LOCATE(' ,', l.log_parse1)>0 OR LOCATE(' ,', l.log_parse2)>0;
   DECLARE vhostByStatusFile CURSOR FOR
       SELECT DISTINCT(l.importfileid)
-        FROM apache_logs.load_error_default l 
-  INNER JOIN apache_logs.import_file f 
+        FROM load_error_default l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
-  INNER JOIN apache_logs.import_load il 
+  INNER JOIN import_load il
           ON f.importloadid = il.id
-       WHERE il.completed IS NOT NULL 
-         AND l.process_status = 0
+       WHERE l.process_status = 0
+         AND il.completed IS NOT NULL
          AND LOCATE(' ,', l.log_parse1)>0 OR LOCATE(' ,', l.log_parse2)>0;
   -- declare NOT FOUND handler
   DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
-  DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-      GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME; 
-      CALL apache_logs.errorProcess('process_error_parse', e1, e2, e3, e4, e5, importLoad_ID, importProcessID);
+      GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME;
+      CALL errorProcess('process_error_parse', e1, e2, e3, e4, e5, importLoad_ID, importProcessID);
       SET processError = processError + 1;
       ROLLBACK;
     END;
@@ -6013,15 +6018,15 @@ BEGIN
   IF importLoad_ID IS NULL THEN
     SELECT COUNT(DISTINCT(f.importloadid))
       INTO loadsProcessed
-      FROM apache_logs.load_error_default l 
-INNER JOIN apache_logs.import_file f 
+      FROM load_error_default l
+INNER JOIN import_file f
         ON l.importfileid = f.id
-INNER JOIN apache_logs.import_load il 
+INNER JOIN import_load il
         ON f.importloadid = il.id
-     WHERE il.completed IS NOT NULL 
+     WHERE il.completed IS NOT NULL
        AND l.process_status = 0;
   END IF;
-  SET importProcessID = apache_logs.importProcessID('error_parse', in_processName);
+  SET importProcessID = importProcessID('error_parse', in_processName);
   START TRANSACTION;
   IF importLoad_ID IS NULL THEN
     -- importformatid SET=5 in Python check if error_vhost format - 'Import File Format - 1=common,2=combined,3=vhost,4=csv2mysql,5=error_default,6=error_vhost'
@@ -6036,11 +6041,11 @@ INNER JOIN apache_logs.import_load il
     ELSE
       FETCH vhostByLoadIDFile INTO importFile_vhost_ID;
     END IF;
-    IF done = true THEN 
+    IF done = true THEN
       LEAVE set_vhostformat;
     END IF;
-    UPDATE apache_logs.import_file 
-       SET importformatid=6 
+    UPDATE import_file
+       SET importformatid=6
      WHERE id = importFile_vhost_ID;
   END LOOP set_vhostformat;
   IF importLoad_ID IS NULL THEN
@@ -6061,10 +6066,10 @@ INNER JOIN apache_logs.import_load il
     ELSE
       FETCH defaultByLoadIDFile INTO importFileCheck_ID;
     END IF;
-    IF done = true THEN 
+    IF done = true THEN
       LEAVE process_parse_file;
     END IF;
-    IF apache_logs.importFileCheck(importFileCheck_ID, importProcessID, 'parse') = 0 THEN
+    IF importFileCheck(importFileCheck_ID, importProcessID, 'parse') = 0 THEN
       ROLLBACK;
       LEAVE process_parse_file;
     END IF;
@@ -6075,7 +6080,7 @@ INNER JOIN apache_logs.import_load il
   ELSE
     CLOSE defaultByLoadIDFile;
   END IF;
-  -- process records 
+  -- process records
   SET done = false;
   IF importLoad_ID IS NULL THEN
     OPEN defaultByStatus;
@@ -6088,11 +6093,11 @@ INNER JOIN apache_logs.import_load il
     ELSE
       FETCH defaultByLoadID INTO importRecordID;
     END IF;
-    IF done = true THEN 
+    IF done = true THEN
       LEAVE process_parse;
     END IF;
     SET recordsProcessed = recordsProcessed + 1;
-    UPDATE apache_logs.load_error_default 
+    UPDATE load_error_default
        SET module = SUBSTR(log_mod_level,3, LOCATE(':', log_mod_level)-3),
            loglevel = SUBSTR(log_mod_level, LOCATE(':', log_mod_level)+1),
            processid = SUBSTR(log_processid_threadid, LOCATE('pid', log_processid_threadid)+4, LOCATE(':', log_processid_threadid)-LOCATE('pid', log_processid_threadid)-4),
@@ -6100,152 +6105,152 @@ INNER JOIN apache_logs.import_load il
            logtime = STR_TO_DATE(SUBSTR(log_time, 2, 31),'%a %b %d %H:%i:%s.%f %Y')
      WHERE id = importRecordID;
 
-    UPDATE apache_logs.load_error_default 
-       SET apachecode = SUBSTR(log_parse1, 2, LOCATE(':', log_parse1)-2) 
+    UPDATE load_error_default
+       SET apachecode = SUBSTR(log_parse1, 2, LOCATE(':', log_parse1)-2)
      WHERE id = importRecordID AND LEFT(log_parse1, 2)=' A';
-    UPDATE apache_logs.load_error_default 
-       SET apachecode = SUBSTR(log_parse2, 2, LOCATE(':', log_parse2)-2) 
+    UPDATE load_error_default
+       SET apachecode = SUBSTR(log_parse2, 2, LOCATE(':', log_parse2)-2)
      WHERE id = importRecordID AND LEFT(log_parse2, 2)=' A';
-    UPDATE apache_logs.load_error_default 
-       SET apachecode = SUBSTR(log_parse1, LOCATE(': AH', log_parse1)+2, LOCATE(':', log_parse1, (LOCATE(': AH', log_parse1)+2))-LOCATE(': AH', log_parse1)-2) 
+    UPDATE load_error_default
+       SET apachecode = SUBSTR(log_parse1, LOCATE(': AH', log_parse1)+2, LOCATE(':', log_parse1, (LOCATE(': AH', log_parse1)+2))-LOCATE(': AH', log_parse1)-2)
      WHERE id = importRecordID AND LOCATE(': AH', log_parse1)>0;
 
-    UPDATE apache_logs.load_error_default 
-       SET apachemessage = SUBSTR(log_parse1, LOCATE(':', log_parse1)+1) 
+    UPDATE load_error_default
+       SET apachemessage = SUBSTR(log_parse1, LOCATE(':', log_parse1)+1)
      WHERE id = importRecordID AND LEFT(log_parse1, 2)=' A';
-    UPDATE apache_logs.load_error_default 
-       SET apachemessage = SUBSTR(log_parse2, LOCATE(':', log_parse2)+1) 
+    UPDATE load_error_default
+       SET apachemessage = SUBSTR(log_parse2, LOCATE(':', log_parse2)+1)
      WHERE id = importRecordID AND LEFT(log_parse2, 2)=' A' AND LOCATE('referer:', log_parse2)=0;
-    UPDATE apache_logs.load_error_default 
-       SET apachemessage = SUBSTR(log_parse2, LOCATE(':', log_parse2)+1, LOCATE(', referer:', log_parse2)-LOCATE(':', log_parse2)-1) 
+    UPDATE load_error_default
+       SET apachemessage = SUBSTR(log_parse2, LOCATE(':', log_parse2)+1, LOCATE(', referer:', log_parse2)-LOCATE(':', log_parse2)-1)
      WHERE id = importRecordID AND LEFT(log_parse2, 2)=' A' AND LOCATE(', referer:', log_parse2)>0;
-    UPDATE apache_logs.load_error_default 
-       SET apachemessage = SUBSTR(log_parse1, LOCATE(':', log_parse1, LOCATE(': AH', log_parse1)+2)+2) 
+    UPDATE load_error_default
+       SET apachemessage = SUBSTR(log_parse1, LOCATE(':', log_parse1, LOCATE(': AH', log_parse1)+2)+2)
      WHERE id = importRecordID AND LOCATE(': AH', log_parse1)>0;
 
-    UPDATE apache_logs.load_error_default 
-       SET client_name = SUBSTR(log_parse1, LOCATE('[client', log_parse1)+8) 
+    UPDATE load_error_default
+       SET client_name = SUBSTR(log_parse1, LOCATE('[client', log_parse1)+8)
      WHERE id = importRecordID AND LOCATE('[client', log_parse1)>0;
 
-    UPDATE apache_logs.load_error_default 
-       SET client_port = SUBSTR(client_name, LOCATE(':', client_name)+1) 
+    UPDATE load_error_default
+       SET client_port = SUBSTR(client_name, LOCATE(':', client_name)+1)
      WHERE id = importRecordID AND LOCATE(':', client_name)>0;
 
-    UPDATE apache_logs.load_error_default 
-       SET client_name = SUBSTR(client_name, 1, LOCATE(':', client_name)-1) 
+    UPDATE load_error_default
+       SET client_name = SUBSTR(client_name, 1, LOCATE(':', client_name)-1)
      WHERE id = importRecordID AND LOCATE(':', client_name)>0;
 
-    UPDATE apache_logs.load_error_default 
-       SET systemcode = SUBSTR(log_parse1, LOCATE('(', log_parse1), LOCATE(':', log_parse1, LOCATE('(', log_parse1))-LOCATE('(', log_parse1)) 
+    UPDATE load_error_default
+       SET systemcode = SUBSTR(log_parse1, LOCATE('(', log_parse1), LOCATE(':', log_parse1, LOCATE('(', log_parse1))-LOCATE('(', log_parse1))
      WHERE id = importRecordID AND LOCATE('(', log_parse1)>0 AND LOCATE(':', log_parse1, LOCATE('(', log_parse1))-LOCATE('(', log_parse1)>0;
 
-    UPDATE apache_logs.load_error_default 
-       SET systemmessage = SUBSTR(log_parse1, LOCATE(':', log_parse1) + 1) 
+    UPDATE load_error_default
+       SET systemmessage = SUBSTR(log_parse1, LOCATE(':', log_parse1) + 1)
      WHERE id = importRecordID AND LOCATE('(', log_parse1)>0 AND LOCATE(':', log_parse1, LOCATE('(', log_parse1))-LOCATE('(', log_parse1)>0 AND apachecode IS NULL;
 
-    UPDATE apache_logs.load_error_default 
-       SET log_message_nocode = log_parse1 
+    UPDATE load_error_default
+       SET log_message_nocode = log_parse1
      WHERE id = importRecordID AND systemcode IS NULL AND apachecode IS NULL;
 
-    UPDATE apache_logs.load_error_default 
-       SET module = SUBSTR(log_parse1, 2, LOCATE(':', log_parse1)-2) 
+    UPDATE load_error_default
+       SET module = SUBSTR(log_parse1, 2, LOCATE(':', log_parse1)-2)
      WHERE id = importRecordID AND systemcode IS NULL AND apachecode IS NULL AND LENGTH(module)=0 AND LOCATE(':', log_parse1)>0 AND LOCATE(' ', log_parse1, 2)>LOCATE(':', log_parse1);
 
-    UPDATE apache_logs.load_error_default 
-       SET logmessage = SUBSTR(log_parse1, LOCATE(':', log_parse1)+1) 
+    UPDATE load_error_default
+       SET logmessage = SUBSTR(log_parse1, LOCATE(':', log_parse1)+1)
      WHERE id = importRecordID AND systemcode IS NULL AND apachecode IS NULL AND LOCATE(':', log_parse1)>0 AND LOCATE(' ', log_parse1,2)>LOCATE(':', log_parse1);
 
-    UPDATE apache_logs.load_error_default 
-       SET logmessage = log_message_nocode 
+    UPDATE load_error_default
+       SET logmessage = log_message_nocode
      WHERE id = importRecordID AND logmessage IS NULL AND log_message_nocode IS NOT NULL;
 
-    UPDATE apache_logs.load_error_default 
-       SET referer = SUBSTR(log_parse2, LOCATE('referer:', log_parse2)+8) 
+    UPDATE load_error_default
+       SET referer = SUBSTR(log_parse2, LOCATE('referer:', log_parse2)+8)
      WHERE id = importRecordID AND LOCATE('referer:', log_parse2)>0;
 
     -- 12/07/2024 @ 4:55AM - server_name and request_log_id parsing - if either exists
     -- referer
-    UPDATE apache_logs.load_error_default 
-       SET request_log_ID=SUBSTR(referer,LOCATE(' ,', referer, LOCATE(' ,', referer)+2)+2) 
+    UPDATE load_error_default
+       SET request_log_ID=SUBSTR(referer,LOCATE(' ,', referer, LOCATE(' ,', referer)+2)+2)
      WHERE id = importRecordID AND LOCATE(' ,', referer, LOCATE(' ,', referer)+2)>0;
 
-    UPDATE apache_logs.load_error_default 
-       SET server_name=SUBSTR(referer, LOCATE(' ,',referer)+2, LOCATE(' ,',referer, LOCATE(' ,',referer)+2)-LOCATE(' ,', referer)-2) 
+    UPDATE load_error_default
+       SET server_name=SUBSTR(referer, LOCATE(' ,',referer)+2, LOCATE(' ,',referer, LOCATE(' ,',referer)+2)-LOCATE(' ,', referer)-2)
      WHERE id = importRecordID AND LOCATE(' ,', referer, LOCATE(' ,',referer)+2)>0;
 
---    UPDATE apache_logs.load_error_default 
+--    UPDATE load_error_default 
 --       SET server_name=SUBSTR(referer, LOCATE(' ,',referer)+2) 
 --     WHERE id = importRecordID AND LOCATE(' ,', referer)>0 AND server_name IS NULL;
 
-    UPDATE apache_logs.load_error_default 
-       SET server_name=SUBSTR(referer, LOCATE(' ,',referer)+2) 
+    UPDATE load_error_default
+       SET server_name=SUBSTR(referer, LOCATE(' ,',referer)+2)
      WHERE id = importRecordID AND LOCATE(' ,', referer)>0 AND LOCATE(' ,', referer, LOCATE(' ,',referer)+2)=0;
 
-    UPDATE apache_logs.load_error_default 
-       SET referer=SUBSTR(referer, 1, LOCATE(' ,', referer)) 
+    UPDATE load_error_default
+       SET referer=SUBSTR(referer, 1, LOCATE(' ,', referer))
      WHERE id = importRecordID AND LOCATE(' ,', referer)>0;
     -- logmessage
-    UPDATE apache_logs.load_error_default 
-       SET request_log_ID=SUBSTR(logmessage, LOCATE(' ,', logmessage, LOCATE(' ,',logmessage)+2)+2) 
+    UPDATE load_error_default
+       SET request_log_ID=SUBSTR(logmessage, LOCATE(' ,', logmessage, LOCATE(' ,',logmessage)+2)+2)
      WHERE id = importRecordID AND LOCATE(' ,', logmessage, LOCATE(' ,',logmessage)+2)>0;
 
-    UPDATE apache_logs.load_error_default 
-       SET server_name=SUBSTR(logmessage, LOCATE(' ,',logmessage)+2, LOCATE(' ,',logmessage,LOCATE(' ,',logmessage)+2)-LOCATE(' ,',logmessage)-2) 
+    UPDATE load_error_default
+       SET server_name=SUBSTR(logmessage, LOCATE(' ,',logmessage)+2, LOCATE(' ,',logmessage,LOCATE(' ,',logmessage)+2)-LOCATE(' ,',logmessage)-2)
      WHERE id = importRecordID AND LOCATE(' ,', logmessage, LOCATE(' ,', logmessage)+2)>0;
 
---    UPDATE apache_logs.load_error_default 
---       SET server_name=SUBSTR(logmessage, LOCATE(' ,', logmessage)+2) 
+--    UPDATE load_error_default
+--       SET server_name=SUBSTR(logmessage, LOCATE(' ,', logmessage)+2)
 --     WHERE id = importRecordID AND LOCATE(' ,', logmessage)>0 AND server_name IS NULL;
 
-    UPDATE apache_logs.load_error_default 
-       SET server_name=SUBSTR(logmessage, LOCATE(' ,', logmessage)+2) 
+    UPDATE load_error_default
+       SET server_name=SUBSTR(logmessage, LOCATE(' ,', logmessage)+2)
      WHERE id = importRecordID AND LOCATE(' ,', logmessage, LOCATE(' ,', logmessage)+2)=0 AND LOCATE(' ,', logmessage)>0;
 
-    UPDATE apache_logs.load_error_default 
-       SET logmessage=SUBSTR(logmessage, 1, LOCATE(' ,', logmessage)) 
+    UPDATE load_error_default
+       SET logmessage=SUBSTR(logmessage, 1, LOCATE(' ,', logmessage))
      WHERE id = importRecordID AND LOCATE(' ,', logmessage)>0;
     -- systemmessage
-    UPDATE apache_logs.load_error_default 
-       SET request_log_ID=SUBSTR(systemmessage, LOCATE(' ,', systemmessage, LOCATE(' ,',systemmessage)+2)+2) 
+    UPDATE load_error_default
+       SET request_log_ID=SUBSTR(systemmessage, LOCATE(' ,', systemmessage, LOCATE(' ,',systemmessage)+2)+2)
      WHERE id = importRecordID AND LOCATE(' ,', systemmessage, LOCATE(' ,', systemmessage)+2)>0;
 
-    UPDATE apache_logs.load_error_default 
-       SET server_name=SUBSTR(systemmessage, LOCATE(' ,', systemmessage)+2, LOCATE(' ,',systemmessage,LOCATE(' ,',systemmessage)+2)-LOCATE(' ,',systemmessage)-2) 
+    UPDATE load_error_default
+       SET server_name=SUBSTR(systemmessage, LOCATE(' ,', systemmessage)+2, LOCATE(' ,',systemmessage,LOCATE(' ,',systemmessage)+2)-LOCATE(' ,',systemmessage)-2)
      WHERE id = importRecordID AND LOCATE(' ,',systemmessage, LOCATE(' ,', systemmessage)+2)>0;
 
---    UPDATE apache_logs.load_error_default 
---       SET server_name=SUBSTR(systemmessage, LOCATE(' ,', systemmessage)+2) 
+--    UPDATE load_error_default
+--       SET server_name=SUBSTR(systemmessage, LOCATE(' ,', systemmessage)+2)
 --     WHERE id = importRecordID AND LOCATE(' ,', systemmessage)>0 AND server_name IS NULL;
 
-    UPDATE apache_logs.load_error_default 
-       SET server_name=SUBSTR(systemmessage, LOCATE(' ,', systemmessage)+2) 
+    UPDATE load_error_default
+       SET server_name=SUBSTR(systemmessage, LOCATE(' ,', systemmessage)+2)
      WHERE id = importRecordID AND LOCATE(' ,',systemmessage, LOCATE(' ,', systemmessage)+2)=0 AND LOCATE(' ,', systemmessage)>0;
 
-    UPDATE apache_logs.load_error_default 
-       SET systemmessage=SUBSTR(systemmessage, 1, LOCATE(' ,', systemmessage)) 
+    UPDATE load_error_default
+       SET systemmessage=SUBSTR(systemmessage, 1, LOCATE(' ,', systemmessage))
      WHERE id = importRecordID AND LOCATE(' ,', systemmessage)>0;
     -- apachemessage
-    UPDATE apache_logs.load_error_default 
-       SET request_log_ID=SUBSTR(apachemessage, LOCATE(' ,', apachemessage, LOCATE(' ,',apachemessage)+2)+2) 
+    UPDATE load_error_default
+       SET request_log_ID=SUBSTR(apachemessage, LOCATE(' ,', apachemessage, LOCATE(' ,',apachemessage)+2)+2)
      WHERE id = importRecordID AND LOCATE(' ,', apachemessage, LOCATE(' ,', apachemessage)+2)>0;
 
-    UPDATE apache_logs.load_error_default 
-       SET server_name=SUBSTR(apachemessage, LOCATE(' ,', apachemessage)+2, LOCATE(' ,', apachemessage, LOCATE(' ,', apachemessage)+2)-LOCATE(' ,', apachemessage)-2) 
+    UPDATE load_error_default
+       SET server_name=SUBSTR(apachemessage, LOCATE(' ,', apachemessage)+2, LOCATE(' ,', apachemessage, LOCATE(' ,', apachemessage)+2)-LOCATE(' ,', apachemessage)-2)
      WHERE id = importRecordID AND LOCATE(' ,', apachemessage, LOCATE(' ,', apachemessage)+2)>0;
 
---    UPDATE apache_logs.load_error_default 
---       SET server_name=SUBSTR(apachemessage, LOCATE(' ,', apachemessage)+2) 
+--    UPDATE load_error_default
+--       SET server_name=SUBSTR(apachemessage, LOCATE(' ,', apachemessage)+2)
 --     WHERE id = importRecordID AND LOCATE(' ,', apachemessage)>0 AND server_name IS NULL;
 
-    UPDATE apache_logs.load_error_default 
-       SET server_name=SUBSTR(apachemessage, LOCATE(' ,', apachemessage)+2) 
+    UPDATE load_error_default
+       SET server_name=SUBSTR(apachemessage, LOCATE(' ,', apachemessage)+2)
      WHERE id = importRecordID AND LOCATE(' ,', apachemessage, LOCATE(' ,', apachemessage)+2)=0 AND LOCATE(' ,', apachemessage)>0;
 
-    UPDATE apache_logs.load_error_default 
-       SET apachemessage=SUBSTR(apachemessage, 1, LOCATE(' ,', apachemessage)) 
+    UPDATE load_error_default
+       SET apachemessage=SUBSTR(apachemessage, 1, LOCATE(' ,', apachemessage))
      WHERE id = importRecordID AND LOCATE(' ,', apachemessage)>0;
 
-    UPDATE apache_logs.load_error_default 
+    UPDATE load_error_default
        SET module=TRIM(module),
            loglevel=TRIM(loglevel),
            processid=TRIM(processid),
@@ -6260,21 +6265,21 @@ INNER JOIN apache_logs.import_load il
            server_name=TRIM(server_name),
            request_log_id=TRIM(request_log_id)
      WHERE id=importRecordID;
-    UPDATE apache_logs.load_error_default SET process_status=1 WHERE id=importRecordID;
+    UPDATE load_error_default SET process_status=1 WHERE id=importRecordID;
   END LOOP process_parse;
   -- to remove SQL calculating loadsProcessed when importLoad_ID is passed. Set=1 by default.
   IF importLoad_ID IS NOT NULL AND recordsProcessed=0 THEN
     SET loadsProcessed = 0;
   END IF;
   -- update import process table
-  UPDATE apache_logs.import_process 
-     SET records = recordsProcessed, 
-         files = filesProcessed, 
-         loads = loadsProcessed, 
+  UPDATE import_process
+     SET records = recordsProcessed,
+         files = filesProcessed,
+         loads = loadsProcessed,
          importloadid = importLoad_ID,
-         completed = now(), 
+         completed = now(),
          errorOccurred = processError,
-         processSeconds = TIME_TO_SEC(TIMEDIFF(now(), started)) 
+         processSeconds = TIME_TO_SEC(TIMEDIFF(now(), started))
    WHERE id = importProcessID;
   COMMIT;
   IF importLoad_ID IS NULL THEN
@@ -6289,7 +6294,8 @@ DELIMITER ;
 DROP PROCEDURE IF EXISTS `process_error_import`;
 -- create procedure ---------------------------------------------------------
 DELIMITER //
-CREATE DEFINER = `root`@`localhost` PROCEDURE `process_error_import` (
+CREATE DEFINER = `root`@`localhost` PROCEDURE `process_error_import`
+(
   IN in_processName VARCHAR(100),
   IN in_importLoadID VARCHAR(20)
 )
@@ -6332,90 +6338,90 @@ BEGIN
   -- Primary IDs for the normalized Attribute tables
   DECLARE logLevel_Id,
           module_Id,
-          process_Id, 
-          thread_Id, 
-          apacheCode_Id, 
-          apacheMessage_Id, 
-          systemCode_Id, 
-          systemMessage_Id, 
-          logMessage_Id, 
+          process_Id,
+          thread_Id,
+          apacheCode_Id,
+          apacheMessage_Id,
+          systemCode_Id,
+          systemMessage_Id,
+          logMessage_Id,
           referer_Id,
-          client_Id, 
-          clientPort_Id, 
-          server_Id, 
-          serverPort_Id, 
+          client_Id,
+          clientPort_Id,
+          server_Id,
+          serverPort_Id,
           requestLog_Id INTEGER DEFAULT NULL;
 	-- declare cursor for default format - single importLoadID
-  DECLARE defaultByLoadID CURSOR FOR 
-      SELECT l.logtime, 
-             l.loglevel, 
-             l.module, 
-             l.processid, 
-             l.threadid, 
-             l.apachecode, 
-             l.apachemessage, 
-             l.systemcode, 
-             l.systemmessage, 
-             l.logmessage, 
+  DECLARE defaultByLoadID CURSOR FOR
+      SELECT l.logtime,
+             l.loglevel,
+             l.module,
+             l.processid,
+             l.threadid,
+             l.apachecode,
+             l.apachemessage,
+             l.systemcode,
+             l.systemmessage,
+             l.logmessage,
              l.referer,
-             l.client_name, 
-             l.client_port, 
-             l.server_name, 
-             l.server_port, 
-             l.request_log_id, 
+             l.client_name,
+             l.client_port,
+             l.server_name,
+             l.server_port,
+             l.request_log_id,
              l.importfileid,
-             f.server_name server_name_file, 
-             f.server_port server_port_file, 
+             f.server_name server_name_file,
+             f.server_port server_port_file,
              l.id
-        FROM apache_logs.load_error_default l 
-  INNER JOIN apache_logs.import_file f 
+        FROM load_error_default l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
        WHERE l.process_status = 1
-         AND f.importloadid = CONVERT(in_importLoadID, UNSIGNED);
-  DECLARE defaultByLoadIDFile CURSOR FOR 
+         AND f.importloadid = importLoad_ID;
+  DECLARE defaultByLoadIDFile CURSOR FOR
       SELECT DISTINCT(l.importfileid)
-        FROM apache_logs.load_error_default l 
-  INNER JOIN apache_logs.import_file f 
+        FROM load_error_default l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
        WHERE l.process_status = 1
-         AND f.importloadid = CONVERT(in_importLoadID, UNSIGNED);
-  DECLARE defaultByStatus CURSOR FOR 
-      SELECT l.logtime, 
-             l.loglevel, 
-             l.module, 
-             l.processid, 
-             l.threadid, 
-             l.apachecode, 
-             l.apachemessage, 
-             l.systemcode, 
-             l.systemmessage, 
-             l.logmessage, 
+         AND f.importloadid = importLoad_ID;
+  DECLARE defaultByStatus CURSOR FOR
+      SELECT l.logtime,
+             l.loglevel,
+             l.module,
+             l.processid,
+             l.threadid,
+             l.apachecode,
+             l.apachemessage,
+             l.systemcode,
+             l.systemmessage,
+             l.logmessage,
              l.referer,
-             l.client_name, 
-             l.client_port, 
-             l.server_name, 
-             l.server_port, 
-             l.request_log_id, 
+             l.client_name,
+             l.client_port,
+             l.server_name,
+             l.server_port,
+             l.request_log_id,
              l.importfileid,
-             f.server_name server_name_file, 
-             f.server_port server_port_file, 
+             f.server_name server_name_file,
+             f.server_port server_port_file,
              l.id
-        FROM apache_logs.load_error_default l 
-  INNER JOIN apache_logs.import_file f 
+        FROM load_error_default l
+  INNER JOIN import_file f
           ON l.importfileid = f.id
        WHERE l.process_status = 1;
-  DECLARE defaultByStatusFile CURSOR FOR 
+  DECLARE defaultByStatusFile CURSOR FOR
      SELECT DISTINCT(l.importfileid)
-       FROM apache_logs.load_error_default l 
- INNER JOIN apache_logs.import_file f 
+       FROM load_error_default l
+ INNER JOIN import_file f
          ON l.importfileid = f.id
       WHERE l.process_status = 1;
   -- declare NOT FOUND handler
   DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
-  DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-      GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME; 
-      CALL apache_logs.errorProcess('process_error_import', e1, e2, e3, e4, e5, importLoad_ID, importProcessID);
+      GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME;
+      CALL errorProcess('process_error_import', e1, e2, e3, e4, e5, importLoad_ID, importProcessID);
       SET processError = processError + 1;
       ROLLBACK;
     END;
@@ -6432,12 +6438,12 @@ BEGIN
   IF importLoad_ID IS NULL THEN
     SELECT COUNT(DISTINCT(f.importloadid))
       INTO loadsProcessed
-      FROM apache_logs.load_error_default l 
-INNER JOIN apache_logs.import_file f 
+      FROM load_error_default l
+INNER JOIN import_file f
         ON l.importfileid = f.id
      WHERE l.process_status = 1;
   END IF;
-  SET importProcessID = apache_logs.importProcessID('error_import', in_processName);
+  SET importProcessID = importProcessID('error_import', in_processName);
   START TRANSACTION;
   -- process import_file TABLE first 
   IF importLoad_ID IS NULL THEN
@@ -6447,14 +6453,14 @@ INNER JOIN apache_logs.import_file f
   END IF;
   process_import_file: LOOP
     IF importLoad_ID IS NULL THEN
-      FETCH defaultByStatusFile INTO importFileCheck_ID; 
+      FETCH defaultByStatusFile INTO importFileCheck_ID;
     ELSE
-      FETCH defaultByLoadIDFile INTO importFileCheck_ID; 
+      FETCH defaultByLoadIDFile INTO importFileCheck_ID;
     END IF;
-    IF done = true THEN 
+    IF done = true THEN
       LEAVE process_import_file;
     END IF;
-    IF apache_logs.importFileCheck(importFileCheck_ID, importProcessID, 'import') = 0 THEN
+    IF importFileCheck(importFileCheck_ID, importProcessID, 'import') = 0 THEN
       ROLLBACK;
       LEAVE process_import_file;
     END IF;
@@ -6474,67 +6480,67 @@ INNER JOIN apache_logs.import_file f
   END IF;
   process_import: LOOP
     IF importLoad_ID IS NULL THEN
-      FETCH defaultByStatus INTO 
-            log_time, 
+      FETCH defaultByStatus INTO
+            log_time,
             log_level,
             log_module,
-            log_processid, 
-            log_threadid, 
-            log_apacheCode, 
-            log_apacheMessage, 
-            log_systemCode, 
-            log_systemMessage, 
-            log_message, 
-            log_referer, 
-            client, 
-            clientPort, 
-            server, 
-            serverPort, 
-            requestLogID, 
+            log_processid,
+            log_threadid,
+            log_apacheCode,
+            log_apacheMessage,
+            log_systemCode,
+            log_systemMessage,
+            log_message,
+            log_referer,
+            client,
+            clientPort,
+            server,
+            serverPort,
+            requestLogID,
             importFile_ID,
-            serverFile, 
-            serverPortFile, 
-            importRecordID; 
+            serverFile,
+            serverPortFile,
+            importRecordID;
     ELSE
-      FETCH defaultByLoadID INTO 
-            log_time, 
+      FETCH defaultByLoadID INTO
+            log_time,
             log_level,
             log_module,
-            log_processid, 
-            log_threadid, 
-            log_apacheCode, 
-            log_apacheMessage, 
-            log_systemCode, 
-            log_systemMessage, 
-            log_message, 
-            log_referer, 
-            client, 
-            clientPort, 
-            server, 
-            serverPort, 
-            requestLogID, 
+            log_processid,
+            log_threadid,
+            log_apacheCode,
+            log_apacheMessage,
+            log_systemCode,
+            log_systemMessage,
+            log_message,
+            log_referer,
+            client,
+            clientPort,
+            server,
+            serverPort,
+            requestLogID,
             importFile_ID,
-            serverFile, 
-            serverPortFile, 
-            importRecordID; 
+            serverFile,
+            serverPortFile,
+            importRecordID;
     END IF;
-    IF done = true THEN 
+    IF done = true THEN
       LEAVE process_import;
     END IF;
     SET recordsProcessed = recordsProcessed + 1;
     SET logLevel_Id = null,
         module_Id = null,
-        process_Id = null, 
-        thread_Id = null, 
-        apacheCode_Id = null, 
-        apacheMessage_Id = null, 
-        systemCode_Id = null, 
-        systemMessage_Id = null, 
-        logMessage_Id = null, 
+        process_Id = null,
+        thread_Id = null,
+        apacheCode_Id = null,
+        apacheMessage_Id = null,
+        systemCode_Id = null,
+        systemMessage_Id = null,
+        logMessage_Id = null,
         referer_Id = null,
-        client_Id = null, 
-        clientPort_Id = null, 
-        server_Id = null, 
+        client_Id = null,
+        clientPort_Id = null,
+        server_Id = null,
         serverPort_Id = null,
         requestLog_Id = null;
     -- any customizing for business needs should be done here before normalization functions called.
@@ -6546,72 +6552,72 @@ INNER JOIN apache_logs.import_file f
     END IF;
     -- normalize import staging table 
     IF log_level IS NOT NULL THEN
-      SET logLevel_Id = apache_logs.error_logLevelID(log_level);
+      SET logLevel_Id = error_logLevelID(log_level);
     END IF;
     IF log_module IS NOT NULL THEN
-      SET module_Id = apache_logs.error_moduleID(log_module);
+      SET module_Id = error_moduleID(log_module);
     END IF;
     IF log_processid IS NOT NULL THEN
-      SET process_Id = apache_logs.error_processID(log_processid);
+      SET process_Id = error_processID(log_processid);
     END IF;
     IF log_threadid IS NOT NULL THEN
-      SET thread_Id = apache_logs.error_threadID(log_threadid);
+      SET thread_Id = error_threadID(log_threadid);
     END IF;
     IF log_apacheCode IS NOT NULL THEN
-      SET apacheCode_Id = apache_logs.error_apacheCodeID(log_apacheCode);
+      SET apacheCode_Id = error_apacheCodeID(log_apacheCode);
     END IF;
     IF log_apacheMessage IS NOT NULL THEN
-      SET apacheMessage_Id = apache_logs.error_apacheMessageID(log_apacheMessage);
+      SET apacheMessage_Id = error_apacheMessageID(log_apacheMessage);
     END IF;
     IF log_systemCode IS NOT NULL THEN
-      SET systemCode_Id = apache_logs.error_systemCodeID(log_systemCode);
+      SET systemCode_Id = error_systemCodeID(log_systemCode);
     END IF;
     IF log_systemMessage IS NOT NULL THEN
-      SET systemMessage_Id = apache_logs.error_systemMessageID(log_systemMessage);
+      SET systemMessage_Id = error_systemMessageID(log_systemMessage);
     END IF;
     IF log_message IS NOT NULL THEN
-      SET logMessage_id = apache_logs.error_logMessageID(log_message);
+      SET logMessage_id = error_logMessageID(log_message);
     END IF;
     IF refererConverted IS NOT NULL AND refererConverted != '-' THEN
-      SET referer_Id = apache_logs.log_refererID(refererConverted);
+      SET referer_Id = log_refererID(refererConverted);
     END IF;
     IF client IS NOT NULL THEN
-      SET client_id = apache_logs.log_clientID(client);
+      SET client_id = log_clientID(client);
     END IF;
     IF clientPort IS NOT NULL THEN
-      SET clientPort_id = apache_logs.log_clientPortID(clientPort);
+      SET clientPort_id = log_clientPortID(clientPort);
     END IF;
     IF server IS NOT NULL THEN
-      SET server_Id = apache_logs.log_serverID(server);
+      SET server_Id = log_serverID(server);
     ELSEIF serverFile IS NOT NULL THEN
-      SET server_Id = apache_logs.log_serverID(serverFile);
+      SET server_Id = log_serverID(serverFile);
     END IF;
     IF serverPort IS NOT NULL THEN
-      SET serverPort_Id = apache_logs.log_serverPortID(serverPort);
+      SET serverPort_Id = log_serverPortID(serverPort);
     ELSEIF serverPortFile IS NOT NULL THEN
-      SET serverPort_Id = apache_logs.log_serverPortID(serverPortFile);
+      SET serverPort_Id = log_serverPortID(serverPortFile);
     END IF;
     IF requestLogID IS NOT NULL AND requestLogID != '-' THEN
       IF server_Id IS NOT NULL THEN
         SET requestLogID = CONCAT(requestLogID, '_', CONVERT(server_Id, CHAR));
       END IF;
-      SET requestLog_Id = apache_logs.log_requestLogID(requestLogID);
+      SET requestLog_Id = log_requestLogID(requestLogID);
     END IF;
-    INSERT INTO apache_logs.error_log 
-       (logged, 
+    INSERT INTO error_log
+       (logged,
         loglevelid,
         moduleid,
-        processid, 
-        threadid, 
-        apachecodeid, 
-        apachemessageid, 
-        systemcodeid, 
-        systemmessageid, 
-        logmessageid, 
+        processid,
+        threadid,
+        apachecodeid,
+        apachemessageid,
+        systemcodeid,
+        systemmessageid,
+        logmessageid,
         refererid,
-        clientid, 
-        clientportid, 
-        serverid, 
+        clientid,
+        clientportid,
+        serverid,
         serverportid,
         requestlogid, 
         importfileid) 
@@ -6619,35 +6625,35 @@ INNER JOIN apache_logs.import_file f
        (log_time,
         logLevel_Id,
         module_Id,
-        process_Id, 
-        thread_Id, 
-        apacheCode_Id, 
-        apacheMessage_Id, 
-        systemCode_Id, 
-        systemMessage_Id, 
-        logMessage_Id, 
+        process_Id,
+        thread_Id,
+        apacheCode_Id,
+        apacheMessage_Id,
+        systemCode_Id,
+        systemMessage_Id,
+        logMessage_Id,
         referer_Id,
-        client_Id, 
-        clientPort_Id, 
-        server_Id, 
-        serverPort_Id, 
-        requestLog_Id, 
+        client_Id,
+        clientPort_Id,
+        server_Id,
+        serverPort_Id,
+        requestLog_Id,
         importFile_ID);
-    UPDATE apache_logs.load_error_default SET process_status=2 WHERE id=importRecordID;
+    UPDATE load_error_default SET process_status=2 WHERE id=importRecordID;
   END LOOP process_import;
   -- to remove SQL calculating loadsProcessed when importLoad_ID is passed. Set=1 by default.
   IF importLoad_ID IS NOT NULL AND recordsProcessed=0 THEN
     SET loadsProcessed = 0;
   END IF;
   -- update import process table
-  UPDATE apache_logs.import_process 
-     SET records = recordsProcessed, 
-         files = filesProcessed, 
+  UPDATE import_process
+     SET records = recordsProcessed,
+         files = filesProcessed,
          loads = loadsProcessed,
-         importloadid = importLoad_ID, 
-         completed = now(), 
+         importloadid = importLoad_ID,
+         completed = now(),
          errorOccurred = processError,
-         processSeconds = TIME_TO_SEC(TIMEDIFF(now(), started)) 
+         processSeconds = TIME_TO_SEC(TIMEDIFF(now(), started))
    WHERE id = importProcessID;
   COMMIT;
   IF importLoad_ID IS NULL THEN
@@ -6662,7 +6668,8 @@ DELIMITER ;
 DROP PROCEDURE IF EXISTS `normalize_useragent`;
 -- create procedure ---------------------------------------------------------
 DELIMITER //
-CREATE DEFINER = `root`@`localhost` PROCEDURE `normalize_useragent` (
+CREATE DEFINER = `root`@`localhost` PROCEDURE `normalize_useragent`
+(
   IN in_processName VARCHAR(100),
   IN in_importLoadID VARCHAR(20)
 )
@@ -6703,7 +6710,7 @@ BEGIN
           uadevicebrand_id,
           uadevicemodel_id INTEGER DEFAULT NULL;
   -- declare cursor for userAgent format
-  DECLARE userAgent CURSOR FOR 
+  DECLARE userAgent CURSOR FOR
     SELECT ua,
            ua_browser,
            ua_browser_family,
@@ -6716,14 +6723,14 @@ BEGIN
            ua_device_brand,
            ua_device_model,
            id
-      FROM apache_logs.access_log_useragent
+      FROM access_log_useragent
      WHERE uaid IS NULL;
   -- declare NOT FOUND handler
   DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
-  DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-      GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME; 
-      CALL apache_logs.errorProcess('normalize_useragent', e1, e2, e3, e4, e5, importLoad_ID, importProcessID);
+      GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME;
+      CALL errorProcess('normalize_useragent', e1, e2, e3, e4, e5, importLoad_ID, importProcessID);
       SET processError = processError + 1;
       ROLLBACK;
     END;
@@ -6737,9 +6744,9 @@ BEGIN
   IF NOT CONVERT(in_importLoadID, UNSIGNED) = 0 THEN
     SET importLoad_ID = CONVERT(in_importLoadID, UNSIGNED);
   END IF;
-  SET importProcessID = apache_logs.importProcessID('normalize_useragent', in_processName);
+  SET importProcessID = importProcessID('normalize_useragent', in_processName);
   OPEN userAgent;
-  START TRANSACTION;	
+  START TRANSACTION;
   process_normalize: LOOP
     FETCH userAgent
      INTO v_ua,
@@ -6754,7 +6761,7 @@ BEGIN
           v_ua_device_brand,
           v_ua_device_model,
           userAgent_id;
-    IF done = true THEN 
+    IF done = true THEN
       LEAVE process_normalize;
     END IF;
     SET recordsProcessed = recordsProcessed + 1;
@@ -6769,41 +6776,41 @@ BEGIN
         uadevicefamily_id = null,
         uadevicebrand_id = null,
         uadevicemodel_id = null;
-        -- normalize import staging table 
+        -- normalize import staging table
     IF v_ua IS NOT NULL THEN
-      SET ua_Id = apache_logs.access_uaID(v_ua);
+      SET ua_Id = access_uaID(v_ua);
     END IF;
     IF v_ua_browser IS NOT NULL THEN
-      SET uabrowser_id = apache_logs.access_uaBrowserID(v_ua_browser);
+      SET uabrowser_id = access_uaBrowserID(v_ua_browser);
     END IF;
     IF v_ua_browser_family IS NOT NULL THEN
-      SET uabrowserfamily_id = apache_logs.access_uaBrowserFamilyID(v_ua_browser_family);
+      SET uabrowserfamily_id = access_uaBrowserFamilyID(v_ua_browser_family);
     END IF;
     IF v_ua_browser_version IS NOT NULL THEN
-      SET uabrowserversion_id = apache_logs.access_uaBrowserVersionID(v_ua_browser_version);
+      SET uabrowserversion_id = access_uaBrowserVersionID(v_ua_browser_version);
     END IF;
     IF v_ua_os IS NOT NULL THEN
-      SET uaos_id = apache_logs.access_uaOsID(v_ua_os);
+      SET uaos_id = access_uaOsID(v_ua_os);
     END IF;
     IF v_ua_os_family IS NOT NULL THEN
-      SET uaosfamily_id = apache_logs.access_uaOsFamilyID(v_ua_os_family);
+      SET uaosfamily_id = access_uaOsFamilyID(v_ua_os_family);
     END IF;
     IF v_ua_os_version IS NOT NULL THEN
-      SET uaosversion_id = apache_logs.access_uaOsVersionID(v_ua_os_version);
+      SET uaosversion_id = access_uaOsVersionID(v_ua_os_version);
     END IF;
     IF v_ua_device IS NOT NULL THEN
-      SET uadevice_id = apache_logs.access_uaDeviceID(v_ua_device);
+      SET uadevice_id = access_uaDeviceID(v_ua_device);
     END IF;
     IF v_ua_device_family IS NOT NULL THEN
-      SET uadevicefamily_id = apache_logs.access_uaDeviceFamilyID(v_ua_device_family);
+      SET uadevicefamily_id = access_uaDeviceFamilyID(v_ua_device_family);
     END IF;
     IF v_ua_device_brand IS NOT NULL THEN
-      SET uadevicebrand_id = apache_logs.access_uaDeviceBrandID(v_ua_device_brand);
+      SET uadevicebrand_id = access_uaDeviceBrandID(v_ua_device_brand);
     END IF;
     IF v_ua_device_model IS NOT NULL THEN
-      SET uadevicemodel_id = apache_logs.access_uaDeviceModelID(v_ua_device_model);
+      SET uadevicemodel_id = access_uaDeviceModelID(v_ua_device_model);
     END IF;
-    UPDATE apache_logs.access_log_useragent 
+    UPDATE access_log_useragent
        SET uaid = ua_id,
            uabrowserid = uabrowser_id,
            uabrowserfamilyid = uabrowserfamily_id,
@@ -6822,13 +6829,13 @@ BEGIN
     SET filesProcessed = 0;
   END IF;
   -- update import process table
-	UPDATE apache_logs.import_process 
-     SET records = recordsProcessed, 
+	UPDATE import_process
+     SET records = recordsProcessed,
          files = filesProcessed,
          importloadid = importLoad_ID,
-         completed = now(), 
+         completed = now(),
          errorOccurred = processError,
-         processSeconds = TIME_TO_SEC(TIMEDIFF(now(), started)) 
+         processSeconds = TIME_TO_SEC(TIMEDIFF(now(), started))
    WHERE id = importProcessID;
 	COMMIT;
     -- close the cursor
@@ -6840,7 +6847,8 @@ DELIMITER ;
 DROP PROCEDURE IF EXISTS `normalize_client`;
 -- create procedure ---------------------------------------------------------
 DELIMITER //
-CREATE DEFINER = `root`@`localhost` PROCEDURE `normalize_client` (
+CREATE DEFINER = `root`@`localhost` PROCEDURE `normalize_client`
+(
   IN in_processName VARCHAR(100),
   IN in_importLoadID VARCHAR(20)
 )
@@ -6873,7 +6881,7 @@ BEGIN
           organization_id,
           network_id INTEGER DEFAULT NULL;
   -- declare cursor for log_client format
-  DECLARE logClient CURSOR FOR 
+  DECLARE logClient CURSOR FOR
       SELECT country_code,
              country,
              subdivision,
@@ -6883,14 +6891,14 @@ BEGIN
              organization,
              network,
              id
-        FROM apache_logs.log_client
+        FROM log_client
        WHERE countryid IS NULL;
   -- declare NOT FOUND handler
   DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
-  DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-      GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME; 
-      CALL apache_logs.errorProcess('normalize_client', e1, e2, e3, e4, e5, importLoad_ID, importProcessID);
+      GET DIAGNOSTICS CONDITION 1 e1 = MYSQL_ERRNO, e2 = MESSAGE_TEXT, e3 = RETURNED_SQLSTATE, e4 = SCHEMA_NAME, e5 = CATALOG_NAME;
+      CALL errorProcess('normalize_client', e1, e2, e3, e4, e5, importLoad_ID, importProcessID);
       SET processError = processError + 1;
       ROLLBACK;
     END;
@@ -6904,9 +6912,9 @@ BEGIN
   IF NOT CONVERT(in_importLoadID, UNSIGNED) = 0 THEN
     SET importLoad_ID = CONVERT(in_importLoadID, UNSIGNED);
   END IF;
-  SET importProcessID = apache_logs.importProcessID('normalize_client', in_processName);
+  SET importProcessID = importProcessID('normalize_client', in_processName);
   OPEN logClient;
-  START TRANSACTION;	
+  START TRANSACTION;
   process_normalize: LOOP
     FETCH logClient
      INTO v_country_code,
@@ -6918,7 +6926,7 @@ BEGIN
           v_organization,
           v_network,
           recid;
-    IF done = true THEN 
+    IF done = true THEN
       LEAVE process_normalize;
     END IF;
     SET recordsProcessed = recordsProcessed + 1;
@@ -6928,26 +6936,26 @@ BEGIN
         coordinate_id = null,
         organization_id = null,
         network_id = null;
-    -- normalize import staging table 
+    -- normalize import staging table
     IF v_country IS NOT NULL AND LENGTH(v_country) > 0 THEN
-      SET country_id = apache_logs.log_clientCountryID(v_country, v_country_code);
+      SET country_id = log_clientCountryID(v_country, v_country_code);
     END IF;
     IF v_subdivision IS NOT NULL AND LENGTH(v_subdivision) > 0 THEN
-      SET subdivision_id = apache_logs.log_clientSubdivisionID(v_subdivision);
+      SET subdivision_id = log_clientSubdivisionID(v_subdivision);
     END IF;
     IF v_city IS NOT NULL AND LENGTH(v_city) > 0 THEN
-      SET city_id = apache_logs.log_clientCityID(v_city);
+      SET city_id = log_clientCityID(v_city);
     END IF;
     IF v_latitude IS NOT NULL AND LENGTH(v_latitude) > 0 THEN
-      SET coordinate_id = apache_logs.log_clientCoordinateID(v_latitude, v_longitude);
+      SET coordinate_id = log_clientCoordinateID(v_latitude, v_longitude);
     END IF;
     IF v_organization IS NOT NULL AND LENGTH(v_organization) > 0 THEN
-      SET organization_id = apache_logs.log_clientOrganizationID(v_organization);
+      SET organization_id = log_clientOrganizationID(v_organization);
     END IF;
     IF v_network IS NOT NULL AND LENGTH(v_network) > 0 THEN
-      SET network_id = apache_logs.log_clientNetworkID(v_network);
+      SET network_id = log_clientNetworkID(v_network);
     END IF;
-    UPDATE apache_logs.log_client
+    UPDATE log_client
        SET countryid = country_id,
            subdivisionid = subdivision_id,
            cityid = city_id,
@@ -6961,13 +6969,13 @@ BEGIN
     SET filesProcessed = 0;
   END IF;
   -- update import process table
-  UPDATE apache_logs.import_process 
-     SET records = recordsProcessed, 
+  UPDATE import_process
+     SET records = recordsProcessed,
          files = filesProcessed,
          importloadid = importLoad_ID,
-         completed = now(), 
+         completed = now(),
          errorOccurred = processError,
-         processSeconds = TIME_TO_SEC(TIMEDIFF(now(), started)) 
+         processSeconds = TIME_TO_SEC(TIMEDIFF(now(), started))
    WHERE id = importProcessID;
   COMMIT;
   -- close the cursor
@@ -6982,7 +6990,7 @@ VALUES
  ("common"),
  ("combined"),
  ("vhost"),
- ("csc2mysql"),
+ ("csv2mysql"),
  ("error_default"),
  ("error_vhost");
 -- # Indexes, Foreign Keys and Constraints for all Tables below
@@ -7005,10 +7013,17 @@ ALTER TABLE `access_log_remoteuser` ADD CONSTRAINT `U_access_remoteuser` UNIQUE 
 ALTER TABLE `access_log_reqmethod` ADD CONSTRAINT `U_access_reqmethod` UNIQUE (name);
 ALTER TABLE `access_log_reqprotocol` ADD CONSTRAINT `U_access_reqprotocol` UNIQUE (name);
 ALTER TABLE `access_log_reqstatus` ADD CONSTRAINT `U_access_reqstatus` UNIQUE (name);
--- ALTER TABLE `access_log_requri` ADD CONSTRAINT `U_access_requri` UNIQUE (name);
--- ALTER TABLE `access_log_reqquery` ADD CONSTRAINT `U_access_reqquery` UNIQUE (name);
+
+-- MySQL 9.2, the maximum key length (index length) for InnoDB tables using DYNAMIC or COMPRESSED row format is 3072 bytes and 767 bytes for REDUNDANT or COMPACT row formats.
+-- MariaDB starting with 10.5 - Unique, if index type is not specified, is normally a BTREE index that can also be used by the optimizer to find rows. 
+-- If the key is longer than the max key length for the used storage engine and the storage engine supports long unique index, a HASH key will be created. 
+-- This enables MariaDB to enforce uniqueness for any type or number of columns.
+-- lines below executed when installed on MariaDB 10.5 or higher
+/*M!100500 ALTER TABLE access_log_requri ADD CONSTRAINT U_access_requri UNIQUE (name)*/;
+/*M!100500 ALTER TABLE access_log_reqquery ADD CONSTRAINT U_access_reqquery UNIQUE (name)*/;
+/*M!100500 ALTER TABLE access_log_useragent ADD CONSTRAINT U_access_useragent UNIQUE (name)*/;
+
 ALTER TABLE `access_log_cookie` ADD CONSTRAINT `U_access_cookie` UNIQUE (name);
--- ALTER TABLE `access_log_useragent` ADD CONSTRAINT `U_access_useragent` UNIQUE (name);
 
 ALTER TABLE `access_log_ua` ADD CONSTRAINT `U_access_ua` UNIQUE (name);
 ALTER TABLE `access_log_ua_browser` ADD CONSTRAINT `U_access_ua_browser` UNIQUE (name);
@@ -7034,8 +7049,7 @@ ALTER TABLE `error_log_threadid` ADD CONSTRAINT `U_error_threadid` UNIQUE (name)
 
 ALTER TABLE `import_file` ADD CONSTRAINT `U_import_file` UNIQUE (importdeviceid, name);
 ALTER TABLE `import_format` ADD CONSTRAINT `U_import_format` UNIQUE (name);
--- ALTER TABLE `import_server` ADD CONSTRAINT `U_import_server` UNIQUE(dbuser, dbhost, dbversion, dbsystem, dbmachine, serveruuid);
-ALTER TABLE `import_server` ADD CONSTRAINT `U_import_server` UNIQUE(dbuser, dbhost, dbversion, dbsystem, dbmachine, dbcomment);
+ALTER TABLE `import_server` ADD CONSTRAINT `U_import_server` UNIQUE(dbuser, dbhost, dbversion, dbsystem, dbmachine, dbserverid);
 ALTER TABLE `import_device` ADD CONSTRAINT `U_import_device` UNIQUE(deviceid, platformNode, platformSystem, platformMachine, platformProcessor);
 ALTER TABLE `import_client` ADD CONSTRAINT `U_import_client` UNIQUE(importdeviceid, ipaddress, login, expandUser, platformRelease, platformVersion);
 
@@ -7051,15 +7065,18 @@ ALTER TABLE `access_log` ADD CONSTRAINT `F_access_useragent` FOREIGN KEY (userag
 ALTER TABLE `access_log` ADD CONSTRAINT `F_access_cookie` FOREIGN KEY (cookieid) REFERENCES `access_log_cookie`(id);
 ALTER TABLE `access_log` ADD CONSTRAINT `F_access_importfile` FOREIGN KEY (importfileid) REFERENCES `import_file`(id);
 
+-- MySQL drops this index and uses compound index to enforce FOREIGN KEY
 ALTER TABLE `access_log` ADD CONSTRAINT `F_access_client` FOREIGN KEY (clientid) REFERENCES `log_client`(id);
 ALTER TABLE `access_log` ADD CONSTRAINT `F_access_clientport` FOREIGN KEY (clientportid) REFERENCES `log_clientport`(id);
 ALTER TABLE `access_log` ADD CONSTRAINT `F_access_referer` FOREIGN KEY (refererid) REFERENCES `log_referer`(id);
+-- MySQL drops this index and uses compound index to enforce FOREIGN KEY
 ALTER TABLE `access_log` ADD CONSTRAINT `F_access_server` FOREIGN KEY (serverid) REFERENCES `log_server`(id);
 ALTER TABLE `access_log` ADD CONSTRAINT `F_access_serverport` FOREIGN KEY (serverportid) REFERENCES `log_serverport`(id);
 ALTER TABLE `access_log` ADD CONSTRAINT `F_access_requestlogid` FOREIGN KEY (requestlogid) REFERENCES `log_requestlogid`(id);
 
 ALTER TABLE `error_log` ADD CONSTRAINT `F_error_level` FOREIGN KEY (loglevelid) REFERENCES `error_log_level`(id);
 ALTER TABLE `error_log` ADD CONSTRAINT `F_error_module` FOREIGN KEY (moduleid) REFERENCES `error_log_module`(id);
+-- MySQL drops this index and uses compound index to enforce FOREIGN KEY
 ALTER TABLE `error_log` ADD CONSTRAINT `F_error_processid` FOREIGN KEY (processid) REFERENCES `error_log_processid`(id);
 ALTER TABLE `error_log` ADD CONSTRAINT `F_error_threadid` FOREIGN KEY (threadid) REFERENCES `error_log_threadid`(id);
 ALTER TABLE `error_log` ADD CONSTRAINT `F_error_apachecode` FOREIGN KEY (apachecodeid) REFERENCES `error_log_apachecode`(id);
@@ -7069,9 +7086,11 @@ ALTER TABLE `error_log` ADD CONSTRAINT `F_error_systemmessage` FOREIGN KEY (syst
 ALTER TABLE `error_log` ADD CONSTRAINT `F_error_message` FOREIGN KEY (logmessageid) REFERENCES `error_log_message`(id);
 ALTER TABLE `error_log` ADD CONSTRAINT `F_error_importfile` FOREIGN KEY (importfileid) REFERENCES `import_file`(id);
 
+-- MySQL drops this index and uses compound index to enforce FOREIGN KEY
 ALTER TABLE `error_log` ADD CONSTRAINT `F_error_client` FOREIGN KEY (clientid) REFERENCES `log_client`(id);
 ALTER TABLE `error_log` ADD CONSTRAINT `F_error_clientport` FOREIGN KEY (clientportid) REFERENCES `log_clientport`(id);
 ALTER TABLE `error_log` ADD CONSTRAINT `F_error_referer` FOREIGN KEY (refererid) REFERENCES `log_referer`(id);
+-- MySQL drops this index and uses compound index to enforce FOREIGN KEY
 ALTER TABLE `error_log` ADD CONSTRAINT `F_error_server` FOREIGN KEY (serverid) REFERENCES `log_server`(id);
 ALTER TABLE `error_log` ADD CONSTRAINT `F_error_serverport` FOREIGN KEY (serverportid) REFERENCES `log_serverport`(id);
 ALTER TABLE `error_log` ADD CONSTRAINT `F_error_requestlogid` FOREIGN KEY (requestlogid) REFERENCES `log_requestlogid`(id);
