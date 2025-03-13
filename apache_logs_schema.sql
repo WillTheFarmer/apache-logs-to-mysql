@@ -2445,7 +2445,7 @@ BEGIN
      AND platformMachine = in_platformMachine
      AND platformProcessor = in_platformProcessor;
   IF importDevice_ID IS NULL THEN
-  	INSERT INTO import_device 
+    INSERT INTO import_device 
       (deviceid,
        platformNode,
        platformSystem,
@@ -2457,7 +2457,7 @@ BEGIN
        in_platformSystem,
        in_platformMachine,
        in_platformProcessor);
-	  SET importDevice_ID = LAST_INSERT_ID();
+    SET importDevice_ID = LAST_INSERT_ID();
   END IF;
   RETURN importDevice_ID;
 END //
@@ -2499,7 +2499,7 @@ BEGIN
      AND platformVersion = in_platformVersion
      AND importdeviceid = importDevice_ID;
   IF importClient_ID IS NULL THEN
-  	INSERT INTO import_client 
+    INSERT INTO import_client 
       (ipaddress,
        login,
        expandUser,
@@ -2513,7 +2513,7 @@ BEGIN
        in_platformRelease,
        in_platformVersion,
        importDevice_ID);
-	  SET importClient_ID = LAST_INSERT_ID();
+    SET importClient_ID = LAST_INSERT_ID();
   END IF;
   RETURN importClient_ID;
 END //
@@ -2619,10 +2619,10 @@ BEGIN
      AND importdeviceid = importDevice_ID;
   IF importFile_ID IS NULL THEN
     IF NOT CONVERT(in_importload_id, UNSIGNED) = 0 THEN
-  	  SET importLoad_ID = CONVERT(in_importload_id, UNSIGNED);
+      SET importLoad_ID = CONVERT(in_importload_id, UNSIGNED);
     END IF;
     IF NOT CONVERT(fileformat, UNSIGNED) = 0 THEN
-  	  SET formatFile_ID = CONVERT(fileformat, UNSIGNED);
+      SET formatFile_ID = CONVERT(fileformat, UNSIGNED);
     END IF;
     INSERT INTO import_file 
        (name,
@@ -2668,8 +2668,8 @@ BEGIN
     RESIGNAL SET SCHEMA_NAME = 'apache_logs', CATALOG_NAME = 'importServerID'; 
   END;
   SELECT id
-	  INTO importServer_ID
-	  FROM import_server
+    INTO importServer_ID
+    FROM import_server
    WHERE dbuser = in_user
      AND dbhost = in_host
      AND dbversion = in_version
@@ -2842,7 +2842,7 @@ CREATE DEFINER = `root`@`localhost` PROCEDURE `errorProcess`
    IN in_loadID INTEGER,
    IN in_processID INTEGER)
 BEGIN
-   INSERT INTO import_error 
+  INSERT INTO import_error 
      (module,
       mysql_errno,
       message_text,
@@ -2867,13 +2867,13 @@ DROP PROCEDURE IF EXISTS `errorLoad`;
 -- create function -----------------------------------------------------------
 DELIMITER //
 CREATE DEFINER = `root`@`localhost` PROCEDURE `errorLoad`
-	(IN in_module VARCHAR(300),
-     IN in_mysqlerrno VARCHAR(10),
-     IN in_messagetext VARCHAR(1000), 
-     IN in_loadID VARCHAR(10))
+  (IN in_module VARCHAR(300),
+   IN in_mysqlerrno VARCHAR(10),
+   IN in_messagetext VARCHAR(1000), 
+   IN in_loadID VARCHAR(10))
 BEGIN
-	DECLARE mysqlerrno INTEGER DEFAULT 0;
-	DECLARE loadID INTEGER DEFAULT 0;
+  DECLARE mysqlerrno INTEGER DEFAULT 0;
+  DECLARE loadID INTEGER DEFAULT 0;
   IF NOT CONVERT(in_mysqlerrno, UNSIGNED) = 0 THEN
     SET mysqlerrno = CONVERT(in_mysqlerrno, UNSIGNED);
   END IF;
@@ -4825,7 +4825,7 @@ BEGIN
   -- declare cursor for csv2mysql format - single importLoadID
   DECLARE csv2mysqlLoadID CURSOR FOR
       SELECT l.id
-  	    FROM load_access_csv2mysql l
+        FROM load_access_csv2mysql l
   INNER JOIN import_file f
           ON l.importfileid = f.id
        WHERE l.process_status = 0
@@ -4833,7 +4833,7 @@ BEGIN
   -- declare cursor for csv2mysql format - single importLoadID
   DECLARE csv2mysqlLoadIDFile CURSOR FOR
       SELECT DISTINCT(l.importfileid)
-  	    FROM load_access_csv2mysql l
+        FROM load_access_csv2mysql l
   INNER JOIN import_file f
           ON l.importfileid = f.id
        WHERE l.process_status = 0
@@ -4841,7 +4841,7 @@ BEGIN
   -- declare cursor for combined format - All importloadIDs not processed
   DECLARE vhostStatus CURSOR FOR
       SELECT l.id
-  	    FROM load_access_vhost l
+        FROM load_access_vhost l
   INNER JOIN import_file f
           ON l.importfileid = f.id
   INNER JOIN import_load il
@@ -4851,7 +4851,7 @@ BEGIN
   -- declare cursor for combined format - All importloadIDs not processed
   DECLARE vhostStatusFile CURSOR FOR
       SELECT DISTINCT(l.importfileid)
-  	    FROM load_access_vhost l
+        FROM load_access_vhost l
   INNER JOIN import_file f
           ON l.importfileid = f.id
   INNER JOIN import_load il
@@ -4861,7 +4861,7 @@ BEGIN
   -- declare cursor for combined format - single importLoadID
   DECLARE vhostLoadID CURSOR FOR
       SELECT l.id
-	      FROM load_access_vhost l
+        FROM load_access_vhost l
   INNER JOIN import_file f
           ON l.importfileid = f.id
        WHERE l.process_status = 0
@@ -4869,7 +4869,7 @@ BEGIN
   -- declare cursor for combined format - single importLoadID
   DECLARE vhostLoadIDFile CURSOR FOR
       SELECT DISTINCT(l.importfileid)
-	      FROM load_access_vhost l
+        FROM load_access_vhost l
   INNER JOIN import_file f
           ON l.importfileid = f.id
        WHERE l.process_status = 0
@@ -4950,7 +4950,7 @@ BEGIN
     SET importLoad_ID = CONVERT(in_importLoadID, UNSIGNED);
   END IF;
   IF importLoad_ID IS NULL THEN
-  	IF in_processName = 'csv2mysql' THEN
+    IF in_processName = 'csv2mysql' THEN
       SELECT COUNT(DISTINCT(f.importloadid))
         INTO loadsProcessed
         FROM load_access_csv2mysql l
@@ -4983,14 +4983,14 @@ BEGIN
     END IF;
   END IF;	
   SET importProcessID = importProcessID('access_parse', in_processName);
-	START TRANSACTION;
-	IF in_processName = 'combined' THEN
+  START TRANSACTION;
+  IF in_processName = 'combined' THEN
     -- importformatid SET=2 in Python check if common format - 'Import File Format - 1=common,2=combined,3=vhost,4=csv2mysql,5=error_default,6=error_vhost'
     IF importLoad_ID IS NULL THEN
       OPEN commonStatusFile;
     ELSE
       OPEN commonLoadIDFile;
-	  END IF;
+    END IF;
     set_commonformat: LOOP
       IF importLoad_ID IS NULL THEN
         FETCH commonStatusFile INTO importFile_common_ID;
@@ -5008,9 +5008,9 @@ BEGIN
       CLOSE commonStatusFile;
     ELSE
       CLOSE commonLoadIDFile;
-	  END IF;
+    END IF;
     SET done = false;
-	END IF;
+  END IF;
   -- process import_file TABLE first
   IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
     OPEN csv2mysqlStatusFile;
@@ -5018,26 +5018,26 @@ BEGIN
     OPEN csv2mysqlLoadIDFile;
   ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
     OPEN vhostStatusFile;
-	ELSEIF in_processName = 'vhost' THEN
+  ELSEIF in_processName = 'vhost' THEN
     OPEN vhostLoadIDFile;
-	ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
+  ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
     OPEN combinedStatusFile;
-	ELSE
+  ELSE
     OPEN combinedLoadIDFile;
   END IF;
   process_parse_file: LOOP
   	IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
-	  	FETCH csv2mysqlStatusFile INTO importFileCheck_ID;
+      FETCH csv2mysqlStatusFile INTO importFileCheck_ID;
 	  ELSEIF in_processName = 'csv2mysql' THEN
-		  FETCH csv2mysqlLoadIDFile INTO importFileCheck_ID;
+      FETCH csv2mysqlLoadIDFile INTO importFileCheck_ID;
 	  ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
-		  FETCH vhostStatusFile INTO importFileCheck_ID;
+      FETCH vhostStatusFile INTO importFileCheck_ID;
   	ELSEIF in_processName = 'vhost' THEN
-	  	FETCH vhostLoadIDFile INTO importFileCheck_ID;
+      FETCH vhostLoadIDFile INTO importFileCheck_ID;
 	  ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
-  		FETCH combinedStatusFile INTO importFileCheck_ID;
+      FETCH combinedStatusFile INTO importFileCheck_ID;
 	  ELSE
-		  FETCH combinedLoadIDFile INTO importFileCheck_ID;
+      FETCH combinedLoadIDFile INTO importFileCheck_ID;
     END IF;
     IF done = true THEN
       LEAVE process_parse_file;
@@ -5049,18 +5049,18 @@ BEGIN
     SET filesProcessed = filesProcessed + 1;
   END LOOP process_parse_file;
   IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
-		CLOSE csv2mysqlStatusFile;
-	ELSEIF in_processName = 'csv2mysql' THEN
-		CLOSE csv2mysqlLoadIDFile;
-	ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
-		CLOSE vhostStatusFile;
-	ELSEIF in_processName = 'vhost' THEN
-		CLOSE vhostLoadIDFile;
-	ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
-		CLOSE combinedStatusFile;
-	ELSE
-		CLOSE combinedLoadIDFile;
-	END IF;
+    CLOSE csv2mysqlStatusFile;
+  ELSEIF in_processName = 'csv2mysql' THEN
+    CLOSE csv2mysqlLoadIDFile;
+  ELSEIF in_processName = 'vhost' AND importLoad_ID IS NULL THEN
+    CLOSE vhostStatusFile;
+  ELSEIF in_processName = 'vhost' THEN
+    CLOSE vhostLoadIDFile;
+  ELSEIF in_processName = 'combined' AND importLoad_ID IS NULL THEN
+    CLOSE combinedStatusFile;
+  ELSE
+    CLOSE combinedLoadIDFile;
+  END IF;
   -- process records
   SET done = false;
   IF in_processName = 'csv2mysql' AND importLoad_ID IS NULL THEN
@@ -5191,7 +5191,7 @@ BEGIN
     SET loadsProcessed = 0;
   END IF;
   -- update import process table
- 	UPDATE import_process
+  UPDATE import_process
      SET records = recordsProcessed,
          files = filesProcessed,
          loads = loadsProcessed,
@@ -5353,7 +5353,7 @@ BEGIN
              f.server_name server_name_file,
              f.server_port server_port_file,
              l.id
-  	    FROM load_access_csv2mysql l
+        FROM load_access_csv2mysql l
   INNER JOIN import_file f
           ON l.importfileid = f.id
        WHERE l.process_status = 1
@@ -5361,7 +5361,7 @@ BEGIN
   -- declare cursor for csv2mysql format - single importLoadID
   DECLARE csv2mysqlLoadIDFile CURSOR FOR
       SELECT DISTINCT(l.importfileid)
-  	    FROM load_access_csv2mysql l
+        FROM load_access_csv2mysql l
   INNER JOIN import_file f
           ON l.importfileid = f.id
        WHERE l.process_status = 1
@@ -5386,14 +5386,14 @@ BEGIN
              f.server_name server_name_file,
              f.server_port server_port_file,
              l.id
-  	    FROM load_access_vhost l
+        FROM load_access_vhost l
   INNER JOIN import_file f
           ON l.importfileid = f.id
        WHERE l.process_status = 1;
   -- declare cursor for combined format - All importloadIDs not processed
   DECLARE vhostStatusFile CURSOR FOR
       SELECT DISTINCT(l.importfileid)
-  	    FROM load_access_vhost l
+        FROM load_access_vhost l
   INNER JOIN import_file f
           ON l.importfileid = f.id
        WHERE l.process_status = 1;
@@ -5417,7 +5417,7 @@ BEGIN
              f.server_name server_name_file,
              f.server_port server_port_file,
              l.id
-	      FROM load_access_vhost l
+        FROM load_access_vhost l
   INNER JOIN import_file f
           ON l.importfileid = f.id
        WHERE l.process_status = 1
@@ -5425,7 +5425,7 @@ BEGIN
   -- declare cursor for combined format - single importLoadID
   DECLARE vhostLoadIDFile CURSOR FOR
       SELECT DISTINCT(l.importfileid)
-	      FROM load_access_vhost l
+        FROM load_access_vhost l
   INNER JOIN import_file f
           ON l.importfileid = f.id
        WHERE l.process_status = 1
@@ -6005,7 +6005,7 @@ BEGIN
       SET processError = processError + 1;
       ROLLBACK;
     END;
-	-- check parameters for valid values
+  -- check parameters for valid values
   IF CONVERT(in_importLoadID, UNSIGNED) = 0 AND in_importLoadID != 'ALL' THEN
     SIGNAL SQLSTATE '22003' SET MESSAGE_TEXT = 'Invalid parameter value for in_importLoadID. Must be convert to number or be ALL';
   END IF;
