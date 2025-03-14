@@ -4,9 +4,9 @@ To contribute Ideas or Comments please create a `New discussion` under repositor
 
 To contribute Apache Access or Error Log Formats commonly used that application should process please start `New discussion`.
 
-If you find this code helpful please remember to contribute a :star: on GitHub.
+If you find this code useful please contribute a :star: to the repository.
 
-Any organizations, people or person with multiple Apache servers that find this application valuable in log collection monetary contributions are appreciated. Repository has my ***Buy Me a Coffee*** :coffee: link.
+If you find this application valuable to your log collection system monetary contributions are appreciated. Repository has my ***Buy Me a Coffee*** :coffee: link.
 
 Monetary :moneybag: contributions made will be reflected in development of [Web Interface](https://github.com/WillTheFarmer/mysql-to-apache-echarts) for the MySQL or MariaDB `apache_logs` schema created by this application.
 

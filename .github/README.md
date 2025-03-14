@@ -3,8 +3,7 @@
 ## Python handles File Processing & Database handles Data Processing
 ApacheLogs2MySQL consists of two Python Modules & one Database Schema ***apache_logs*** to automate importing Access & Error files, normalizing log data into database and generating a well-documented data lineage audit trail.
 
-Imports Access Logs in LogFormats - ***common***, ***combined*** and ***vhost_combined*** & additional ***csv2mysql*** 
-LogFormat defined below.
+Imports Access Logs in LogFormats - ***common***, ***combined*** and ***vhost_combined*** & additional ***csv2mysql*** LogFormat defined below.
 
 Imports Error Logs in ***default*** ErrorLogFormat & ***additional*** ErrorLogFormat defined below performing data harmonization 
 on Apache Codes & Messages, System Codes & Messages, and Log Messages to create a unified, standardized dataset.
@@ -310,7 +309,10 @@ Organizing data into normalized tables greatly enhances efficiency and maintaina
 ## 85 Views in apache_logs schema
 ![apache_logs_view_list.png](./assets/apache_logs_view_list.png)
 
-The schema has many useful views of Import, Access and Error primary attribute tables created in normalization process with simple aggregate values. These are primitive data presentations of the data warehouse. More complex data Slicing and Dicing is done in [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts).
+The schema has many useful views of Import, Access and Error primary attribute tables created in normalization process with simple aggregate values. These are primitive data presentations of the data warehouse. 
+More complex data Slicing and Dicing is done in [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts).
+
+If you find this code useful please contribute a :star: to the repository. It will also be encouragement to complete MySQL2ApacheECharts.
 #### Access Log View by Browser
 Database View - apache_logs.access_ua_browser_family_list - data from LogFormat: combined & csv2mysql
 ![view-access_ua_browser_family_list.png](./assets/access_ua_browser_list.png)
