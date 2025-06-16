@@ -13,7 +13,7 @@ Every log data record is traceable back to the computer, path, file, load proces
 
 Multiple Access and Error logs and formats can be loaded, parsed and imported along with User Agent parsing and IP Address Geolocation retrieval processes within a single "Import Load" execution. 
 
-A single "Import Load" execution can also be configured to only load logs to Server (single child process) leaving other processes to be executed within another "Import Load" on a centralized computer.
+A single "Import Load" execution can be configured to only load logs to Server (single child process) leaving other processes to be executed within another "Import Load" on a centralized computer.
 ### Process Messages in Console - 4 LogFormats, 2 ErrorLogFormats & 6 Stored Procedures can be processed in a single Import Load execution
 ![Processing Messages Console](./assets/processing_messages_console.png)
 ### Application runs on Windows, Linux & MacOS - Database runs on MySQL & MariaDB
