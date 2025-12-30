@@ -43,7 +43,7 @@ This enables a complete audit trail providing ability to determine who, what, wh
 All folder paths, filename patterns, logging, processing, Database connection setting variables are in .env file for easy installation and maintenance.
 
 Client `watch4logs` module can run in [PM2](https://github.com/Unitech/pm2) daemon process manager or `logs2mysql` module run in [logrotate's](https://github.com/logrotate/logrotate) apache `postrotate` configuration for 24/7 online processing on multiple web servers feeding a single Server module simultaneous.
-## Valuable Enrichment & Visual Enhancements
+## Data Enrichment & Visual Interfaces
 ### IP Geolocation data integration
 using [MaxMind GeoIP2](https://pypi.org/project/geoip2/) Python API provides IP country, subdivision, city, system organization, 
 network and coordinates information stored and normalized into 6 Database Schema tables.
