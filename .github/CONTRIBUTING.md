@@ -10,6 +10,6 @@ If you find this application valuable to your log collection system monetary con
 
 Monetary :moneybag: contributions made will encourage [Web Interface](https://github.com/WillTheFarmer/mysql-to-apache-echarts) development continuation for MySQL or MariaDB schema created here. It also encourages completion [NGINX Logging](https://github.com/WillTheFarmer/nginx-logs-to-mysql) that uses same MySQL or MariaDB schema.
 
-March 2025 I had about 1200 hours :hourglass_flowing_sand: of research of existing solutions and application development into codebase. I stopped logging maintenance hours after that release. It is much more time then I intended to invest but it did produce my first open-source software.
+March 2025 I had about 1200 hours :hourglass_flowing_sand: researching existing solutions and application development into codebase. I stopped logging maintenance hours after that release. It is much more time then I intended to invest but it did produce my first open-source software.
 
 I volunteer at local nonprofit that provides food and clothing for those in need. Director is familiar with MySQL and wanted to import Apache website logs into MySQL tables to query data. I offered to research existing solutions that used MySQL. At that meeting I knew little about Apache logs and thought it would be two or three days of my time.
