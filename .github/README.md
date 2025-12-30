@@ -43,8 +43,9 @@ This enables a complete audit trail providing ability to determine who, what, wh
 All folder paths, filename patterns, logging, processing, Database connection setting variables are in .env file for easy installation and maintenance.
 
 Client `watch4logs` module can run in [PM2](https://github.com/Unitech/pm2) daemon process manager or `logs2mysql` module run in [logrotate's](https://github.com/logrotate/logrotate) apache `postrotate` configuration for 24/7 online processing on multiple web servers feeding a single Server module simultaneous.
-### Valuable Data Enrichment & Visual Enhancements
-***IP Geolocation data*** integration using [MaxMind GeoIP2](https://pypi.org/project/geoip2/) Python API provides IP country, subdivision, city, system organization, 
+## Valuable Enrichment & Visual Enhancements
+### IP Geolocation data integration
+using [MaxMind GeoIP2](https://pypi.org/project/geoip2/) Python API provides IP country, subdivision, city, system organization, 
 network and coordinates information stored and normalized into 6 Database Schema tables.
 
 Application requires two GeoLite Databases - ***City*** & ***ASN***. GeoLite databases are subsets of the commercial databases with reduced coverage and accuracy. Application tested with these databases: 
@@ -52,7 +53,8 @@ Application requires two GeoLite Databases - ***City*** & ***ASN***. GeoLite dat
 
 2) DB-IP Lite databases at [DB-IP](https://db-ip.com/db/lite.php) available under Creative Commons Attribution 4.0 International License.
 
-***User-Agent data*** integration using [user-agents](https://pypi.org/project/user-agents/) provides browser, device and operating system information stored and normalized into 11 Database Schema tables.
+### User-Agent data integration
+using [user-agents](https://pypi.org/project/user-agents/) provides browser, device and operating system information stored and normalized into 11 Database Schema tables.
 
 [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) is a ***visualization tool*** for the Database Schema ***apache_logs*** currently under development. The Web interface consists of [Express](https://github.com/expressjs/express) web application frameworks with Drill Down Capability 
 & [Apache ECharts](https://github.com/apache/echarts) frameworks for Data Visualization.
