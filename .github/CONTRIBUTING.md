@@ -12,4 +12,4 @@ Monetary :moneybag: contributions made will encourage [Web Interface](https://gi
 
 I volunteer at local nonprofit that provides food and clothing for those in need. The Director is familiar with MySQL and he wanted to import Apache website logs into MySQL tables. At that meeting I knew little about Apache logs but lots about MySQL. I thought it would be two or three days of my time so I offered to research existing solutions. Surprisingly none I found performed any data normalization and were very primitive. The lack of existing solutions led to creation of this solution.
 
-As of March 2025 I had about 1200 hours :hourglass_flowing_sand: of researching existing solutions and application development into codebase. I stopped logging maintenance hours after that major release. It is much more time then I intended to invest but it did produce my first open-source software.
+As of March 2025 I had about 1200 hours :hourglass_flowing_sand: of researching existing solutions and application development into codebase. I stopped tracking hours after that major release. It is much more time then I intended to invest but it did produce my first open-source software.
