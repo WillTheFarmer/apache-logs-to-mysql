@@ -56,7 +56,7 @@ Application requires two GeoLite Databases - ***City*** & ***ASN***. GeoLite dat
 ### User-Agent data integration
 using [user-agents](https://pypi.org/project/user-agents/) provides browser, device and operating system information stored and normalized into 11 Database Schema tables.
 
-[MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) is a ***visualization tool*** for the Database Schema ***apache_logs*** currently under development. The Web interface consists of [Express](https://github.com/expressjs/express) web application frameworks with Drill Down Capability 
+[MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) is a ***visualization tool*** for the Database Schema currently under development. The Web interface consists of [Express](https://github.com/expressjs/express) web application frameworks with Drill Down Capability 
 & [Apache ECharts](https://github.com/apache/echarts) frameworks for Data Visualization.
 ## Four Apache Access Log Formats - next release includes NGINX Formats
 Apache uses Standard Access LogFormats (***common***, ***combined***, ***vhost_combined***) on all 3 platforms. Each LogFormat adds 2 Format Strings to the prior. 
@@ -291,7 +291,7 @@ Execute Stored Procedures with a SECOND PARAMETER = 'ALL' processes files & reco
 
 Execute Stored Procedures with second parameter `importloadid` value as a STRING processes ONLY files & records related to that `importloadid`.
 
-Second parameter enables Python Client modules to run on multiple servers simultaneously uploading to a single Database Server `apache_logs` schema.
+Second parameter enables Python Client modules to run on multiple servers simultaneously uploading to a single Database Server schema.
 
 `call_processes.sql` contains execution commands for each stored procedure. Comment area has functionality explanation. (`call_processes.sql` in repository)
 ![call_processes.sql in repository](./assets/call_processes.png)
@@ -303,12 +303,12 @@ Log files imported from multiple domains require a ServerName value to properly 
 Database normalization is the process of organizing data in a relational database to improve data integrity and reduce redundancy. 
 Normalization ensures that data is organized in a way that makes sense for the data model and attributes, and that the database functions efficiently.
 
-Database `apache_logs` schema currently has 55 Tables, 1040 Columns, 190 Indexes, 85 Views, 8 Stored Procedures and 90 Functions to process HTTP Access log in 4 formats 
+Database schema currently has 55 Tables, 1040 Columns, 190 Indexes, 85 Views, 8 Stored Procedures and 90 Functions to process HTTP Access log in 4 formats 
 & HTTP Error log in 2 formats. Database normalization at work!
 
 Database normalization is a critical process in database design with objectives of optimizing data storage, improving data integrity, and reducing data anomalies.
 Organizing data into normalized tables greatly enhances efficiency and maintainability of a database system.
-## 85 Views in apache_logs schema
+## 85 Views in database schema
 ![apache_logs_view_list.png](./assets/apache_logs_view_list.png)
 
 The schema has many useful views of Import, Access and Error primary attribute tables created in normalization process with simple aggregate values. These are primitive data presentations of the data warehouse. 
@@ -325,7 +325,7 @@ Database View - access_requri_list - data from LogFormat: combined & csv2mysql
 Error logs consist of three different data formats for error types. 
 Application harmonizes the 3 formats into a single standardized format and normalizes primary attributes.
 Error log attribute is name of first column or first and second column.
-Each attribute has an associated table in ***apache_logs*** schema.
+Each attribute has an associated table in database schema.
 ![error_log_apache_message_list](./assets/error_log_apache_message_list.png)
 ![error_log_system_message](./assets/error_log_system_message.png)
 ![error_log_message_list](./assets/error_log_message_list.png)
