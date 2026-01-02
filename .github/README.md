@@ -52,11 +52,10 @@ Application requires two GeoLite Databases - ***City*** & ***ASN***. GeoLite dat
 1) GeoLite2 databases at [MaxMind](https://www.maxmind.com/en/geolite-free-ip-geolocation-data) available under MaxMind continues to incorporate Creative Commons into our GeoLite End User Agreement (EULA).
 
 2) DB-IP Lite databases at [DB-IP](https://db-ip.com/db/lite.php) available under Creative Commons Attribution 4.0 International License.
-
 ### User-Agent data integration
 using [user-agents](https://pypi.org/project/user-agents/) provides browser, device and operating system information stored and normalized into 11 Database Schema tables.
 ## Visual Interface App
-[MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) is a ***visualization tool*** for the Database Schema currently under development. The Web interface consists of [Express](https://github.com/expressjs/express) web application frameworks with Drill Down Capability 
+[MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) is a ***visualization tool*** for the Database Schema currently under development. The Web interface consists of [Express](https://github.com/expressjs/express) web application frameworks with [W2UI](https://github.com/vitmalina/w2ui) drill-down data grids for Data Point Details 
 & [Apache ECharts](https://github.com/apache/echarts) frameworks for Data Visualization.
 ## Four Apache Access Log Formats - next release includes NGINX Formats
 Apache uses Standard Access LogFormats (***common***, ***combined***, ***vhost_combined***) on all 3 platforms. Each LogFormat adds 2 Format Strings to the prior. 
