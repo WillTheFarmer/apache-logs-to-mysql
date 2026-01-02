@@ -1,12 +1,12 @@
 # Database designed for HTTP log data analysis 
 ![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
 ## Python handles File Processing & Database handles Data Processing
-ApacheLogs2MySQL consists of two Python Modules & one Database Schema ***apache_logs*** to automate importing Access & Error files, normalizing log data into database and generating a well-documented data lineage audit trail.
+HTTPLogs2MySQL consists of two Python Modules & one Database Schema to automate importing Access & Error files, normalizing log data into database and generating a well-documented data lineage audit trail.
 
 Imports Access Logs in LogFormats - ***common***, ***combined*** and ***vhost_combined*** & additional ***csv2mysql*** LogFormat defined below.
 
 Imports Error Logs in ***default*** ErrorLogFormat & ***additional*** ErrorLogFormat defined below performing data harmonization 
-on Apache Codes & Messages, System Codes & Messages, and Log Messages to create a unified, standardized dataset.
+on HTTP Codes & Messages, System Codes & Messages, and Log Messages to create a unified, standardized dataset.
 
 All processing stages (child processes) are encapsulated within one "Import Load" (parent process) that captures process metrics, notifications and errors into Database import tables. 
 Every log data record is traceable back to the computer, path, file, load process, parse process and import process the data originates from.
@@ -23,7 +23,7 @@ Second stage is performed in `process_access_parse` and `process_error_parse` St
 
 Python handles polling of log file folders and executing Database LOAD DATA, Stored Procedures, Stored Functions and SQL Statements. Python drives the application but MySQL or MariaDB does all Data Manipulation & Processing.
 
-Application determines what files have been processed using `apache_logs.import_file` TABLE. 
+Application determines what files have been processed using `import_file` TABLE. 
 Each imported file has record with name, path, size, created, modified attributes inserted during `processLogs`.
 
 Application runs with no need for user interaction. File deletion is not required by application if files desired for later reference.
@@ -31,10 +31,10 @@ Application runs with no need for user interaction. File deletion is not require
 On servers, run application in conjunction with [logrotate](https://github.com/logrotate/logrotate) using [configuration file directives](https://man7.org/linux/man-pages/man8/logrotate.8.html) - `dateext`, `rotate`, `olddir`, `nocompress`, `notifempty`, `maxage`.
 Set `WATCH_PATH` to same folder as `olddir` and configure logrotate to delete files.
 
-On centralized computers, environment variables - `BACKUP_DAYS` and `BACKUP_PATH` can be configured to remove files from `WATCH_PATH` to reduce `apache_logs.importFileExists` execution in `processLogs` when tens of thousands of files exist in `WATCH_PATH` subfolder structure. If `BACKUP_DAYS` is set to 0 files are never moved or deleted from `WATCH_PATH` subfolder structure. Setting `BACKUP_DAYS` to a positive number will copy files to `BACKUP_PATH` creating an identical subfolder structure as `WATCH_PATH` as files are copied. `BACKUP_DAYS` is number of days since file was initially added to `apache_logs.import_file` TABLE before file is moved to `BACKUP_PATH`. Once file is copied the file will be deleted from `WATCH_PATH`. Setting `BACKUP_DAYS` = -1 files are not copied to `BACKUP_PATH` before deleting files from `WATCH_PATH`. When `BACKUP_DAYS` is set to -1 files are deleted from `WATCH_PATH` next time `processLogs` is executed.
+On centralized computers, environment variables - `BACKUP_DAYS` and `BACKUP_PATH` can be configured to remove files from `WATCH_PATH` to reduce `importFileExists` execution in `processLogs` when tens of thousands of files exist in `WATCH_PATH` subfolder structure. If `BACKUP_DAYS` is set to 0 files are never moved or deleted from `WATCH_PATH` subfolder structure. Setting `BACKUP_DAYS` to a positive number will copy files to `BACKUP_PATH` creating an identical subfolder structure as `WATCH_PATH` as files are copied. `BACKUP_DAYS` is number of days since file was initially added to `import_file` TABLE before file is moved to `BACKUP_PATH`. Once file is copied the file will be deleted from `WATCH_PATH`. Setting `BACKUP_DAYS` = -1 files are not copied to `BACKUP_PATH` before deleting files from `WATCH_PATH`. When `BACKUP_DAYS` is set to -1 files are deleted from `WATCH_PATH` next time `processLogs` is executed.
 
 Log-level variables can be set to display Process Messages in console or inserted into [PM2](https://github.com/Unitech/pm2) logs for every process step. 
-All import errors in Python `processLogs` (client) and Stored Procedures (server) are inserted into `apache_logs.import_error` TABLE.
+All import errors in Python `processLogs` (client) and Stored Procedures (server) are inserted into `import_error` TABLE.
 This is the only schema table that uses ENGINE=MYISAM to avoid TRANSACTION ROLLBACKS.
 
 Logging functionality, database design and table relationship constraints produce both physical and logical integrity. 
@@ -58,8 +58,8 @@ using [user-agents](https://pypi.org/project/user-agents/) provides browser, dev
 
 [MySQL2ApacheECharts](https://github.com/willthefarmer/mysql-to-apache-echarts) is a ***visualization tool*** for the Database Schema ***apache_logs*** currently under development. The Web interface consists of [Express](https://github.com/expressjs/express) web application frameworks with Drill Down Capability 
 & [Apache ECharts](https://github.com/apache/echarts) frameworks for Data Visualization.
-## Four Supported Access Log Formats
-Apache uses same Standard Access LogFormats (***common***, ***combined***, ***vhost_combined***) on all 3 platforms. Each LogFormat adds 2 Format Strings to the prior. 
+## Four Apache Access Log Formats - next release includes NGINX Formats
+Apache uses Standard Access LogFormats (***common***, ***combined***, ***vhost_combined***) on all 3 platforms. Each LogFormat adds 2 Format Strings to the prior. 
 Format String descriptions are listed below each LogFormat. Information from: https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#logformat 
 ```
 LogFormat "%h %l %u %t \"%r\" %>s %O" common
@@ -117,7 +117,7 @@ LogFormat "%v,%p,%h,%l,%u,%t,%I,%O,%S,%B,%{ms}T,%D,%^FB,%>s,\"%H\",\"%m\",\"%U\"
 |%{User-Agent}i|The User-Agent HTTP request header. This is the identifying information that the client browser reports about itself.|
 |%{VARNAME}C|ADDED - The contents of cookie VARNAME in request sent to server. Only version 0 cookies are fully supported. Format String is optional.|
 |%L|ADDED - The request log ID from the error log (or '-' if nothing has been logged to the error log for this request). Look for the matching error log line to see what request| caused what error.
-## Two supported Error Log Formats
+## Two Apache Error Log Formats - next release includes NGINX Formats
 Application processes Error Logs with ***default format*** for threaded MPMs (Multi-Processing Modules). If running Apache 2.4 on any platform 
 and ErrorLogFormat is not defined in config files this is the Error Log format.
 Information from: https://httpd.apache.org/docs/2.4/mod/core.html#errorlogformat
@@ -179,9 +179,9 @@ UPDATE commands to populate both Access and Error Logs if ***"Log File Names"***
 ```
 Log file naming conventions enable the use of UPDATE statements:
 ```
-UPDATE apache_logs.import_file SET server_name='farmfreshsoftware.com', server_port=443 WHERE server_name IS NULL AND name LIKE '%farmfreshsoftware%';
-UPDATE apache_logs.import_file SET server_name='farmwork.app', server_port=443 WHERE server_name IS NULL AND name LIKE '%farmwork%';
-UPDATE apache_logs.import_file SET server_name='ip255-255-255-255.us-east.com', server_port=443 WHERE server_name IS NULL AND name LIKE '%error%';
+UPDATE import_file SET server_name='farmfreshsoftware.com', server_port=443 WHERE server_name IS NULL AND name LIKE '%farmfreshsoftware%';
+UPDATE import_file SET server_name='farmwork.app', server_port=443 WHERE server_name IS NULL AND name LIKE '%farmwork%';
+UPDATE import_file SET server_name='ip255-255-255-255.us-east.com', server_port=443 WHERE server_name IS NULL AND name LIKE '%error%';
 ```
 ## Required Python Packages
 Single quotes around 'PyMySQL[rsa]' package required on macOS.
@@ -194,7 +194,7 @@ Single quotes around 'PyMySQL[rsa]' package required on macOS.
 |[geoip2](https://pypi.org/project/geoip2/)|python -m pip install geoip2|[maxmind/GeoIP2-python](https://github.com/maxmind/GeoIP2-python)|
 
 ## Installation Instructions
-Steps make installation quick and straightforward. Application will be ready to import Apache logs on completion.
+Steps make installation quick and straightforward. Application will be ready to import HTTP logs on completion.
 
 ### 1. Python
 Install all required packages (`requirements.txt` in repository):
@@ -303,8 +303,8 @@ Log files imported from multiple domains require a ServerName value to properly 
 Database normalization is the process of organizing data in a relational database to improve data integrity and reduce redundancy. 
 Normalization ensures that data is organized in a way that makes sense for the data model and attributes, and that the database functions efficiently.
 
-Database `apache_logs` schema currently has 55 Tables, 1040 Columns, 190 Indexes, 85 Views, 8 Stored Procedures and 90 Functions to process Apache Access log in 4 formats 
-& Apache Error log in 2 formats. Database normalization at work!
+Database `apache_logs` schema currently has 55 Tables, 1040 Columns, 190 Indexes, 85 Views, 8 Stored Procedures and 90 Functions to process HTTP Access log in 4 formats 
+& HTTP Error log in 2 formats. Database normalization at work!
 
 Database normalization is a critical process in database design with objectives of optimizing data storage, improving data integrity, and reducing data anomalies.
 Organizing data into normalized tables greatly enhances efficiency and maintainability of a database system.
@@ -316,10 +316,10 @@ More complex data Slicing and Dicing is done in [MySQL2ApacheECharts](https://gi
 
 If you find this code useful please contribute a :star: to the repository. It will also be encouragement to complete MySQL2ApacheECharts.
 #### Access Log View by Browser
-Database View - apache_logs.access_ua_browser_family_list - data from LogFormat: combined & csv2mysql
+Database View - access_ua_browser_family_list - data from LogFormat: combined & csv2mysql
 ![view-access_ua_browser_family_list.png](./assets/access_ua_browser_list.png)
 #### Access Log View by URI
-Database View - apache_logs.access_requri_list - data from LogFormat: combined & csv2mysql
+Database View - access_requri_list - data from LogFormat: combined & csv2mysql
 ![view-access_requri_list](./assets/access_requri_list.png)
 #### Error Log Views
 Error logs consist of three different data formats for error types. 
