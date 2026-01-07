@@ -1,7 +1,7 @@
 # Database designed for HTTP log data analysis 
 ![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
 ## Python handles File Processing & Database handles Data Processing
-HTTPlogs2MySQL consists of two Python Modules & one Database Schema to automate importing Access & Error files, normalizing log data into database and generating a well-documented data lineage audit trail.
+httpLogs2MySQL consists of two Python Modules & one Database Schema to automate importing Access & Error files, normalizing log data into database and generating a well-documented data lineage audit trail.
 
 Imports Access Logs in LogFormats - ***common***, ***combined*** and ***vhost_combined*** & additional ***csv2mysql*** LogFormat defined below.
 
