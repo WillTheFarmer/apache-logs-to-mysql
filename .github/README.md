@@ -1,5 +1,6 @@
+### Major release by January 15th - Python redesign with Factory Method implementation 
+![Entity Relationship Diagram](./assets/python_code_redesign.png)
 # Database designed for HTTP log data analysis
-### Major release coming... proper Python with Factory Method implementation 
 ![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
 ## Python handles File Processing & Database handles Data Processing
 httpLogs2MySQL consists of two Python Modules & one Database Schema to automate importing Access & Error files, normalizing log data into database and generating a well-documented data lineage audit trail.
