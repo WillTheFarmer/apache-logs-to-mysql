@@ -1,4 +1,4 @@
-### Major release by January 15th - Python redesign with Factory Method implementation 
+### Major release January 15th - Python redesign with Factory Method implementation 
 ![Entity Relationship Diagram](./assets/python_code_redesign.png)
 # Database designed for HTTP log data analysis
 ![Entity Relationship Diagram](./assets/entity_relationship_diagram.png)
