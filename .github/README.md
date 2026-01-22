@@ -1,6 +1,6 @@
 ## Python handles File Processing & Database handles Data Processing
 ![Entity Relationship Diagram](./images/json_config_lists.png)
-httpLogs2MySQL consists of a data-driven Python Module & a MySQL Database Schema to automate importing Access & Error files, normalizing log data into database and generating a well-documented data lineage audit trail.
+httpLogs2MySQL consists of a data-driven Python Application & a MySQL Database Schema to automate importing Access & Error files, normalizing log data into database and generating a well-documented data lineage audit trail.
 
 All processing stages (child processes) are encapsulated within one "Import Load" (parent process) that captures process metrics, notifications and errors into Database import tables.
 
