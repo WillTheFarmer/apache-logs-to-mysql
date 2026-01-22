@@ -1,0 +1,51 @@
+import pymysql
+import sys
+
+from os import getenv
+from dotenv import load_dotenv
+
+load_dotenv() # Load environment variables from .env file
+
+mysql_host = getenv('MYSQL_HOST')
+mysql_port = int(getenv('MYSQL_PORT'))
+mysql_user = getenv('MYSQL_USER')
+mysql_password = getenv('MYSQL_PASSWORD')
+mysql_schema = getenv('MYSQL_SCHEMA')
+
+def getConnection():
+    """Establishes and returns a database connection."""
+    # Database connection parameters
+    db_params = {
+        'host': mysql_host,
+        'port': mysql_port,
+        'user': mysql_user,
+        'password': mysql_password,
+        'database': mysql_schema,
+        'connect_timeout': 5,
+        'local_infile': True
+    }
+
+    try:
+    # Attempt to establish the connection
+        conn = pymysql.connect(**db_params)
+        # You can now proceed with creating a cursor and executing queries
+        # print("ENV Connection successful!")
+        # ...
+
+    except pymysql.MySQLError as e:
+        # Catch specific PyMySQL errors during connection attempt
+        print(f"Error connecting to MySQL database: {e}")
+        # You might want to log the error, display a user-friendly message, or exit the program
+        sys.exit(1) # Exit the script upon connection failure
+
+    except Exception as e:
+        # Catch any other potential exceptions
+        print(f"An unexpected error occurred: {e}")
+        sys.exit(1)
+
+    finally:
+        # Ensure the connection is closed if it was opened successfully
+        return conn
+#        if 'conn' in locals() and conn.open:
+#            conn.close()
+#            print("Connection closed.")

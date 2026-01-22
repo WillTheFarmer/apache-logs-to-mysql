@@ -1,0 +1,514 @@
+{
+  "mysql": {
+    "host": "localhost",
+    "port": 3606,
+    "user": "http_upload",
+    "password": "password",
+    "schema": "http_logs"
+  },
+  "backup": {
+    "days": 0,
+    "path": "data/backup_files/"
+  },
+  "observers": [
+    {
+      "id": "apacheErrorStd",
+      "name": "Apache Error Standard",
+      "description": "Apache Error format",
+      "status": "Active",
+      "log": true,
+      "path": "data/apacheErrorStd/",
+      "recursive": false,
+      "interval": 15,
+      "processList": ["apacheErrorLoad","apacheErrorParse","apacheErrorImport"],
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "apacheErrorExt",
+      "name": "Apache Error Extended",
+      "description": "Apache Error format with Vhost properties",
+      "status": "Active",
+      "log": true,
+      "path": "data/apacheErrorExt/",
+      "recursive": false,
+      "interval": 15,
+      "processList": ["apacheErrorLoad","apacheErrorParse","apacheErrorImport"],
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "apacheCommon",
+      "name": "Apache Common",
+      "description": "Apache Common format - LOAD ONLY",
+      "status": "Active",
+      "log": true,
+      "path": "data/apacheCommon/",
+      "recursive": false,
+      "interval": 25,
+      "processList": ["apacheCombinedLoad"],
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "apacheCombined",
+      "name": "Apache Combined",
+      "description": "Apache Combined format - NO IMPORT processing",
+      "status": "Active",
+      "log": true,
+      "path": "data/apacheCombined/",
+      "recursive": false,
+      "interval": 25,
+      "processList": ["apacheCombinedLoad","apacheCombinedParse"],
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "apacheVhost",
+      "name": "Apache Vhost",
+      "description": "Apache Vhost format - LOAD ONLY",
+      "status": "Active",
+      "log": true,
+      "path": "data/apacheVhost/",
+      "recursive": false,
+      "interval": 15,
+      "processList": ["apacheVhostLoad"],
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "apacheCsv",
+      "name": "Apache CSV2MySQL",
+      "description": "Apache CSV2MySQL format",
+      "status": "Active",
+      "log": true,
+      "path": "data/apacheCsv/",
+      "recursive": false,
+      "interval": 15,
+      "processList": ["apacheCsvLoad","apacheCsvParse","apacheCsvImport"],
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "nginxError",
+      "name": "NGINX Error Format",
+      "description": "Apache Error format",
+      "status": "Active",
+      "log": true,
+      "path": "data/nginxError/",
+      "recursive": false,
+      "interval": 15,
+      "processList": ["nginxErrorLoad","nginxErrorParse","nginxErrorImport"],
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "nginxCombined",
+      "name": "NGINX Access Format",
+      "description": "Apache Combined format",
+      "status": "Active",
+      "log": true,
+      "path": "data/nginxCombined/",
+      "recursive": false,
+      "interval": 15,
+      "processList": ["nginxCombinedLoad","nginxCombinedParse","nginxCombinedImport"],
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    }
+  ],
+  "processes": [
+    {
+      "id": "apacheErrorLoad",
+      "name": "Apache Error Load",
+      "description": "Error Standard log files loading.",
+      "moduleName": "fileLoader",
+      "group": "Apache Error",
+      "status": "Active",
+      "attributes": {
+        "process": 2,
+        "log": 2,
+        "log_format": "apacheError",
+        "load_table": "load_error_apache",
+        "path": "data/apacheErrorStd/**/*error*.*",
+        "recursive": true,
+        "server": "mydomain.com",
+        "serverport": 443
+      },
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "apacheErrorParse",
+      "name": "Apache Error Parse",
+      "description": "Apache Error being parsed database.",
+      "moduleName": "databaseModule",
+      "group": "Apache Error",
+      "status": "Active",
+      "attributes": {
+        "process": 2,
+        "log": 1,
+        "dbModuleName": "parse_error_apache",
+        "dbModuleParm1": "default"
+      },
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "apacheErrorImport",
+      "name": "Apache Error Import",
+      "description": "Apache Error being imported database.",
+      "moduleName": "databaseModule",
+      "group": "Apache Error",
+      "status": "Active",
+      "attributes": {
+        "process": 2,
+        "log": 1,
+        "dbModuleName": "import_error_apache",
+        "dbModuleParm1": "default"
+      },
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "apacheCommonLoad",
+      "name": "Apache Common Load",
+      "description": "Access Common log format.",
+      "moduleName": "fileLoader",
+      "group": "Apache Common",
+      "status": "Active",
+      "attributes": {
+        "process": 2,
+        "log": 2,
+        "log_format": "apacheCommon",
+        "load_table": "load_access_combined",
+        "path": "data/apacheCommon/**/*access*.*",
+        "recursive": true,
+        "server": "mydomain.com",
+        "serverport": 443
+      },
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "apacheCommonParse",
+      "name": "Apache Common Parse",
+      "description": "Apache Common being parsed database.",
+      "moduleName": "databaseModule",
+      "group": "Apache Common",
+      "status": "Active",
+      "attributes": {
+        "process": 2,
+        "log": 1,
+        "dbModuleName": "parse_access_apache",
+        "dbModuleParm1": "combined"
+      },
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "apacheCommonImport",
+      "name": "Apache Common Import",
+      "description": "Apache Common being imported database.",
+      "moduleName": "databaseModule",
+      "group": "Apache Common",
+      "status": "Active",
+      "attributes": {
+        "process": 2,
+        "log": 1,
+        "dbModuleName": "import_access_apache",
+        "dbModuleParm1": "combined"
+      },
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "apacheCombinedLoad",
+      "name": "Apache Combined Load",
+      "description": "Access Combined format files loading.",
+      "moduleName": "fileLoader",
+      "group": "Apache Combined",
+      "status": "Active",
+      "attributes": {
+        "process": 2,
+        "log": 2,
+        "log_format": "apacheCombined",
+        "load_table": "load_access_combined",
+        "path": "data/apacheCombined/**/*access*.*",
+        "recursive": true,
+        "server": "mydomain.com",
+        "serverport": 443
+      },
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "apacheCombinedParse",
+      "name": "Apache Combined Parse",
+      "description": "Access Combined logs being parsed database.",
+      "moduleName": "databaseModule",
+      "group": "Apache Combined",
+      "status": "Active",
+      "attributes": {
+        "process": 2,
+        "log": 2,
+        "dbModuleName": "parse_access_apache",
+        "dbModuleParm1": "combined"
+      },
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "apacheCombinedImport",
+      "name": "Apache Combined Import",
+      "description": "Access Combined logs being imported database.",
+      "moduleName": "databaseModule",
+      "group": "Apache Combined",
+      "status": "Active",
+      "attributes": {
+        "process": 2,
+        "log": 2,
+        "dbModuleName": "import_access_apache",
+        "dbModuleParm1": "combined"
+      },
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "apacheVhostLoad",
+      "name": "Apache Vhost Load",
+      "description": "Access Vhost log format files loading.",
+      "moduleName": "fileLoader",
+      "group": "Apache Vhost",
+      "status": "InActive",
+      "attributes": {
+        "process": 2,
+        "log": 1,
+        "log_format": "apacheVhost",
+        "load_table": "load_access_vhost",
+        "path": "data/apacheVhost/**/*access*.*",
+        "recursive": true,
+        "server": "mydomain.com",
+        "serverport": 443
+      },
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "apacheVhostParse",
+      "name": "Apache Vhost Parse",
+      "description": "Access Vhost logs being parsed database.",
+      "moduleName": "databaseModule",
+      "group": "Apache Vhost",
+      "status": "InActive",
+      "attributes": {
+        "process": 2,
+        "log": 1,
+        "dbModuleName": "parse_access_apache",
+        "dbModuleParm1": "Vhost"
+      },
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "apacheVhostImport",
+      "name": "Apache Vhost Import",
+      "description": "Access Vhost logs being imported database.",
+      "moduleName": "databaseModule",
+      "group": "Apache Vhost",
+      "status": "InActive",
+      "attributes": {
+        "process": 2,
+        "log": 1,
+        "dbModuleName": "import_access_apache",
+        "dbModuleParm1": "Vhost"
+      },
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "apacheCsvLoad",
+      "name": "Apache Access CSV Load",
+      "description": "Access Comma Separated Values format files loading.",
+      "moduleName": "fileLoader",
+      "group": "Apache Csv",
+      "status": "Active",
+      "attributes": {
+        "process": 2,
+        "log": 1,
+        "log_format": "apacheCsv",
+        "load_table": "load_access_csv",
+        "path": "data/apacheCsv/**/*access*.*",
+        "recursive": true,
+        "server": "mydomain.com",
+        "serverport": 443
+      },
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "apacheCsvParse",
+      "name": "Apache Csv2 Parse",
+      "description": "Access Csv logs being parsed database.",
+      "moduleName": "databaseModule",
+      "group": "Apache Csv",
+      "status": "Active",
+      "attributes": {
+        "process": 2,
+        "log": 1,
+        "dbModuleName": "parse_access_apache",
+        "dbModuleParm1": "csv2mysql"
+      },
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "apacheCsvImport",
+      "name": "Apache Csv Import",
+      "description": "Access Csv logs being imported database.",
+      "moduleName": "databaseModule",
+      "group": "Apache Csv",
+      "status": "Active",
+      "attributes": {
+        "process": 2,
+        "log": 1,
+        "dbModuleName": "import_access_apache",
+        "dbModuleParm1": "csv2mysql"
+      },
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "nginxErrorLoad",
+      "name": "NGINX Error Load",
+      "description": "NGINX Standard Error format files loading.",
+      "moduleName": "fileLoader",
+      "group": "Nginx Error",
+      "status": "Active",
+      "attributes": {
+        "process": 2,
+        "log": 2,
+        "log_format": "nginxError",
+        "load_table": "load_error_nginx",
+        "path": "data/nginxError/**/*error*.*",
+        "recursive": true,
+        "server": "mydomain.com",
+        "serverport": 443
+      },
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "nginxErrorParse",
+      "name": "NGINX Error Parse",
+      "description": "NGINX error logs being parsed database.",
+      "moduleName": "databaseModule",
+      "group": "Nginx Error",
+      "status": "InActive",
+      "attributes": {
+        "process": 2,
+        "log": 1,
+        "dbModuleName": "parse_error_nginx",
+        "dbModuleParm1": "nginx"
+      },
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "nginxErrorImport",
+      "name": "NGINX Error Import",
+      "description": "NGINX error logs being imported database.",
+      "moduleName": "databaseModule",
+      "group": "Nginx Error",
+      "status": "InActive",
+      "attributes": {
+        "process": 2,
+        "log": 1,
+        "dbModuleName": "import_error_nginx",
+        "dbModuleParm1": "nginx"
+      },
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "nginxCombinedLoad",
+      "name": "NGINX Combined Load",
+      "description": "NGINX Access Combined format files loading.",
+      "moduleName": "fileLoader",
+      "group": "Nginx Combined",
+      "status": "Active",
+      "attributes": {
+        "process": 2,
+        "log": 1,
+        "log_format": "nginxCombined",
+        "load_table": "load_access_nginx",
+        "path": "data/nginxCombined/**/*access*.*",
+        "recursive": true,
+        "server": "mydomain.com",
+        "serverport": 443
+      },
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "nginxCombinedParse",
+      "name": "NGINX Combined Parse",
+      "description": "NGINX Access Combined being parsed database.",
+      "moduleName": "databaseModule",
+      "group": "Nginx Combined",
+      "status": "Active",
+      "attributes": {
+        "process": 2,
+        "log": 1,
+        "dbModuleName": "parse_access_nginx",
+        "dbModuleParm1": "combined"
+      },
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "nginxCombinedImport",
+      "name": "NGINX Combined Import",
+      "description": "NGINX Access Combined being imported database.",
+      "moduleName": "databaseModule",
+      "group": "Nginx Combined",
+      "status": "Active",
+      "attributes": {
+        "process": 2,
+        "log": 1,
+        "dbModuleName": "import_access_nginx",
+        "dbModuleParm1": "combined"
+      },
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "useragentEnrichment",
+      "name": "User Agent Parsing",
+      "description": "Slices and Dices your string.",
+      "moduleName": "userAgent",
+      "group": "DataEnhance",
+      "status": "Active",
+      "attributes": {
+        "process": 2,
+        "log": 1
+      },
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "useragentImport",
+      "name": "User Agent Normalization",
+      "description": "Normalizing User Agent data Start.",
+      "moduleName": "databaseModule",
+      "group": "DataEnhance",
+      "status": "Active",
+      "attributes": {
+        "process": 2,
+        "log": 1,
+        "dbModuleName": "normalize_useragent",
+        "dbModuleParm1": "Python Processed"
+      },
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "geoipEnrichment",
+      "name": "IP Address Data Extraction",
+      "description": "Geolocation information related to IP",
+      "moduleName": "geoIP",
+      "group": "DataEnhance",
+      "status": "Active",
+      "attributes": {
+        "process": 2,
+        "log": 1,
+        "city": "data/downloads/maxmind/GeoLite2-City.mmdb",
+        "asn": "data/downloads/maxmind/GeoLite2-ASN.mmdb"
+      },
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "geoipImport",
+      "name": "IP Address Normalizing",
+      "description": "Normalizing IP Address data.",
+      "moduleName": "databaseModule",
+      "group": "DataEnhance",
+      "status": "Active",
+      "attributes": {
+        "process": 2,
+        "log": 1,
+        "dbModuleName": "normalize_client",
+        "dbModuleParm1": "Python Processed"
+      },
+      "lastUpdated": "2026-01-01T10:00:00Z"
+    }
+  ]
+}

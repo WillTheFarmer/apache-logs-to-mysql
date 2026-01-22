@@ -1,0 +1,32 @@
+[Thu Oct 24 05:05:17.891521 2024] [proxy:error] [pid 2569:tid 2604] (111)Connection refused: AH00957: http: attempt to connect to 127.0.0.1:3000 (localhost:3000) failed
+[Thu Oct 24 05:05:17.891618 2024] [proxy_http:error] [pid 2569:tid 2604] [client 67.240.117.81:59916] AH01114: HTTP: failed to make connection to backend: localhost
+[Thu Oct 24 05:05:18.022945 2024] [proxy:error] [pid 2569:tid 2606] (111)Connection refused: AH00957: http: attempt to connect to 127.0.0.1:3000 (localhost:3000) failed
+[Thu Oct 24 05:05:18.023022 2024] [proxy_http:error] [pid 2569:tid 2606] [client 67.240.117.81:59923] AH01114: HTTP: failed to make connection to backend: localhost
+[Thu Oct 24 05:05:18.034566 2024] [proxy:error] [pid 2568:tid 2578] (111)Connection refused: AH00957: http: attempt to connect to 127.0.0.1:3000 (localhost:3000) failed
+[Thu Oct 24 05:05:18.034656 2024] [proxy_http:error] [pid 2568:tid 2578] [client 67.240.117.81:59922] AH01114: HTTP: failed to make connection to backend: localhost
+[Thu Oct 24 05:05:18.045240 2024] [proxy:error] [pid 2569:tid 2610] (111)Connection refused: AH00957: http: attempt to connect to 127.0.0.1:3000 (localhost:3000) failed
+[Thu Oct 24 05:05:18.045320 2024] [proxy_http:error] [pid 2569:tid 2610] [client 67.240.117.81:59924] AH01114: HTTP: failed to make connection to backend: localhost
+[Thu Oct 24 09:03:11.809431 2024] [proxy:error] [pid 2568:tid 2595] (111)Connection refused: AH00957: http: attempt to connect to 127.0.0.1:3000 (localhost:3000) failed
+[Thu Oct 24 09:03:11.809550 2024] [proxy_http:error] [pid 2568:tid 2595] [client 67.240.117.81:60236] AH01114: HTTP: failed to make connection to backend: localhost
+[Thu Oct 24 12:22:57.870895 2024] [proxy:error] [pid 2568:tid 2575] (111)Connection refused: AH00957: http: attempt to connect to 127.0.0.1:3000 (localhost:3000) failed
+[Thu Oct 24 12:22:57.871038 2024] [proxy_http:error] [pid 2568:tid 2575] [client 143.198.148.166:46882] AH01114: HTTP: failed to make connection to backend: localhost
+[Thu Oct 24 12:22:59.598822 2024] [proxy:error] [pid 2568:tid 2587] (111)Connection refused: AH00957: http: attempt to connect to 127.0.0.1:3000 (localhost:3000) failed
+[Thu Oct 24 12:22:59.598939 2024] [proxy_http:error] [pid 2568:tid 2587] [client 143.198.148.166:46986] AH01114: HTTP: failed to make connection to backend: localhost, referer: https://farmwork.app/
+[Thu Oct 24 13:08:00.816410 2024] [proxy:error] [pid 2569:tid 2601] (111)Connection refused: AH00957: http: attempt to connect to 127.0.0.1:3000 (localhost:3000) failed
+[Thu Oct 24 13:08:00.816549 2024] [proxy_http:error] [pid 2569:tid 2601] [client 74.48.78.125:30828] AH01114: HTTP: failed to make connection to backend: localhost
+[Thu Oct 24 13:46:46.345111 2024] [proxy:error] [pid 2568:tid 2584] (111)Connection refused: AH00957: http: attempt to connect to 127.0.0.1:3000 (localhost:3000) failed
+[Thu Oct 24 13:46:46.345299 2024] [proxy_http:error] [pid 2568:tid 2584] [client 64.227.187.232:40356] AH01114: HTTP: failed to make connection to backend: localhost
+[Thu Oct 24 13:46:52.492425 2024] [proxy:error] [pid 2568:tid 2588] (111)Connection refused: AH00957: http: attempt to connect to 127.0.0.1:3000 (localhost:3000) failed
+[Thu Oct 24 13:46:52.492564 2024] [proxy_http:error] [pid 2568:tid 2588] [client 64.227.187.232:60868] AH01114: HTTP: failed to make connection to backend: localhost, referer: https://farmwork.app/
+[Thu Oct 24 16:28:35.458382 2024] [proxy:error] [pid 2569:tid 2607] (111)Connection refused: AH00957: http: attempt to connect to 127.0.0.1:3000 (localhost:3000) failed
+[Thu Oct 24 16:28:35.458537 2024] [proxy_http:error] [pid 2569:tid 2607] [client 87.236.176.66:35133] AH01114: HTTP: failed to make connection to backend: localhost
+[Thu Oct 24 17:28:43.956459 2024] [proxy:error] [pid 2568:tid 2584] (111)Connection refused: AH00957: http: attempt to connect to 127.0.0.1:3000 (localhost:3000) failed
+[Thu Oct 24 17:28:43.956605 2024] [proxy_http:error] [pid 2568:tid 2584] [client 35.212.200.119:37570] AH01114: HTTP: failed to make connection to backend: localhost
+[Thu Oct 24 17:29:45.268098 2024] [proxy:error] [pid 2569:tid 2599] (111)Connection refused: AH00957: http: attempt to connect to 127.0.0.1:3000 (localhost:3000) failed
+[Thu Oct 24 17:29:45.268304 2024] [proxy_http:error] [pid 2569:tid 2599] [client 34.0.154.99:57426] AH01114: HTTP: failed to make connection to backend: localhost
+[Thu Oct 24 19:31:35.930428 2024] [proxy:error] [pid 2568:tid 2592] (111)Connection refused: AH00957: http: attempt to connect to 127.0.0.1:3000 (localhost:3000) failed
+[Thu Oct 24 19:31:35.930567 2024] [proxy_http:error] [pid 2568:tid 2592] [client 65.108.132.101:2417] AH01114: HTTP: failed to make connection to backend: localhost
+[Thu Oct 24 20:13:30.300841 2024] [proxy:error] [pid 2569:tid 2605] (111)Connection refused: AH00957: http: attempt to connect to 127.0.0.1:3000 (localhost:3000) failed
+[Thu Oct 24 20:13:30.300985 2024] [proxy_http:error] [pid 2569:tid 2605] [client 71.6.134.234:47520] AH01114: HTTP: failed to make connection to backend: localhost
+[Thu Oct 24 20:19:21.861379 2024] [proxy:error] [pid 2569:tid 2613] (111)Connection refused: AH00957: http: attempt to connect to 127.0.0.1:3000 (localhost:3000) failed
+[Thu Oct 24 20:19:21.861518 2024] [proxy_http:error] [pid 2569:tid 2613] [client 71.6.134.234:54200] AH01114: HTTP: failed to make connection to backend: localhost

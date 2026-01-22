@@ -2,7 +2,7 @@
 # Visit https://bit.ly/cffinit to generate yours today!
 
 cff-version: 1.2.0
-title: ApacheLogs2MySQL
+title: httpLogs2MySQL
 message: >-
   If you use this software, please cite it using the
   metadata from this file.
@@ -14,19 +14,18 @@ authors:
     affiliation: Farm Fresh Software
 identifiers:
   - type: url
-    value: 'https://github.com/WillTheFarmer/apache-logs-to-mysql'
-repository-code: 'https://github.com/WillTheFarmer/apache-logs-to-mysql'
+    value: 'https://github.com/WillTheFarmer/http-logs-to-mysql'
+repository-code: 'https://github.com/WillTheFarmer/http-logs-to-mysql'
 url: 'https://willthefarmer.github.io'
 abstract: >-
-  ApacheLogs2MySQL includes two Python files, one SQL file
-  and one ENV file. Python module 'logs2mysql.py' handles
-  file processing and execution of MySQL LOAD DATA
+  httpLogs2MySQL includes a data-driven Python module es, SQL schema 
+  script file, JSON file and ENV file. Python module 'main:process_logs'
+  handles file processing and execution of MySQL LOAD DATA
   statements, stored procedures and SQL statements. Python module
-  'watch4logs.py' imports module 'logs2mysql.py' and
+  'files_watch.py' imports module 'files_import.py' and
   watches Apache log folders for new files. When new files
-  are created in folders module calls
-  logs2mysql.processLogs() function. SQL file
-  'apache_logs_schema.sql' contains Data Definition Language (DDL)
+  are created in folders module calls main.process_logs() function. SQL
+  file 'create_http_logs_schema.sql' contains Data Definition Language (DDL)
   that creates a MySQL Schema named 'apache_logs' with tables,
   views, stored functions and procedures designed to automate 
   importing Apache Access & Error Log files into a normalized 
@@ -36,8 +35,9 @@ keywords:
   - Python
   - MySQL
   - Apache2
+  - NGINX
   - Access & Error Logs
 license: Apache-2.0
 commit: My First Open-Source Release
-version: '1.0.0'
-date-released: '2024-11-04'
+version: '4.0.0'
+date-released: '2026-01-21'

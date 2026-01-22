@@ -1,0 +1,8 @@
+149.57.180.113 - - [30/Dec/2025:07:13:25 +0000] "GET / HTTP/1.1" 200 414 "-" "Mozilla/5.0 (X11; Linux i686; rv:109.0) Gecko/20100101 Firefox/120.0"
+134.209.150.213 - - [30/Dec/2025:07:30:19 +0000] "GET / HTTP/1.1" 200 414 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+134.209.150.213 - - [30/Dec/2025:07:30:25 +0000] "GET /favicon.ico HTTP/1.1" 404 196 "https://saunathinker.com/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+51.68.247.209 - - [30/Dec/2025:09:48:47 +0000] "GET /robots.txt HTTP/1.1" 404 134 "-" "Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)"
+51.222.95.144 - - [30/Dec/2025:09:48:50 +0000] "GET / HTTP/1.1" 200 414 "-" "Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)"
+13.220.202.126 - - [30/Dec/2025:15:34:32 +0000] "GET / HTTP/1.1" 200 414 "-" "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0"
+103.139.144.228 - - [30/Dec/2025:15:39:34 +0000] "GET /wp-login.php HTTP/1.1" 404 134 "-" "Mozilla/5.0"
+167.94.138.115 - - [30/Dec/2025:18:39:49 +0000] "GET / HTTP/1.1" 200 414 "-" "Mozilla/5.0 (compatible; CensysInspect/1.1; +https://about.censys.io/)"

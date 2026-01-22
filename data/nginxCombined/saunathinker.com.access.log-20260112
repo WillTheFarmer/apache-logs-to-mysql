@@ -1,0 +1,8 @@
+15.235.27.240 - - [11/Jan/2026:01:57:42 +0000] "GET /robots.txt HTTP/1.1" 404 134 "-" "Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)"
+54.39.6.248 - - [11/Jan/2026:01:57:45 +0000] "GET / HTTP/1.1" 200 414 "-" "Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)"
+104.248.241.104 - - [11/Jan/2026:08:19:40 +0000] "GET / HTTP/1.1" 200 414 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+104.248.241.104 - - [11/Jan/2026:08:19:43 +0000] "GET /favicon.ico HTTP/1.1" 404 196 "https://saunathinker.com/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+3.146.111.124 - - [11/Jan/2026:12:56:02 +0000] "GET / HTTP/1.1" 200 414 "-" "cypex.ai/scanning Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/126.0.0.0 Safari/537.36"
+18.188.191.244 - - [11/Jan/2026:16:38:17 +0000] "GET / HTTP/1.1" 200 414 "-" "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36"
+5.39.109.165 - - [11/Jan/2026:20:42:17 +0000] "GET /robots.txt HTTP/1.1" 404 134 "-" "Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)"
+54.39.89.39 - - [11/Jan/2026:20:42:20 +0000] "GET / HTTP/1.1" 200 414 "-" "Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)"

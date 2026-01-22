@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "http-logs-to-mysql"
+version = "4.0.0"
+requires-python = ">=3.13"
+dependencies = [
+    "geoip2==4.8.1",
+    "pycparser==2.22",
+    "pymysql==1.1.1",
+    "python-dotenv==1.0.1",
+    "pyyaml==6.0.2",
+    "tabulate==0.9.0",
+    "ua-parser==0.18.0",
+    "user-agents==2.2.0",
+    "watchdog==5.0.3",
+]
+description = "process http log files, load into MySQL tables and execute MySQL modules"
+readme = "https://github.com/WillTheFarmer/http-logs-to-mysql/blob/main/.github/README.md"
+license = "Apach-2.0"
+license-files = ["https://github.com/WillTheFarmer/http-logs-to-mysql/blob/main/LICENSE"]
+keywords = ["mysql", "apache", "mariadb", "nginx", "http logs"]
+authors = [
+  {name = "Will Raymond", email = "farmfreshsoftware@gmail.com"}
+]
+maintainers = [
+  {name = "Will Raymond", email = "farmfreshsoftware@gmail.com"}
+]
+
+[project.urls]
+Homepage = "https://farmfreshsoftware.com"
+Documentation = "https://willthefarmer.github.io/"
+Repository = "https://github.com/WillTheFarmer/http-logs-to-mysql"
+Issues = "https://github.com/WillTheFarmer/http-logs-to-mysql/issues"
+Changelog = "https://github.com/WillTheFarmer/http-logs-to-mysql/blob/main/.github/CHANGELOG.md"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["http-logs-to-mysql"]
+
+# command-line entry points for my scripts BUT not sure how best to configure for stituation.
+# The application must be run by one of these scripts or another application possibly.
+# [project.scripts]
+# files_import.py = "http-logs-to-mysql.main:process_files"
+# files_watch.py = "http-logs-to-mysql.main:process_files"

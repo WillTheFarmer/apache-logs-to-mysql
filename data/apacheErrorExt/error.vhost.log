@@ -1,0 +1,5 @@
+[Fri Nov 22 07:15:12.598616 2024] [mpm_event:notice] [pid 4010:tid 137796950194048] AH00489: Apache/2.4.62 (Ubuntu) OpenSSL/3.0.13 configured -- resuming normal operations ,ip74-208-201-174.pbiaas.com
+[Fri Nov 22 07:15:12.598731 2024] [core:notice] [pid 4010:tid 137796950194048] AH00094: Command line: '/usr/sbin/apache2' ,ip74-208-201-174.pbiaas.com
+[Fri Nov 22 07:17:15.504200 2024] [mpm_event:notice] [pid 4010:tid 137796950194048] AH00492: caught SIGWINCH, shutting down gracefully ,ip74-208-201-174.pbiaas.com
+[Fri Nov 22 07:18:37.410777 2024] [mpm_event:notice] [pid 4142:tid 139218247251840] AH00489: Apache/2.4.62 (Ubuntu) OpenSSL/3.0.13 configured -- resuming normal operations ,ip74-208-201-174.pbiaas.com
+[Fri Nov 22 07:18:37.410903 2024] [core:notice] [pid 4142:tid 139218247251840] AH00094: Command line: '/usr/sbin/apache2' ,ip74-208-201-174.pbiaas.com

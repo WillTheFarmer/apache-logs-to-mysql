@@ -1,0 +1,9 @@
+[Tue Oct 22 07:09:18.722380 2024] [mpm_event:notice] [pid 35280:tid 35280] AH00489: Apache/2.4.62 (Ubuntu) OpenSSL/3.0.13 configured -- resuming normal operations , ip74-208-201-174.pbiaas.com
+[Tue Oct 22 07:09:18.722494 2024] [core:notice] [pid 35280:tid 35280] AH00094: Command line: '/usr/sbin/apache2' , ip74-208-201-174.pbiaas.com
+[Tue Oct 22 07:20:40.365618 2024] [mpm_event:notice] [pid 35280:tid 35280] AH00492: caught SIGWINCH, shutting down gracefully , ip74-208-201-174.pbiaas.com
+[Tue Oct 22 07:22:27.771966 2024] [mpm_event:notice] [pid 35368:tid 35368] AH00489: Apache/2.4.62 (Ubuntu) OpenSSL/3.0.13 configured -- resuming normal operations , ip74-208-201-174.pbiaas.com
+[Tue Oct 22 07:22:27.772077 2024] [core:notice] [pid 35368:tid 35368] AH00094: Command line: '/usr/sbin/apache2' , ip74-208-201-174.pbiaas.com
+[Tue Oct 22 08:16:08.599570 2024] [mpm_event:notice] [pid 35368:tid 35368] AH00492: caught SIGWINCH, shutting down gracefully , ip74-208-201-174.pbiaas.com
+[Tue Oct 22 08:16:11.959806 2024] [core:warn] [pid 35368:tid 35368] AH00045: child process 35370 still did not exit, sending a SIGTERM , ip74-208-201-174.pbiaas.com
+[Tue Oct 22 08:16:13.961940 2024] [core:warn] [pid 35368:tid 35368] AH00045: child process 35370 still did not exit, sending a SIGTERM , ip74-208-201-174.pbiaas.com
+[Tue Oct 22 08:16:15.963461 2024] [core:warn] [pid 35368:tid 35368] AH00045: child process 35370 still did not exit, sending a SIGTERM , ip74-208-201-174.pbiaas.com

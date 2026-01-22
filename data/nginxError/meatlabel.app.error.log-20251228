@@ -1,0 +1,1 @@
+2025/12/27 10:15:17 [error] 743#743: *2846 connect() failed (111: Connection refused) while connecting to upstream, client: 20.168.120.101, server: meatlabel.app, request: "GET /developmentserver/metadatauploader HTTP/1.1", upstream: "http://127.0.0.1:3000/developmentserver/metadatauploader", host: "74.208.166.116"
