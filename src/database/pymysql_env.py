@@ -1,3 +1,4 @@
+# version 4.0.1 - 01/23/2026 - Proper Python code, NGINX format support and Python/SQL repository separation - see changelog
 import pymysql
 import sys
 

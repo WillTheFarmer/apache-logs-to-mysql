@@ -1,15 +1,20 @@
-"""
-:function: copy_backup_file
-:synopsis: if file already been imported but still found in a GLOB directory search repeatedly. This option removes it.
-:author: Will Raymond <farmfreshsoftware@gmail.com>
-"""
+# version 4.0.1 - 01/23/2026 - Proper Python code, NGINX format support and Python/SQL repository separation - see changelog
+#
+# function: copy_backup_file
+# synopsis: if file already been imported but still found in a GLOB directory search repeatedly. This option removes it.
+# author: Will Raymond <farmfreshsoftware@gmail.com>
+
 from os import path
 import shutil
 from os import makedirs
 from os import remove
 
 # application-level properties and references shared across app modules (files) 
-from apis.app_settings import app
+from apis.properties_app import app
+
+# application-level error handle
+from apis.error_app import add_error
+
 # Color Class used app-wide for Message Readability in console
 from apis.color_class import color
 
@@ -17,9 +22,6 @@ def test_message(messageFrom):
     print(f"From:{messageFrom} Backup Days:{app.backup_days} | DeviceID:{app.importDeviceID} | LoadID:{app.importLoadID} | Backup Path: {app.backup_path}")
     
 def copy_backup_file(log_path_file, log_days):
-#    processStart = parms.processStart
-#    log_log = parms.log
-#    log_process = parms.process
 
     dbCursor = app.dbConnection.cursor()
     

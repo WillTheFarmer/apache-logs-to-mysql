@@ -6,7 +6,7 @@
 #
 #     http://www.http.org/licenses/LICENSE-2.0
 #
-# version 4.0.0 - 01/18/2026 - Proper Python code - converted Python script to application with factory method. - see changelog
+# version 4.0.1 - 01/23/2026 - Proper Python code, NGINX format support and Python/SQL repository separation - see changelog
 #
 # CHANGELOG.md in repository - https://github.com/WillTheFarmer/http-logs-to-mysql
 """
@@ -33,7 +33,7 @@ from queue import Queue
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 # config.json drives application loading import processes and watchDog observers 
-from config.app_config import load_file
+from config.config_app import load_file
 # Color Class used app-wide for Message Readability in console
 from apis.color_class import color
 # Used to display dictionary lists
