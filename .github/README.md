@@ -1,6 +1,6 @@
 ## Python handles File Processing & Database handles Data Processing
 ![Entity Relationship Diagram](./images/json_config_lists.png)
-httpLogs2MySQL is a Python ***JSON data-driven*** App & MySQL database schema to automate importing Access & Error files, normalizing log data into database and generating a well-documented data lineage audit trail 24/7.
+httpLogs2MySQL is a Python ***JSON data-driven*** App & MySQL database schema to automate importing access & error files, normalizing log data into database and generating a well-documented data lineage audit trail 24/7.
 
 Process properties - collection of Processes executed filtered or individually in an "Import Load" process (ID)
 
@@ -20,7 +20,7 @@ Python handles polling of log file folders and executing database LOAD DATA, Pro
 
 Python drives the application but MySQL or MariaDB does all Data Manipulation & Processing. 
 
-Multiple Access and Error logs and formats can be loaded, parsed and imported along with User Agent parsing and IP Address Geolocation retrieval processes within a single "Import Load" execution. 
+Multiple access and error logs and formats can be loaded, parsed and imported along with User Agent parsing and IP Address Geolocation retrieval processes within a single "Import Load" execution. 
 
 "Import Load" execution can be configured to only load logs to Server (single child process) leaving other processes to be executed within another "Import Load" on a centralized computer.
 ### Application runs on Windows, Linux & MacOS - Database runs on MySQL & MariaDB
