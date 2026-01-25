@@ -15,7 +15,7 @@ A single "Import Load" execution can be configured to only load logs to Server (
 Python handles polling of log file folders and executing Database LOAD DATA, Stored Procedures, Stored Functions and SQL Statements. Python drives the application but MySQL or MariaDB does all Data Manipulation & Processing.
 
 Application determines what files have been processed using `import_file` TABLE. 
-Each imported file has record with name, path, size, created, modified attributes inserted during `main:process_logs`.
+Each imported file has record with name, path, size, created, modified attributes inserted during `main:process_files`.
 
 Application runs with no need for user interaction. File deletion is not required by application if files desired for later reference.
 ## Data Enrichments
@@ -54,7 +54,7 @@ Install all required packages (`requirements.txt` in repository):
 pip install -r requirements.txt
 ```
 ### 2. Database
-Before running `create_http_logs_schema.sql` if User Account `root`@`localhost` does not exist on installation server open 
+Before running `create_http_logs.sql` if User Account `root`@`localhost` does not exist on installation server open 
 file and perform a ***Find and Replace*** using a User Account with DBA Role on installation server. Copy below:
 ```
 root`@`localhost`
@@ -75,7 +75,7 @@ To minimize data exposure and breach risks create a Database USER for Python mod
 ### 4. Run Application
 If log files exist in folders run `files_import.py` and all files in all configured folders will be processed. 
 
-Run `files_watch.py` and drop a file or files into folder. Application `process_logs` will only process the added files.
+Run `files_watch.py` and drop a file or files into folder. Application `main:process_files` will only process the added files.
 
 To process all files in folder will only occur by running `files_import.py`. This will ingest all unprocessed files in watchDog observer folders.
 
