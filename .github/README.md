@@ -1,6 +1,7 @@
 ## Python handles File Processing & Database handles Data Processing
 ![Entity Relationship Diagram](./images/json_config_lists.png)
 httpLogs2MySQL consists of a ***data-driven*** Python Application & a MySQL Database Schema to automate importing Access & Error files, normalizing log data into database and generating a well-documented data lineage audit trail.
+![Observers Properties](./images/observer_properties.png)![Process Properties](./images/process_properties.png)
 
 All processing stages (child processes) are encapsulated within one "Import Load" (parent process) that captures process metrics, notifications and errors into Database import tables.
 
@@ -77,7 +78,9 @@ If log files exist in folders run `files_import.py` and all files in all configu
 
 Run `files_watch.py` and drop a file or files into folder. Application `main:process_files` will only process the added files.
 
-To process all files in folder will only occur by running `files_import.py`. This will ingest all unprocessed files in watchDog observer folders.
+To process all files in folder by running `files_import.py`. This will ingest all unprocessed files in folders.
+
+The `config.json` runs the application with processesthe . The Both the LOAD processes and the WatchDog Observers  the watchDog observer folders.
 
 Run import process directly:
 ```
