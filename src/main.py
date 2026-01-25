@@ -275,6 +275,8 @@ def process_files(processList=[]):
     # Print report footer
     print(f"{color.fg.YELLOW}{color.style.BRIGHT}ProcessLogs complete: {datetime.now():%Y-%m-%d %H:%M:%S} | " \
           f"Execution time: {app.processSeconds:.4f} seconds{color.END}")
-
-if __name__ == "__main__":
-    process_files()
+    # Print application footer
+    print(f"{color.fg.GREEN}{color.style.NORMAL}httpLogs2MySQL application{color.END} | " \
+          f"Import all Files in Folders: {color.fg.GREEN}{color.style.NORMAL}files_import.py{color.END} | " \
+          f"Watch for new Files in Folders: {color.fg.GREEN}{color.style.NORMAL}files_watch.py{color.END} | " \
+          f"Process & Observer Property Lists: {color.fg.GREEN}{color.style.NORMAL}config_lists.py{color.END}")
