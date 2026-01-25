@@ -1,7 +1,14 @@
 ## Python handles File Processing & Database handles Data Processing
 ![Entity Relationship Diagram](./images/json_config_lists.png)
 httpLogs2MySQL consists of a ***data-driven*** Python Application & a MySQL Database Schema to automate importing Access & Error files, normalizing log data into database and generating a well-documented data lineage audit trail.
-![Observers Properties](./images/observer_properties.png)![Process Properties](./images/process_properties.png)
+
+Process Properties - A collection of Processes with filtering and individual executed in a "Import Load" process
+
+![Process Properties](./images/process_properties.png)
+
+watchdog Observer Properties - A collection of Observers with filtering and individual executing
+
+![Observers Properties](./images/observer_properties.png)
 
 All processing stages (child processes) are encapsulated within one "Import Load" (parent process) that captures process metrics, notifications and errors into Database import tables.
 
@@ -10,6 +17,7 @@ Every log data record is traceable back to the computer, path, file, load proces
 Python handles polling of log file folders and executing Database LOAD DATA, Stored Procedures, Stored Functions and SQL Statements. List of Observers Watching:
 
 ![Observers Watching](./images/observers_running.png)
+
 Python drives the application but MySQL or MariaDB does all Data Manipulation & Processing. 
 
 Multiple Access and Error logs and formats can be loaded, parsed and imported along with User Agent parsing and IP Address Geolocation retrieval processes within a single "Import Load" execution. 
