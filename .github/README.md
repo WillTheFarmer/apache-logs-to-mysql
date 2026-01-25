@@ -7,14 +7,17 @@ All processing stages (child processes) are encapsulated within one "Import Load
 
 Every log data record is traceable back to the computer, path, file, load process, parse process and import process the data originates from.
 
+Python handles polling of log file folders and executing Database LOAD DATA, Stored Procedures, Stored Functions and SQL Statements. List of Observers Watching:
+
+![Observers Watching](./images/observers_running.png)
+Python drives the application but MySQL or MariaDB does all Data Manipulation & Processing. 
+
 Multiple Access and Error logs and formats can be loaded, parsed and imported along with User Agent parsing and IP Address Geolocation retrieval processes within a single "Import Load" execution. 
 
 "Import Load" execution can be configured to only load logs to Server (single child process) leaving other processes to be executed within another "Import Load" on a centralized computer.
 ### Application runs on Windows, Linux & MacOS - Database runs on MySQL & MariaDB
 ![Entity Relationship Diagram](./images/entity_relationship_diagram.png)
 ## Database designed for HTTP log data analysis
-Python handles polling of log file folders and executing Database LOAD DATA, Stored Procedures, Stored Functions and SQL Statements. Python drives the application but MySQL or MariaDB does all Data Manipulation & Processing.
-
 Application determines what files have been processed using `import_file` TABLE. 
 Each imported file has record with name, path, size, created, modified attributes inserted during `main:process_files`.
 
