@@ -63,7 +63,7 @@ Rename above <sup>user</sup> to a <sup>user</sup> on your server. For example - 
 
 The easiest way to install is use Database Command Line Client. Login as User with DBA Role and execute the following:
 ```
-source yourpath/create_http_logs_schema.sql
+source path/create_http_logs.sql
 ```
 Only MySQL server must be configured in `my.ini`, `mysqld.cnf` or `my.cnf` depending on platform with following: 
 ```
