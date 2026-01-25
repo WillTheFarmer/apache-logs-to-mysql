@@ -1,5 +1,5 @@
 ## Python handles File Processing & Database handles Data Processing
-![Entity Relationship Diagram](./images/json_config_lists.png)
+![Entity Relationship Diagram](./images/import_load_summary.png)
 httpLogs2MySQL is a Python ***JSON data-driven*** App & MySQL database schema to automate importing access & error files, normalizing log data into database and generating a well-documented data lineage audit trail 24/7.
 
 Process properties - collection of Processes executed filtered or individually in an "Import Load" process (ID)
