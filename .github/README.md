@@ -75,13 +75,13 @@ local-infile=1
 To minimize data exposure and breach risks create a Database USER for Python module with GRANTS to only schema objects and privileges required to execute import processes. Replace hostname from `localhost` to hostname of installed database if different. (`mysql_user_and_grants.sql` in repository)
 ### 4. Run Application
 
-If log files exist in folders running `files_import.py` will ingest all files in configured folders and subfolders will be processed. Next time running `files_import.py` will only import files since it was last run. It knows what files have been imported.
+Run `files_import.py` ingests all files in a configured folder will be processed. Next time running `files_import.py` only new files since last run will be processed. It knows what files have been imported.
 
-Run `files_watch.py` and drop a file or files into folder. Application `main:process_files` will process ONLY the added files.
+Run `files_watch.py` and drop a file or files into a configured folder. Application `main:process_files` will process ONLY the added files.
 
-To process all files in that folder by running `files_import.py`. This will ingest all unprocessed files in folders.
+To process all files in the shared configured folder run `files_import.py` and all unprocessed files in folders will be ingested.
 
-The `config.json` runs the application with Collections of Processes and Observers.
+The included `config.json` has Processes and Observers configured to share folders. Any number of Processes and Objects can run in a single `main:process_files` execution.  
 
 Run import process directly:
 ```
