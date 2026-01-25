@@ -3,7 +3,7 @@
     "host": "localhost",
     "port": 3606,
     "user": "http_upload",
-    "password": "password",
+    "password": "Just4TheData",
     "schema": "http_logs"
   },
   "backup": {
