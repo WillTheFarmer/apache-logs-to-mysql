@@ -72,12 +72,14 @@ def process_file(rawFile):
 
     if days_since_imported is None:
 
-        print(f"load_table : {mod.load_table} log_format : {mod.log_format} server_name : {mod.log_server} server_name : {mod.log_server} days_since_imported : {days_since_imported} loadFile : {loadFile}")
+        if app.error_details:
+            #print(f"load_table : {mod.load_table} log_format : {mod.log_format} server_name : {mod.log_server} server_port : {mod.log_serverport} loadFile : {loadFile}")
+            print(f"load_table : {mod.load_table} log_format : {mod.log_format} server_name : {mod.log_server} server_port : {mod.log_serverport} days_since_imported : {days_since_imported}")
 
         mod.filesProcessed += 1
 
         if mod.display_log >= 2:
-            print(f"Loading log file | {rawFile}")
+            print(f"Loading file | {rawFile}")
 
         fileInsertCreated = ctime(path.getctime(rawFile))
         fileInsertModified = ctime(path.getmtime(rawFile))
@@ -103,7 +105,8 @@ def process_file(rawFile):
         fileLoadSQL_serverInfo = ""
 
         # build LOAD DATA string - it all depends on log format being setup below - app settings (config.json)
-        print(f"load_table : {mod.load_table} log_format : {mod.log_format} server_name : {mod.log_server} server_port : {mod.log_serverport} loadFile : {loadFile}")
+        if app.error_details:
+            print(f"load_table : {mod.load_table} log_format : {mod.log_format} server_name : {mod.log_server} server_port : {mod.log_serverport} loadFile : {loadFile}")
 
         if mod.log_format=="apacheError" or mod.log_format=="nginxError":
           fileLoadSQL_format = f" FIELDS TERMINATED BY ']' ESCAPED BY '\r'"
@@ -134,7 +137,9 @@ def process_file(rawFile):
 
             # build LOAD DATA string
             fileLoadSQL = f"{fileLoadSQL_tables}{fileLoadSQL_format}{fileLoadSQL_importFileID}{fileLoadSQL_serverInfo}"
-            print(f"fileLoadSQL : {fileLoadSQL}")
+
+            if app.error_details:
+                print(f"fileLoadSQL : {fileLoadSQL}")
 
             try:
                 mod.cursor.execute( fileLoadSQL )
@@ -182,15 +187,19 @@ def process(parms):
         for rawFile in glob(mod.log_path, recursive=mod.log_recursive):
 
             filename = path.basename(rawFile)
-            print(f"Processing file: {filename}")
+
+            if app.error_details:
+                print(f"Processing file: {filename}")
+
             mod.filesFound += 1
 
             try:
               fileStatus = process_file(rawFile)
-              if fileStatus:
-                  print(f"Status for {filename}: {fileStatus}")
-              else:
-                  print(f"No record found for {filename}")
+              if app.error_details:
+                  if fileStatus:
+                      print(f"Status for {filename}: {fileStatus}")
+                  else:
+                      print(f"No record found for {filename}")
 
             except pymysql.Error as e:
                 add_error({__name__},{type(e).__name__}, {e})
@@ -199,6 +208,7 @@ def process(parms):
         # Commit changes if the loop completes without a breaking error
         else:
             app.dbConnection.commit()
-            print("All files processed successfully (or continued past errors). Changes committed.")
+            if mod.display_log >= 2:
+                print("All files processed successfully (or continued past errors). Changes committed.")
 
     return mod.process_report()

@@ -16,7 +16,7 @@
       "name": "Apache Error Standard",
       "description": "Apache Error format",
       "status": "Active",
-      "log": 1,
+      "log": 2,
       "path": "data/apache_error/",
       "recursive": false,
       "interval": 15,
@@ -28,7 +28,7 @@
       "name": "Apache Common",
       "description": "Apache Common format - LOAD ONLY",
       "status": "Active",
-      "log": 1,
+      "log": 2,
       "path": "data/apache_common/",
       "recursive": false,
       "interval": 25,
@@ -40,7 +40,7 @@
       "name": "Apache Combined",
       "description": "Apache Combined format - No Import process",
       "status": "Active",
-      "log": 1,
+      "log": 2,
       "path": "data/apache_combined/",
       "recursive": false,
       "interval": 25,
@@ -52,7 +52,7 @@
       "name": "Apache Vhost",
       "description": "Apache Vhost format - LOAD ONLY",
       "status": "Active",
-      "log": 1,
+      "log": 2,
       "path": "data/apache_vhost/",
       "recursive": false,
       "interval": 15,
@@ -64,7 +64,7 @@
       "name": "Apache CSV2MySQL",
       "description": "Apache CSV2MySQL format",
       "status": "Active",
-      "log": 1,
+      "log": 2,
       "path": "data/apache_csv/",
       "recursive": false,
       "interval": 15,
@@ -76,7 +76,7 @@
       "name": "NGINX Error Format",
       "description": "Apache Error format",
       "status": "Active",
-      "log": 1,
+      "log": 2,
       "path": "data/nginx_error/",
       "recursive": false,
       "interval": 15,
@@ -88,7 +88,7 @@
       "name": "NGINX Access Format",
       "description": "Apache Combined format",
       "status": "Active",
-      "log": 1,
+      "log": 2,
       "path": "data/nginx_combined/",
       "recursive": false,
       "interval": 15,
@@ -123,7 +123,7 @@
       "group": "Apache Error",
       "status": "Active",
       "attributes": {
-        "log": 1,
+        "log": 2,
         "dbModuleName": "parse_error_apache",
         "dbModuleParm1": "default"
       },
@@ -137,7 +137,7 @@
       "group": "Apache Error",
       "status": "Active",
       "attributes": {
-        "log": 1,
+        "log": 2,
         "dbModuleName": "import_error_apache",
         "dbModuleParm1": "default"
       },
@@ -169,7 +169,7 @@
       "group": "Apache Common",
       "status": "Active",
       "attributes": {
-        "log": 1,
+        "log": 2,
         "dbModuleName": "parse_access_apache",
         "dbModuleParm1": "combined"
       },
@@ -183,7 +183,7 @@
       "group": "Apache Common",
       "status": "Active",
       "attributes": {
-        "log": 1,
+        "log": 2,
         "dbModuleName": "import_access_apache",
         "dbModuleParm1": "combined"
       },
@@ -243,7 +243,7 @@
       "group": "Apache Vhost",
       "status": "InActive",
       "attributes": {
-        "log": 1,
+        "log": 2,
         "log_format": "apacheVhost",
         "load_table": "load_access_vhost",
         "path": "data/apache_vhost/**/*access*.*",
@@ -261,7 +261,7 @@
       "group": "Apache Vhost",
       "status": "InActive",
       "attributes": {
-        "log": 1,
+        "log": 2,
         "dbModuleName": "parse_access_apache",
         "dbModuleParm1": "Vhost"
       },
@@ -275,7 +275,7 @@
       "group": "Apache Vhost",
       "status": "InActive",
       "attributes": {
-        "log": 1,
+        "log": 2,
         "dbModuleName": "import_access_apache",
         "dbModuleParm1": "Vhost"
       },
@@ -289,7 +289,7 @@
       "group": "Apache Csv",
       "status": "Active",
       "attributes": {
-        "log": 1,
+        "log": 2,
         "log_format": "apacheCsv",
         "load_table": "load_access_csv",
         "path": "data/apache_csv/**/*access*.*",
@@ -307,7 +307,7 @@
       "group": "Apache Csv",
       "status": "Active",
       "attributes": {
-        "log": 1,
+        "log": 2,
         "dbModuleName": "parse_access_apache",
         "dbModuleParm1": "csv2mysql"
       },
@@ -321,7 +321,7 @@
       "group": "Apache Csv",
       "status": "Active",
       "attributes": {
-        "log": 1,
+        "log": 2,
         "dbModuleName": "import_access_apache",
         "dbModuleParm1": "csv2mysql"
       },
@@ -353,7 +353,7 @@
       "group": "Nginx Error",
       "status": "InActive",
       "attributes": {
-        "log": 1,
+        "log": 2,
         "dbModuleName": "parse_error_nginx",
         "dbModuleParm1": "nginx"
       },
@@ -367,7 +367,7 @@
       "group": "Nginx Error",
       "status": "InActive",
       "attributes": {
-        "log": 1,
+        "log": 2,
         "dbModuleName": "import_error_nginx",
         "dbModuleParm1": "nginx"
       },
@@ -381,7 +381,7 @@
       "group": "Nginx Combined",
       "status": "Active",
       "attributes": {
-        "log": 1,
+        "log": 2,
         "log_format": "nginxCombined",
         "load_table": "load_access_nginx",
         "path": "data/nginx_combined/**/*access*.*",
@@ -399,7 +399,7 @@
       "group": "Nginx Combined",
       "status": "Active",
       "attributes": {
-        "log": 1,
+        "log": 2,
         "dbModuleName": "parse_access_nginx",
         "dbModuleParm1": "combined"
       },
@@ -413,7 +413,7 @@
       "group": "Nginx Combined",
       "status": "Active",
       "attributes": {
-        "log": 1,
+        "log": 2,
         "dbModuleName": "import_access_nginx",
         "dbModuleParm1": "combined"
       },
@@ -439,7 +439,7 @@
       "group": "DataEnhance",
       "status": "Active",
       "attributes": {
-        "log": 1,
+        "log": 2,
         "dbModuleName": "normalize_useragent",
         "dbModuleParm1": "Python Processed"
       },
@@ -453,7 +453,7 @@
       "group": "DataEnhance",
       "status": "Active",
       "attributes": {
-        "log": 1,
+        "log": 2,
         "city": "data/downloads/maxmind/GeoLite2-City.mmdb",
         "asn": "data/downloads/maxmind/GeoLite2-ASN.mmdb"
       },
@@ -467,7 +467,7 @@
       "group": "DataEnhance",
       "status": "Active",
       "attributes": {
-        "log": 1,
+        "log": 2,
         "dbModuleName": "normalize_client",
         "dbModuleParm1": "Python Processed"
       },

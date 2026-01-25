@@ -20,20 +20,20 @@ import pymysql
 
 def get_table_id(table):
     """
-    Primary IDs for MySQL tables - Import Process requires 4 IDs 
-    Executes a specific SQL query based on the provided table name.
-
+    # Import Process requires 4 Primary IDs from MySQL to start main:process_files
+    # app will gracefully end with database premission issue error console message.
+    #    
     Args:
         table (str): The name of the table to query.
-                     Must be one of "client", "device", "load", or "process".
+        Must be one of "client", "device", "load" or "process"
 
-    Returns:
-        PrimaryID: The function executes the query and returns new Primary ID for table.
+        table - part of corresponding MySQL table name - "import_" + table
 
-    Raises:
-        ValueError: If the provided table name is not one of the allowed parameters.
+       Returns: returns new Primary ID for record INSERTed into TABLE
+
     """
-    # Dictionary mapping allowed table names to their respective SQL strings
+
+   # centralized controlled function for App Primary IDs
     sql_queries = {
         "client": f"SELECT importClientID( '{app.ipaddress}', '{app.login}', '{app.expandUser}', '{app.platformRelease}', '{app.platformVersion}', '{app.importDeviceID}' );",
         "device": f"SELECT importDeviceID( '{app.deviceid}', '{app.platformNode}', '{app.platformSystem}', '{app.platformMachine}', '{app.platformProcessor}' );",
