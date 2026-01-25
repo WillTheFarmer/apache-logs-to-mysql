@@ -37,21 +37,21 @@ def process(parms):
     display_log = parms.get("log")
     app.cursor = app.dbConnection.cursor()
 
-    selectUserAgentCursor = app.dbConnection.cursor()
-    updateUserAgentCursor = app.dbConnection.cursor()
+    selectCursor = app.dbConnection.cursor()
+    updateCursor = app.dbConnection.cursor()
 
     try:
-        selectUserAgentCursor.execute("SELECT id, name FROM access_log_useragent WHERE ua_browser IS NULL")
+        selectCursor.execute("SELECT id, name FROM access_log_useragent WHERE ua_browser IS NULL")
 
     except Exception as e:
         mod.errorCount += 1
-        add_error({__name__},{type(e).__name__}, f"SELECT id, name FROM access_log_useragent WHERE ua_browser IS NULL failed", e)
+        add_error({__name__},{type(e).__name__}, {e}, e)
 
-    for x in range(selectUserAgentCursor.rowcount):
+    for x in range(selectCursor.rowcount):
 
         mod.recordsProcessed += 1
 
-        userAgent = selectUserAgentCursor.fetchone()
+        userAgent = selectCursor.fetchone()
 
         recID = str(userAgent[0])
         ua = parse(userAgent[1])
@@ -102,20 +102,20 @@ def process(parms):
                         f"ua_device='{dv}', " \
                         f"ua_device_family='{dv_family}', " \
                         f"ua_device_brand='{dv_brand}', " \
-                        f"ua_device_model='{dv_model}', " \
+                        f"ua_device_model='{dv_model}' " \
                         f" WHERE id={recID}"
 
             try:
-                updateUserAgentCursor.execute(updateSql)
+                updateCursor.execute(updateSql)
 
             except Exception as e:
                 mod.errorCount += 1
-                add_error({__name__},{type(e).__name__}, f"UPDATE access_log_useragent failed", e)
+                add_error({__name__},{type(e).__name__}, {e}, e)
 
     app.dbConnection.commit()
 
-    selectUserAgentCursor.close()
+    selectCursor.close()
 
-    updateUserAgentCursor.close()
+    updateCursor.close()
 
     return mod.process_report()

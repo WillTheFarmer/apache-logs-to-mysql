@@ -103,7 +103,7 @@ def process_file(rawFile):
         fileLoadSQL_serverInfo = ""
 
         # build LOAD DATA string - it all depends on log format being setup below - app settings (config.json)
-        print(f"load_table : {mod.load_table} log_format : {mod.log_format} server_name : {mod.log_server} server_name : {mod.log_server} loadFile : {loadFile}")
+        print(f"load_table : {mod.load_table} log_format : {mod.log_format} server_name : {mod.log_server} server_port : {mod.log_serverport} loadFile : {loadFile}")
 
         if mod.log_format=="apacheError" or mod.log_format=="nginxError":
           fileLoadSQL_format = f" FIELDS TERMINATED BY ']' ESCAPED BY '\r'"

@@ -15,7 +15,7 @@ A single "Import Load" execution can be configured to only load logs to Server (
 Python handles polling of log file folders and executing Database LOAD DATA, Stored Procedures, Stored Functions and SQL Statements. Python drives the application but MySQL or MariaDB does all Data Manipulation & Processing.
 
 Application determines what files have been processed using `import_file` TABLE. 
-Each imported file has record with name, path, size, created, modified attributes inserted during `process_logs`.
+Each imported file has record with name, path, size, created, modified attributes inserted during `main:process_logs`.
 
 Application runs with no need for user interaction. File deletion is not required by application if files desired for later reference.
 ## Data Enrichments

@@ -41,7 +41,8 @@ def process(parms):
     geoip_city = parms.get("city")
     geoip_asn = parms.get("asn")
     
-    app.cursor = app.dbConnection.cursor()
+    # mod.cursor is a property used to share cursor between def()s
+    # mod.cursor = app.dbConnection.cursor()
       
     geoip_city_file_exists = True
     geoip_asn_file_exists = True
@@ -57,44 +58,44 @@ def process(parms):
       geoip_asn_file = geoip_asn
 
     if not path.exists(geoip_city_file):
-        mod.errorCount += 1
         geoip_city_file_exists = False
-        add_error({__name__},{type(e).__name__}, f"IP geolocation city database: {geoip_city_file} not found.")
+        mod.errorCount += 1
+        add_error({__name__},{type(e).__name__}, {e}, e)
 
     if not path.exists(geoip_asn_file):
-        mod.errorCount += 1
         geoip_asn_file_exists = False
-        add_error({__name__},{type(e).__name__}, f"IP geolocation ASN database: {geoip_asn_file} not found.")
+        mod.errorCount += 1
+        add_error({__name__},{type(e).__name__}, {e}, e)
 
     if geoip_city_file_exists and geoip_asn_file_exists:
 
-        selectGeoIPCursor = app.dbConnection.cursor()
-        updateGeoIPCursor = app.dbConnection.cursor()
+        selectCursor = app.dbConnection.cursor()
+        updateCursor = app.dbConnection.cursor()
 
         try:
-            selectGeoIPCursor.execute("SELECT id, name FROM log_client WHERE country_code IS NULL")
+            selectCursor.execute("SELECT id, name FROM log_client WHERE country_code IS NULL")
 
         except Exception as e:
             mod.errorCount += 1
-            add_error({__name__},{type(e).__name__}, f"SELECT FROM log_client WHERE ua_browser IS NULL failed.", e)
+            add_error({__name__},{type(e).__name__}, {e}, e)
 
         try:
             cityReader = geoip2.database.Reader(geoip_city_file)
 
         except Exception as e:
             mod.errorCount += 1
-            add_error({__name__},{type(e).__name__}, f"Geoip2 Database failed : {geoip_city_file}", e)
+            add_error({__name__},{type(e).__name__}, {e}, e)
 
         try:
             asnReader = geoip2.database.Reader(geoip_asn_file)
 
         except Exception as e:
             mod.errorCount += 1
-            add_error({__name__},{type(e).__name__}, f"Reader failed : {geoip_asn_file}", e)
+            add_error({__name__},{type(e).__name__}, {e}, e)
 
-        for x in range(selectGeoIPCursor.rowcount):
+        for x in range(selectCursor.rowcount):
             mod.recordsProcessed += 1
-            geoipRec = selectGeoIPCursor.fetchone()
+            geoipRec = selectCursor.fetchone()
             recID = str(geoipRec[0])
             ipAddress = geoipRec[1]
             country_code = ''
@@ -137,7 +138,7 @@ def process(parms):
 
             except Exception as e:
                 mod.errorCount += 1
-                add_error({__name__},{type(e).__name__}, f"cityReader for IP : {ipAddress}", e)
+                add_error({__name__},{type(e).__name__}, {e}, e)
 
             try:
                 asnData = asnReader.asn(ipAddress)
@@ -164,17 +165,17 @@ def process(parms):
                         f"latitude={latitude}, " \
                         f"longitude={longitude}, " \
                         f"organization='{organization}', " \
-                        f"network='{network}', " \
+                        f"network='{network}' " \
                         f" WHERE id= {recID};"
             try:
-                updateGeoIPCursor.execute(updateSql)
+                updateCursor.execute(updateSql)
 
             except Exception as e:
-              mod.errorCount += 1
-              add_error({__name__},{type(e).__name__}, f"UPDATE log_client SET Statement failed", e)
+                mod.errorCount += 1
+                add_error({__name__},{type(e).__name__}, {e}, e)
 
         app.dbConnection.commit()
-        selectGeoIPCursor.close()
-        updateGeoIPCursor.close()
+        selectCursor.close()
+        updateCursor.close()
 
     return mod.process_report()
