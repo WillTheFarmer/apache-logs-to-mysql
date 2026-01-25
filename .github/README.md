@@ -14,7 +14,7 @@ All processing stages (child processes) are encapsulated within one "Import Load
 
 Every log data record is traceable back to the computer, path, file, load process, parse process and import process the data originates from.
 
-Python handles polling of log file folders and executing database LOAD DATA, Stored Procedures, Stored Functions and SQL Statements. List of Observers Watching:
+Python handles polling of log file folders and executing database LOAD DATA, Procedures, Functions and SQL Statements. List of Observers Watching:
 
 ![Observers Watching](./images/observers_running.png)
 
