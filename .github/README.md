@@ -77,7 +77,7 @@ To minimize data exposure and breach risks create a Database USER for Python mod
 
 Run `files_import.py` to ingest all files in configured folders. Next time `files_import.py` is run only new files since last run will be processed. It knows what files have been imported.
 
-Run `files_watch.py` and drop a file or files into a configured folder. Application `main:process_files` will process ONLY the added files.
+Run `files_watch.py` and add file or files to a configured folder. Application `main:process_files` will process ONLY the added files. Multiple folders and formats can be processed in one run.
 
 To process all files in the shared configured folder run `files_import.py`. All unprocessed files in folders will be ingested.
 
