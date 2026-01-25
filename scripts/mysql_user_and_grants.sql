@@ -19,7 +19,7 @@ GRANT EXECUTE ON FUNCTION importLoadID TO `http_upload`@`localhost`;
 GRANT EXECUTE ON FUNCTION importLoadProcessID TO `http_upload`@`localhost`;
 GRANT EXECUTE ON FUNCTION importFileExists TO `http_upload`@`localhost`;
 GRANT EXECUTE ON FUNCTION importFileID TO `http_upload`@`localhost`;
--- Python module INSERTS into 4 TABLES executing LOAD DATA LOCAL INFILE for log processing
+-- Python module INSERTS into TABLES executing LOAD DATA LOCAL INFILE for log processing
 GRANT INSERT ON load_access_combined TO `http_upload`@`localhost`;
 GRANT INSERT ON load_access_csv TO `http_upload`@`localhost`;
 GRANT INSERT ON load_access_vhost TO `http_upload`@`localhost`;
