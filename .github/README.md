@@ -2,11 +2,11 @@
 ![Entity Relationship Diagram](./images/json_config_lists.png)
 httpLogs2MySQL consists of a ***data-driven*** Python Application & a MySQL Database Schema to automate importing Access & Error files, normalizing log data into database and generating a well-documented data lineage audit trail.
 
-Process properties - Collection of Processes with filtering and individual executed in a "Import Load" process
+Process properties - Collection of Processes with executed filtered or individual in a "Import Load" process (ID)
 
 ![Process Properties](./images/process_properties.png)
 
-watchdog Observer properties - Collection of Observers with filtering and individual constantly running
+watchdog Observer properties - Collection of Observers that execute "Import Load" process (ID) with file(s) parameter
 
 ![Observers Properties](./images/observer_properties.png)
 
