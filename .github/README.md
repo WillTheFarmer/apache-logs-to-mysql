@@ -74,13 +74,14 @@ local-infile=1
 ### 3. Create Database USER & GRANTS
 To minimize data exposure and breach risks create a Database USER for Python module with GRANTS to only schema objects and privileges required to execute import processes. Replace hostname from `localhost` to hostname of installed database if different. (`mysql_user_and_grants.sql` in repository)
 ### 4. Run Application
-If log files exist in folders run `files_import.py` and all files in all configured folders will be processed. 
 
-Run `files_watch.py` and drop a file or files into folder. Application `main:process_files` will only process the added files.
+If log files exist in folders running `files_import.py` will ingest all files in configured folders and subfolders will be processed. Next time running `files_import.py` will only import files since it was last run. It knows what files have been imported.
 
-To process all files in folder by running `files_import.py`. This will ingest all unprocessed files in folders.
+Run `files_watch.py` and drop a file or files into folder. Application `main:process_files` will process ONLY the added files.
 
-The `config.json` runs the application with processesthe . The Both the LOAD processes and the WatchDog Observers  the watchDog observer folders.
+To process all files in that folder by running `files_import.py`. This will ingest all unprocessed files in folders.
+
+The `config.json` runs the application with Collections of Processes and Observers.
 
 Run import process directly:
 ```
