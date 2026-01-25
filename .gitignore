@@ -8,8 +8,15 @@ __pycache__
 snippets
 
 # Installer logs
-pip-log.txt
+.txt
 .log
 
 # Environments
-.venv
+.env
+.Environments
+
+# Ignore maxmind and dbip databases
+/data/downloads/*
+
+# Ignore test code
+/tests/

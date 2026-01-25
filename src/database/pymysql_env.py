@@ -1,4 +1,7 @@
-# version 4.0.1 - 01/23/2026 - Proper Python code, NGINX format support and Python/SQL repository separation - see changelog
+# version 4.0.1 - 01/24/2026 - Proper Python code, NGINX format support and Python/SQL repository separation - see changelog
+# application-level error handle
+from apis.error_app import add_error
+
 import pymysql
 import sys
 
@@ -28,25 +31,29 @@ def getConnection():
 
     try:
     # Attempt to establish the connection
-        conn = pymysql.connect(**db_params)
+        conn = pymysql.connect(host=mysql_host,
+                               port=mysql_port,
+                               user=mysql_user,
+                               password=mysql_password,
+                               database=mysql_schema,
+                               connect_timeout=5,
+                               local_infile=True)  
         # You can now proceed with creating a cursor and executing queries
         # print("ENV Connection successful!")
-        # ...
+        return conn
 
-    except pymysql.MySQLError as e:
+    except pymysql.err.OperationalError as e:
+        add_error({__name__},{type(e).__name__}, f"Database connection failed: {e}")
+
+    except pymysql.err.MySQLError as e:
         # Catch specific PyMySQL errors during connection attempt
-        print(f"Error connecting to MySQL database: {e}")
+        add_error({__name__},{type(e).__name__}, f"Error connecting to MySQL database: {e}")
+        # print(f"Error connecting to MySQL database: {e}")
         # You might want to log the error, display a user-friendly message, or exit the program
         sys.exit(1) # Exit the script upon connection failure
 
     except Exception as e:
         # Catch any other potential exceptions
-        print(f"An unexpected error occurred: {e}")
+        add_error({__name__},{type(e).__name__}, f"An unexpected error occurred: {e}")
+        # print(f"An unexpected error occurred: {e}")
         sys.exit(1)
-
-    finally:
-        # Ensure the connection is closed if it was opened successfully
-        return conn
-#        if 'conn' in locals() and conn.open:
-#            conn.close()
-#            print("Connection closed.")

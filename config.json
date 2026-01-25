@@ -12,24 +12,12 @@
   },
   "observers": [
     {
-      "id": "apacheErrorStd",
+      "id": "apacheError",
       "name": "Apache Error Standard",
       "description": "Apache Error format",
       "status": "Active",
       "log": true,
-      "path": "data/apacheErrorStd/",
-      "recursive": false,
-      "interval": 15,
-      "processList": ["apacheErrorLoad","apacheErrorParse","apacheErrorImport"],
-      "lastUpdated": "2026-01-01T10:00:00Z"
-    },
-    {
-      "id": "apacheErrorExt",
-      "name": "Apache Error Extended",
-      "description": "Apache Error format with Vhost properties",
-      "status": "Active",
-      "log": true,
-      "path": "data/apacheErrorExt/",
+      "path": "data/apache_error/",
       "recursive": false,
       "interval": 15,
       "processList": ["apacheErrorLoad","apacheErrorParse","apacheErrorImport"],
@@ -41,7 +29,7 @@
       "description": "Apache Common format - LOAD ONLY",
       "status": "Active",
       "log": true,
-      "path": "data/apacheCommon/",
+      "path": "data/apache_common/",
       "recursive": false,
       "interval": 25,
       "processList": ["apacheCombinedLoad"],
@@ -50,10 +38,10 @@
     {
       "id": "apacheCombined",
       "name": "Apache Combined",
-      "description": "Apache Combined format - NO IMPORT processing",
+      "description": "Apache Combined format - No Import process",
       "status": "Active",
       "log": true,
-      "path": "data/apacheCombined/",
+      "path": "data/apache_combined/",
       "recursive": false,
       "interval": 25,
       "processList": ["apacheCombinedLoad","apacheCombinedParse"],
@@ -65,7 +53,7 @@
       "description": "Apache Vhost format - LOAD ONLY",
       "status": "Active",
       "log": true,
-      "path": "data/apacheVhost/",
+      "path": "data/apache_vhost/",
       "recursive": false,
       "interval": 15,
       "processList": ["apacheVhostLoad"],
@@ -77,7 +65,7 @@
       "description": "Apache CSV2MySQL format",
       "status": "Active",
       "log": true,
-      "path": "data/apacheCsv/",
+      "path": "data/apache_csv/",
       "recursive": false,
       "interval": 15,
       "processList": ["apacheCsvLoad","apacheCsvParse","apacheCsvImport"],
@@ -89,7 +77,7 @@
       "description": "Apache Error format",
       "status": "Active",
       "log": true,
-      "path": "data/nginxError/",
+      "path": "data/nginx_error/",
       "recursive": false,
       "interval": 15,
       "processList": ["nginxErrorLoad","nginxErrorParse","nginxErrorImport"],
@@ -101,7 +89,7 @@
       "description": "Apache Combined format",
       "status": "Active",
       "log": true,
-      "path": "data/nginxCombined/",
+      "path": "data/nginx_combined/",
       "recursive": false,
       "interval": 15,
       "processList": ["nginxCombinedLoad","nginxCombinedParse","nginxCombinedImport"],
@@ -117,11 +105,10 @@
       "group": "Apache Error",
       "status": "Active",
       "attributes": {
-        "process": 2,
         "log": 2,
         "log_format": "apacheError",
         "load_table": "load_error_apache",
-        "path": "data/apacheErrorStd/**/*error*.*",
+        "path": "data/apache_error/**/*error*.*",
         "recursive": true,
         "server": "mydomain.com",
         "serverport": 443
@@ -136,7 +123,6 @@
       "group": "Apache Error",
       "status": "Active",
       "attributes": {
-        "process": 2,
         "log": 1,
         "dbModuleName": "parse_error_apache",
         "dbModuleParm1": "default"
@@ -151,7 +137,6 @@
       "group": "Apache Error",
       "status": "Active",
       "attributes": {
-        "process": 2,
         "log": 1,
         "dbModuleName": "import_error_apache",
         "dbModuleParm1": "default"
@@ -166,11 +151,10 @@
       "group": "Apache Common",
       "status": "Active",
       "attributes": {
-        "process": 2,
         "log": 2,
         "log_format": "apacheCommon",
         "load_table": "load_access_combined",
-        "path": "data/apacheCommon/**/*access*.*",
+        "path": "data/apache_common/**/*access*.*",
         "recursive": true,
         "server": "mydomain.com",
         "serverport": 443
@@ -185,7 +169,6 @@
       "group": "Apache Common",
       "status": "Active",
       "attributes": {
-        "process": 2,
         "log": 1,
         "dbModuleName": "parse_access_apache",
         "dbModuleParm1": "combined"
@@ -200,7 +183,6 @@
       "group": "Apache Common",
       "status": "Active",
       "attributes": {
-        "process": 2,
         "log": 1,
         "dbModuleName": "import_access_apache",
         "dbModuleParm1": "combined"
@@ -215,11 +197,10 @@
       "group": "Apache Combined",
       "status": "Active",
       "attributes": {
-        "process": 2,
         "log": 2,
         "log_format": "apacheCombined",
         "load_table": "load_access_combined",
-        "path": "data/apacheCombined/**/*access*.*",
+        "path": "data/apache_combined/**/*access*.*",
         "recursive": true,
         "server": "mydomain.com",
         "serverport": 443
@@ -234,7 +215,6 @@
       "group": "Apache Combined",
       "status": "Active",
       "attributes": {
-        "process": 2,
         "log": 2,
         "dbModuleName": "parse_access_apache",
         "dbModuleParm1": "combined"
@@ -249,7 +229,6 @@
       "group": "Apache Combined",
       "status": "Active",
       "attributes": {
-        "process": 2,
         "log": 2,
         "dbModuleName": "import_access_apache",
         "dbModuleParm1": "combined"
@@ -264,11 +243,10 @@
       "group": "Apache Vhost",
       "status": "InActive",
       "attributes": {
-        "process": 2,
         "log": 1,
         "log_format": "apacheVhost",
         "load_table": "load_access_vhost",
-        "path": "data/apacheVhost/**/*access*.*",
+        "path": "data/apache_vhost/**/*access*.*",
         "recursive": true,
         "server": "mydomain.com",
         "serverport": 443
@@ -283,7 +261,6 @@
       "group": "Apache Vhost",
       "status": "InActive",
       "attributes": {
-        "process": 2,
         "log": 1,
         "dbModuleName": "parse_access_apache",
         "dbModuleParm1": "Vhost"
@@ -298,7 +275,6 @@
       "group": "Apache Vhost",
       "status": "InActive",
       "attributes": {
-        "process": 2,
         "log": 1,
         "dbModuleName": "import_access_apache",
         "dbModuleParm1": "Vhost"
@@ -313,11 +289,10 @@
       "group": "Apache Csv",
       "status": "Active",
       "attributes": {
-        "process": 2,
         "log": 1,
         "log_format": "apacheCsv",
         "load_table": "load_access_csv",
-        "path": "data/apacheCsv/**/*access*.*",
+        "path": "data/apache_csv/**/*access*.*",
         "recursive": true,
         "server": "mydomain.com",
         "serverport": 443
@@ -332,7 +307,6 @@
       "group": "Apache Csv",
       "status": "Active",
       "attributes": {
-        "process": 2,
         "log": 1,
         "dbModuleName": "parse_access_apache",
         "dbModuleParm1": "csv2mysql"
@@ -347,7 +321,6 @@
       "group": "Apache Csv",
       "status": "Active",
       "attributes": {
-        "process": 2,
         "log": 1,
         "dbModuleName": "import_access_apache",
         "dbModuleParm1": "csv2mysql"
@@ -362,11 +335,10 @@
       "group": "Nginx Error",
       "status": "Active",
       "attributes": {
-        "process": 2,
         "log": 2,
         "log_format": "nginxError",
         "load_table": "load_error_nginx",
-        "path": "data/nginxError/**/*error*.*",
+        "path": "data/nginx_error/**/*error*.*",
         "recursive": true,
         "server": "mydomain.com",
         "serverport": 443
@@ -381,7 +353,6 @@
       "group": "Nginx Error",
       "status": "InActive",
       "attributes": {
-        "process": 2,
         "log": 1,
         "dbModuleName": "parse_error_nginx",
         "dbModuleParm1": "nginx"
@@ -396,7 +367,6 @@
       "group": "Nginx Error",
       "status": "InActive",
       "attributes": {
-        "process": 2,
         "log": 1,
         "dbModuleName": "import_error_nginx",
         "dbModuleParm1": "nginx"
@@ -411,11 +381,10 @@
       "group": "Nginx Combined",
       "status": "Active",
       "attributes": {
-        "process": 2,
         "log": 1,
         "log_format": "nginxCombined",
         "load_table": "load_access_nginx",
-        "path": "data/nginxCombined/**/*access*.*",
+        "path": "data/nginx_combined/**/*access*.*",
         "recursive": true,
         "server": "mydomain.com",
         "serverport": 443
@@ -430,7 +399,6 @@
       "group": "Nginx Combined",
       "status": "Active",
       "attributes": {
-        "process": 2,
         "log": 1,
         "dbModuleName": "parse_access_nginx",
         "dbModuleParm1": "combined"
@@ -445,7 +413,6 @@
       "group": "Nginx Combined",
       "status": "Active",
       "attributes": {
-        "process": 2,
         "log": 1,
         "dbModuleName": "import_access_nginx",
         "dbModuleParm1": "combined"
@@ -460,7 +427,6 @@
       "group": "DataEnhance",
       "status": "Active",
       "attributes": {
-        "process": 2,
         "log": 1
       },
       "lastUpdated": "2026-01-01T10:00:00Z"
@@ -473,7 +439,6 @@
       "group": "DataEnhance",
       "status": "Active",
       "attributes": {
-        "process": 2,
         "log": 1,
         "dbModuleName": "normalize_useragent",
         "dbModuleParm1": "Python Processed"
@@ -488,7 +453,6 @@
       "group": "DataEnhance",
       "status": "Active",
       "attributes": {
-        "process": 2,
         "log": 1,
         "city": "data/downloads/maxmind/GeoLite2-City.mmdb",
         "asn": "data/downloads/maxmind/GeoLite2-ASN.mmdb"
@@ -503,7 +467,6 @@
       "group": "DataEnhance",
       "status": "Active",
       "attributes": {
-        "process": 2,
         "log": 1,
         "dbModuleName": "normalize_client",
         "dbModuleParm1": "Python Processed"

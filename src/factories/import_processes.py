@@ -6,7 +6,7 @@
 #
 #     http://www.http.org/licenses/LICENSE-2.0
 #
-# version 4.0.1 - 01/23/2026 - Proper Python code, NGINX format support and Python/SQL repository separation - see changelog
+# version 4.0.1 - 01/24/2026 - Proper Python code, NGINX format support and Python/SQL repository separation - see changelog
 #
 # CHANGELOG.md in repository - https://github.com/WillTheFarmer/http-logs-to-mysql
 # 

@@ -6,7 +6,7 @@
 #
 #     http://www.http.org/licenses/LICENSE-2.0
 #
-# version 4.0.1 - 01/23/2026 - Proper Python code, NGINX format support and Python/SQL repository separation - see changelog
+# version 4.0.1 - 01/24/2026 - Proper Python code, NGINX format support and Python/SQL repository separation - see changelog
 #
 # CHANGELOG.md in repository - https://github.com/WillTheFarmer/http-logs-to-mysql
 #
@@ -45,7 +45,7 @@ def process(parms):
 
     except Exception as e:
         mod.errorCount += 1
-        add_error(f"SELECT id, name FROM access_log_useragent WHERE ua_browser IS NULL failed", e)
+        add_error({__name__},{type(e).__name__}, f"SELECT id, name FROM access_log_useragent WHERE ua_browser IS NULL failed", e)
 
     for x in range(selectUserAgentCursor.rowcount):
 
@@ -110,7 +110,7 @@ def process(parms):
 
             except Exception as e:
                 mod.errorCount += 1
-                add_error(f"UPDATE access_log_useragent failed", e)
+                add_error({__name__},{type(e).__name__}, f"UPDATE access_log_useragent failed", e)
 
     app.dbConnection.commit()
 

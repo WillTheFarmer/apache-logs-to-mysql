@@ -1,0 +1,73 @@
+# Copyright 2024-2026 Will Raymond <farmfreshsoftware@gmail.com>
+#
+# Licensed under the http License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.http.org/licenses/LICENSE-2.0
+#
+# version 4.0.1 - 01/24/2026 - Proper Python code, NGINX format support and Python/SQL repository separation - see changelog
+#
+# CHANGELOG.md in repository - https://github.com/WillTheFarmer/http-logs-to-mysql
+
+# application-level properties and references shared across app modules (files) 
+from apis.properties_app import app
+
+# application-level error handle
+from apis.error_app import add_error
+
+import pymysql
+
+def get_table_id(table):
+    """
+    Primary IDs for MySQL tables - Import Process requires 4 IDs 
+    Executes a specific SQL query based on the provided table name.
+
+    Args:
+        table (str): The name of the table to query.
+                     Must be one of "client", "device", "load", or "process".
+
+    Returns:
+        PrimaryID: The function executes the query and returns new Primary ID for table.
+
+    Raises:
+        ValueError: If the provided table name is not one of the allowed parameters.
+    """
+    # Dictionary mapping allowed table names to their respective SQL strings
+    sql_queries = {
+        "client": f"SELECT importClientID( '{app.ipaddress}', '{app.login}', '{app.expandUser}', '{app.platformRelease}', '{app.platformVersion}', '{app.importDeviceID}' );",
+        "device": f"SELECT importDeviceID( '{app.deviceid}', '{app.platformNode}', '{app.platformSystem}', '{app.platformMachine}', '{app.platformProcessor}' );",
+        "load": f"SELECT importLoadID( '{app.importClientID}' );",
+        "process": f"SELECT importLoadProcessID( '{app.importLoadID}' );"
+    }
+
+    # Validate the input parameter
+    if table not in sql_queries:
+        raise ValueError(f"Invalid table parameter: '{table}'. Expected one of 'client', 'device', 'load', or 'process'.")
+
+    # Get the specific SQL string for the valid table name
+    sql_string = sql_queries[table]
+
+    table_id = None
+    try:
+        app.cursor.execute( sql_string )
+
+        result = app.cursor.fetchone()
+            
+        if result:
+            # fetchone() returns a tuple, e.g., (123,)
+            table_id = result[0]
+
+        # print(f"SQL for '{table}': {sql_string}")
+
+    except pymysql.Error as e:
+        app.errorCount += 1
+        add_error({__name__},{type(e).__name__}, {e}, e)
+
+    except Exception as e:
+        app.errorCount += 1
+        add_error({__name__},{type(e).__name__}, {e}, e)
+        
+    #print(f"table {table} id = {table_id}")
+
+    return table_id

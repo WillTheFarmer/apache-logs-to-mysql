@@ -1,10 +1,26 @@
-# version 4.0.1 - 01/23/2026 - Proper Python code, NGINX format support and Python/SQL repository separation - see changelog
+# version 4.0.1 - 01/24/2026 - Proper Python code, NGINX format support and Python/SQL repository separation - see changelog
+
+# application-level properties and references shared across app modules (files) 
+from apis.properties_app import app
+
+# application-level error handle
+from apis.error_app import add_error
+
 import pymysql
 import sys
 
-def getConnection(parms):
+def getConnection(parms=app.mysql):
     """Establishes and returns a database connection."""
     # Database connection parameters
+    
+    mysql_host = parms.get("host")
+    mysql_port = parms.get("port")
+    mysql_user = parms.get("user")
+    mysql_password = parms.get("password")
+    mysql_schema = parms.get("schema")
+    
+    # 'cursorclass': pymysql.cursors.DictCursor
+
     db_params = {
             'host': parms.get("host"),
             'port': parms.get("port"),
@@ -12,31 +28,37 @@ def getConnection(parms):
             'password': parms.get("password"),
             'database': parms.get("schema"),
             'connect_timeout': 5,
-            'local_infile': True,
-            'cursorclass': pymysql.cursors.DictCursor
+            'local_infile': True
             }
 
     try:
     # Attempt to establish the connection
-        conn = pymysql.connect(**db_params)
-        # You can now proceed with creating a cursor and executing queries
-        # print("JSON Connection successful!")
-        # ...
+        #conn = pymysql.connect(**db_params)
+        conn = pymysql.connect(host=mysql_host,
+                               port=mysql_port,
+                               user=mysql_user,
+                               password=mysql_password,
+                               database=mysql_schema,
+                               connect_timeout=5,
+                               local_infile=True)  
 
-    except pymysql.MySQLError as e:
+        # print("JSON Connection successful!")
+        #showWarnings = conn.show_warnings()
+        #print(f"JSON Connection successful - {showWarnings}")
+        return conn
+
+    except pymysql.err.OperationalError as e:
+        add_error({__name__},{type(e).__name__}, f"Database connection failed: {e}")
+
+    except pymysql.err.MySQLError as e:
         # Catch specific PyMySQL errors during connection attempt
-        print(f"Error connecting to MySQL database: {e}")
+        add_error({__name__},{type(e).__name__}, f"Error connecting to MySQL database: {e}")
+        # print(f"Error connecting to MySQL database: {e}")
         # You might want to log the error, display a user-friendly message, or exit the program
         sys.exit(1) # Exit the script upon connection failure
 
     except Exception as e:
         # Catch any other potential exceptions
-        print(f"An unexpected error occurred: {e}")
+        add_error({__name__},{type(e).__name__}, f"An unexpected error occurred: {e}")
+        # print(f"An unexpected error occurred: {e}")
         sys.exit(1)
-
-    finally:
-        # Ensure the connection is closed if it was opened successfully
-        return conn
-#        if 'conn' in locals() and conn.open:
-#            conn.close()
-#            print("Connection closed.")

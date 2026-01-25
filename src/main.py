@@ -6,7 +6,7 @@
 #
 #     http://www.http.org/licenses/LICENSE-2.0
 #
-# version 4.0.1 - 01/23/2026 - Proper Python code, NGINX format support and Python/SQL repository separation - see changelog
+# version 4.0.1 - 01/24/2026 - Proper Python code, NGINX format support and Python/SQL repository separation - see changelog
 #
 # CHANGELOG.md in repository - https://github.com/WillTheFarmer/http-logs-to-mysql
 #
@@ -60,23 +60,28 @@ from tabulate import tabulate
 # config.json drives application loading import processes and watchDog observers. 
 from config.config_app import load_file
 
+# most import function for Import Primary IDs
+from apis.table_id import get_table_id
+
 # used EXIT if missing required IDs : app.importDeviceID, app.importClientID and app.importLoadID    
 import sys
 
 # all starts here - json process file must exist - nothing works without it
 config = load_file()
 if config:
-    ipaddress = gethostbyname(gethostname())
-    deviceid = get_device_id()
-    login = getlogin( )
-    expandUser = path.expanduser('~')
+    app.ipaddress = gethostbyname(gethostname())
+    app.deviceid = get_device_id()
+    app.login = getlogin( )
+    app.expandUser = path.expanduser('~')
+    
     tuple_uname = uname()
     platformSystem = tuple_uname[0]
     platformNode = tuple_uname[1]
-    platformRelease = tuple_uname[2]
-    platformVersion = tuple_uname[3]
-    platformMachine = tuple_uname[4]
-    platformProcessor = processor()
+    
+    app.platformRelease = tuple_uname[2]
+    app.platformVersion = tuple_uname[3]
+    app.platformMachine = tuple_uname[4]
+    app.platformProcessor = processor()
 
     # settings for shared functions
     app.backup_days = config["backup"].get("days")
@@ -85,30 +90,14 @@ if config:
     app.host_name = config["mysql"].get("host")
     app.host_port = config["mysql"].get("port")
 
+    app.mysql = config.get("mysql")
+
     # Two options for shared database connection to help install issues
     # and separate connction data from JSON app process settings.  
     # Option 1 - pymysql_env.py uses .env file for connection settings 
-    from src.database.pymysql_env import getConnection
+    #from src.database.pymysql_env import getConnection
     # Option 2 - pymysql_json.py uses config.json file for connection settings
-    # from src.database.pymysql_json import getConnection
-
-def new_importProcessID():
-
-    getImportLoadID = "SELECT importLoadProcessID('" + str(app.importLoadID) + "');"
-
-    try:
-        app.cursor.execute( getImportLoadID )
-        importLoadProcessTupleID = app.cursor.fetchall()
-        # import_process TABLE associates all "import processes" to a import_load OR import_server TABLE record
-        # some import_process TABLE records are related to BOTH a import_load AND import_server TABLE record 
-        # this important change to enable loosely coupled filtered processes a an import load execution.
-        # this new version needs to be released on GitHub and out of my hands for paying projects have been  
-        # patiently waiting to start... MLK DAY 2026, 6:25AM EST, 25 hours awake and long weekend at desk.
-        return importLoadProcessTupleID[0][0]
-
-    except Exception as e:
-        add_error("Function importLoadProcessID(importLoadID) failed", e)
-        return None
+    from src.database.pymysql_json import getConnection
 
 def update_importProcess(data):
 
@@ -116,7 +105,7 @@ def update_importProcess(data):
     if data.get("ProcessErrors") == 0: 
        """ update import_process.completed = now() """
 
-    print(f"UPDATE import_process with {data} where id = {app.importProcessID}")
+    #print(f"UPDATE import_process with {data} where id = {app.importProcessID}")
 
 def execute_process(process):
     # process info to feed to processes
@@ -129,12 +118,14 @@ def execute_process(process):
     app.executeStart = perf_counter()
 
     if processParms.get("log") >= 1:
-        print(f"{color.fg.GREEN}{color.style.NORMAL}Start{color.END} | {process.get("name")} | {datetime.now():%Y-%m-%d %H:%M:%S} | {color.fg.GREEN}{color.style.NORMAL}App execution: {app.executeStart - app.processStart:.4f} seconds.{color.END}")
+        print(f"{color.fg.GREEN}{color.style.NORMAL}Start{color.END} | " \
+              f"{process.get("name")} | {datetime.now():%Y-%m-%d %H:%M:%S} | " \
+              f"{color.fg.GREEN}{color.style.NORMAL}App execution: {app.executeStart - app.processStart:.4f} seconds.{color.END}")
 
     try:
         # gererate new primary ID for import_process table
         # each Import Load Child process gets ID. Stored Procudures UPDATE record totals with ID.
-        app.importProcessID = new_importProcessID()
+        app.importProcessID = get_table_id("process")
 
         # Use the factory to get the appropriate loader
         importProcess = get_import_process(moduleName)
@@ -147,7 +138,7 @@ def execute_process(process):
             if data:
                 app.executeSeconds = perf_counter() - app.executeStart
 
-                print(data)
+                # print(data)
         
                 update_importProcess(data)
 
@@ -155,23 +146,27 @@ def execute_process(process):
                 # add import process information for summary report
                 processInfo = {"importProcessID": app.importProcessID, "executeSeconds": app.executeSeconds}
                 processInfo.update(data)
-  
+            else:
+                print(f"There is a problem - data: {data}")
+
         except Exception as e:
-            add_error(f"Error processing {process.get("name")}", e)
-            print(f"Error processing {process.get("name")}: {e}")
+            add_error({__name__},{type(e).__name__}, {e}, e)
+            #print(f"Error processing {process.get("name")}: {e}")
             return None
 
         if processParms.get("log") >= 1:
-          print(f"{color.fg.GREENI}{color.style.NORMAL}End{color.END} | {process.get('name')} | {color.fg.GREENI}{color.style.NORMAL}Process ID: {processInfo.get('importProcessID'):.4f} | {processInfo.get('Files Loaded')} files loaded | time: {processInfo.get('executeSeconds'):.4f} seconds{color.END}")
+          print(f"{color.fg.GREENI}{color.style.NORMAL}End{color.END} | " \
+                f"{process.get('name')} | {color.fg.GREENI}{color.style.NORMAL}Process ID: {processInfo.get('importProcessID'):.4f} | " \
+                f"{processInfo.get('Files Loaded')} files loaded | time: {processInfo.get('executeSeconds'):.4f} seconds{color.END}")
 
         # return dictionary {} to main:process_files for process_list to append for Import Load summary log message
         return processInfo
 
     except ValueError as e:
-        add_error(f"Error processing file: {e}", e)
+        add_error({__name__},{type(e).__name__}, {e}, e)
 
     except FileNotFoundError:
-        add_error(f"Error: File not found at {moduleName}")
+        add_error({__name__},{type(e).__name__}, {e}, e)
 
 def process_files(processList=[]):
     # display console message log header
@@ -188,43 +183,16 @@ def process_files(processList=[]):
     app.cursor = app.dbConnection.cursor()
 
     # if any of the 3 MySQL function calls fail process is aborted 
-    sqlImportDeviceID = f"SELECT importDeviceID('{deviceid}', '{platformNode}', '{platformSystem}', '{platformMachine}', '{platformProcessor}');"
-    try:
-        app.cursor.execute( sqlImportDeviceID )
-        importDeviceTupleID = app.cursor.fetchall()
-        # app.importDeviceID identifies the computer executing this application
-        app.importDeviceID = importDeviceTupleID[0][0]
-
-        sqlImportClientID = f"SELECT importClientID('{ipaddress}', '{login}', '{expandUser}', '{platformRelease}', '{platformVersion}', '{app.importDeviceID}');"
-        try:
-            app.cursor.execute( sqlImportClientID )
-            importClientTupleID = app.cursor.fetchall()
-            # app.importClientID identifies the login information about computer executing this application
-            app.importClientID = importClientTupleID[0][0]
-
-            getImportLoadID = "SELECT importLoadID('" + str(app.importClientID) + "');"
-            try:
-                app.cursor.execute( getImportLoadID )
-                importLoadTupleID = app.cursor.fetchall()
-                # app.importloadID relates back to all data imported by this application
-                app.importLoadID = importLoadTupleID[0][0]
-
-            except Exception as e:
-                add_error(f"Function importLoadID(importClientID) failed.", e)
-
-        except Exception as e:
-            add_error(f"Function importClientID() failed.", e)
-
-    except Exception as e:
-        add_error(f"Function importDeviceID() failed.", e)
+    app.importDeviceID = get_table_id("device")
+    app.importClientID = get_table_id("client")
+    app.importLoadID = get_table_id("load")
 
     if app.errorCount > 0:
         print("Error has already occurred and nothing was done yet!")
         sys.exit(1) # Exit with error code 1
-     
-    print(f"Processing with is a starting... please wait")
 
-    # list for adding each process execution information for summary report
+    app.dbConnection.commit()     
+    # list for process execution information summary report
     log_processes = []
 
     # starting collection to filter.A Parameter can be passed - processList - List[] of processids for flexibility.
@@ -261,11 +229,10 @@ def process_files(processList=[]):
                 log_processes.append(processInfo)
     
         except Exception as e:
-            add_error(f"Error processing {processInfo}: {e}", e)
+            add_error({__name__},{type(e).__name__}, {e}, e)
             # print(f"Error processing {processInfo}: {e}")
-            break  # Exit the loop entirely on error
-            # continue  # Or skip this process and move to next
-
+            # break  # Exit the loop entirely on error
+            continue  # Or skip this process and move to next
 
     loadUpdateSQL = f"UPDATE import_load SET errorCount={app.errorCount}, completed=now(), processSeconds={app.processSeconds} WHERE id={app.importLoadID}"
 
@@ -274,7 +241,7 @@ def process_files(processList=[]):
 
     except Exception as e:
         app.errorCount += 1
-        add_error(f"UPDATE import_load SET Statement failed.", e)
+        add_error({__name__},{type(e).__name__}, {e}, e)
 
     # commit and close 
     app.dbConnection.commit()

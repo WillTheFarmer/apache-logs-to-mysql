@@ -6,7 +6,7 @@
 #
 #     http://www.http.org/licenses/LICENSE-2.0
 #
-# version 4.0.1 - 01/23/2026 - Proper Python code, NGINX format support and Python/SQL repository separation - see changelog
+# version 4.0.1 - 01/24/2026 - Proper Python code, NGINX format support and Python/SQL repository separation - see changelog
 #
 # CHANGELOG.md in repository - https://github.com/WillTheFarmer/http-logs-to-mysql
 #
@@ -27,6 +27,13 @@ from apis.properties_process import DatabaseModule as mod
 # Color Class used app-wide for Message Readability in console
 # from apis.color_class import color
 
+import pymysql
+# Define specific MySQL error codes for conditional handling
+# Example error codes: 1045 (Access denied), 1062 (Duplicate entry), 1146 (No such table)
+# You might need to adjust these based on your specific error handling needs.
+ERROR_ACCESS_DENIED = 1045
+ERROR_NO_SUCH_TABLE = 1146
+
 def process(parms):
 
     mod.set_defaults()
@@ -41,9 +48,37 @@ def process(parms):
         mod.cursor.callproc(dbModuleName,
                             [dbModuleParm1,
                             str(app.importProcessID)])
+
+    except pymysql.Error as e:
+        mod.errorCount += 1
+        add_error({__name__},{type(e).__name__}, {e}, e)
+
+        error_code = e.args[0]
+        error_message = e.args[1]
+        print(f"Error : Stored Procedure : {dbModuleName} Parms : {dbModuleParm1} - Code {error_code} - {error_message}")
+
+
+        # Conditional handling based on the specific error
+        if error_code == ERROR_NO_SUCH_TABLE:
+            #print(f"Error: Table does not exist. Breaking loop.")
+            # Rollback any pending transaction before breaking
+            # app.dbConnection.rollback() 
+            return False # break # Stop all processing immediately
+
+        elif error_code == ERROR_ACCESS_DENIED:
+            #print(f"Error: Access denied. Continuing to the next file.")
+            # Rollback current transaction and continue
+            # app.dbConnection.rollback()
+            return True #continue # Skip the current file and move to the next iteration
+
+        else:
+            #print(f"An unexpected error occurred. Continuing to the next file.")
+             # app.dbConnection.rollback()
+             return True #continue # Skip the current file and move to the next iteration
+
     except Exception as e:
         errorCount += 1
-        add_error(f"Stored Procedure : {dbModuleName} with Parms : {dbModuleParm1} failed", e)
+        add_error({__name__},{type(e).__name__}, f"Stored Procedure : {dbModuleName} with Parms : {dbModuleParm1} failed", e)
 
     app.dbConnection.commit()
 

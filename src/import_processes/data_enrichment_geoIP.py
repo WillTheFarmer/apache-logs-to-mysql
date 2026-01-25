@@ -6,7 +6,7 @@
 #
 #     http://www.http.org/licenses/LICENSE-2.0
 #
-# version 4.0.1 - 01/23/2026 - Proper Python code, NGINX format support and Python/SQL repository separation - see changelog
+# version 4.0.1 - 01/24/2026 - Proper Python code, NGINX format support and Python/SQL repository separation - see changelog
 #
 # CHANGELOG.md in repository - https://github.com/WillTheFarmer/http-logs-to-mysql
 #
@@ -59,12 +59,12 @@ def process(parms):
     if not path.exists(geoip_city_file):
         mod.errorCount += 1
         geoip_city_file_exists = False
-        add_error(f"IP geolocation city database: {geoip_city_file} not found.")
+        add_error({__name__},{type(e).__name__}, f"IP geolocation city database: {geoip_city_file} not found.")
 
     if not path.exists(geoip_asn_file):
         mod.errorCount += 1
         geoip_asn_file_exists = False
-        add_error(f"IP geolocation ASN database: {geoip_asn_file} not found.")
+        add_error({__name__},{type(e).__name__}, f"IP geolocation ASN database: {geoip_asn_file} not found.")
 
     if geoip_city_file_exists and geoip_asn_file_exists:
 
@@ -76,21 +76,21 @@ def process(parms):
 
         except Exception as e:
             mod.errorCount += 1
-            add_error(f"SELECT FROM log_client WHERE ua_browser IS NULL failed.", e)
+            add_error({__name__},{type(e).__name__}, f"SELECT FROM log_client WHERE ua_browser IS NULL failed.", e)
 
         try:
             cityReader = geoip2.database.Reader(geoip_city_file)
 
         except Exception as e:
             mod.errorCount += 1
-            add_error(f"Geoip2 Database failed : {geoip_city_file}", e)
+            add_error({__name__},{type(e).__name__}, f"Geoip2 Database failed : {geoip_city_file}", e)
 
         try:
             asnReader = geoip2.database.Reader(geoip_asn_file)
 
         except Exception as e:
             mod.errorCount += 1
-            add_error(f"Reader failed : {geoip_asn_file}", e)
+            add_error({__name__},{type(e).__name__}, f"Reader failed : {geoip_asn_file}", e)
 
         for x in range(selectGeoIPCursor.rowcount):
             mod.recordsProcessed += 1
@@ -137,7 +137,7 @@ def process(parms):
 
             except Exception as e:
                 mod.errorCount += 1
-                add_error(f"cityReader for IP : {ipAddress}", e)
+                add_error({__name__},{type(e).__name__}, f"cityReader for IP : {ipAddress}", e)
 
             try:
                 asnData = asnReader.asn(ipAddress)
@@ -155,7 +155,7 @@ def process(parms):
                 asnData = None
                 network = str(e.network)
                 mod.errorCount += 1
-                add_error(f"asnReader for IP : {ipAddress}", e)
+                add_error({__name__},{type(e).__name__}, f"asnReader for IP : {ipAddress}", e)
 
             updateSql = f"UPDATE log_client SET country_code='{country_code}', " \
                         f"country='{country}', " \
@@ -171,7 +171,7 @@ def process(parms):
 
             except Exception as e:
               mod.errorCount += 1
-              add_error(f"UPDATE log_client SET Statement failed", e)
+              add_error({__name__},{type(e).__name__}, f"UPDATE log_client SET Statement failed", e)
 
         app.dbConnection.commit()
         selectGeoIPCursor.close()
