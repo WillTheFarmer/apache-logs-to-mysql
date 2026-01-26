@@ -10,7 +10,7 @@ If you find this application valuable to your log collection system monetary con
 
 Monetary :moneybag: contributions made will encourage [Web Interface](https://github.com/WillTheFarmer/mysql-to-apache-echarts) repository development continuation for MySQL or MariaDB schema created by [mysql-schema-http-logs](https://github.com/willthefarmer/mysql-schema-http-logs) repository.
 
-This repository exists because I volunteer at local nonprofit that provides food and clothing for those in need. The Director is familiar with MySQL and wanted to import Apache website logs into MySQL tables. At that meeting I knew little about Apache logs but lots about MySQL. I thought it would be a couple days to research existing solutions and offered to investigate.
+This repository exists because I volunteer at local nonprofit that provides food and clothing for those in need. The Director is familiar with MySQL and wanted to import Apache website logs into MySQL tables. At that meeting I knew little about Apache but lots about MySQL. I thought it would be a couple days to research existing solutions and offered to investigate.
 
 Surprisingly none I found performed any data normalization and were very primitive. The lack of existing relational database open-source solutions led to creation of this solution.
 
