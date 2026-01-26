@@ -152,6 +152,7 @@ def process(parms):
                 if asnData_network is not None:
                     network = str(asnData_network)
 
+
             except Exception as e:
                 asnData = None
                 network = str(e.network)
