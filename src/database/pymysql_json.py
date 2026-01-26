@@ -11,7 +11,6 @@ import sys
 
 def get_connection(parms=app.mysql):
     """Establishes and returns a database connection."""
-    # Database connection parameters
     
     mysql_host = parms.get("host")
     mysql_port = parms.get("port")
@@ -19,21 +18,7 @@ def get_connection(parms=app.mysql):
     mysql_password = parms.get("password")
     mysql_schema = parms.get("schema")
     
-    # 'cursorclass': pymysql.cursors.DictCursor
-
-    db_params = {
-            'host': parms.get("host"),
-            'port': parms.get("port"),
-            'user': parms.get("user"),
-            'password': parms.get("password"),
-            'database': parms.get("schema"),
-            'connect_timeout': 5,
-            'local_infile': True
-            }
-
     try:
-    # Attempt to establish the connection
-        #conn = pymysql.connect(**db_params)
         conn = pymysql.connect(host=mysql_host,
                                port=mysql_port,
                                user=mysql_user,
@@ -42,23 +27,20 @@ def get_connection(parms=app.mysql):
                                connect_timeout=5,
                                local_infile=True)  
 
-        # print("JSON Connection successful!")
-        #showWarnings = conn.show_warnings()
-        #print(f"JSON Connection successful - {showWarnings}")
         return conn
 
     except pymysql.err.OperationalError as e:
-        add_error({__name__},{type(e).__name__}, f"Database connection failed: {e}")
+        add_error({__name__},{type(e).__name__}, {e}, e )
 
     except pymysql.err.MySQLError as e:
         # Catch specific PyMySQL errors during connection attempt
-        add_error({__name__},{type(e).__name__}, f"Error connecting to MySQL database: {e}")
+        add_error({__name__},{type(e).__name__}, {e}, e )
         # print(f"Error connecting to MySQL database: {e}")
         # You might want to log the error, display a user-friendly message, or exit the program
         sys.exit(1) # Exit the script upon connection failure
 
     except Exception as e:
         # Catch any other potential exceptions
-        add_error({__name__},{type(e).__name__}, f"An unexpected error occurred: {e}")
+        add_error({__name__},{type(e).__name__}, {e}, e )
         # print(f"An unexpected error occurred: {e}")
         sys.exit(1)
