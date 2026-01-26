@@ -439,7 +439,7 @@
       "group": "DataEnhance",
       "status": "Active",
       "attributes": {
-        "log": 2,
+        "log": 1,
         "dbModuleName": "normalize_useragent",
         "dbModuleParm1": "Python Processed"
       },
@@ -453,7 +453,7 @@
       "group": "DataEnhance",
       "status": "Active",
       "attributes": {
-        "log": 2,
+        "log": 1,
         "city": "data/downloads/maxmind/GeoLite2-City.mmdb",
         "asn": "data/downloads/maxmind/GeoLite2-ASN.mmdb"
       },
@@ -467,7 +467,7 @@
       "group": "DataEnhance",
       "status": "Active",
       "attributes": {
-        "log": 2,
+        "log": 1,
         "dbModuleName": "normalize_client",
         "dbModuleParm1": "Python Processed"
       },

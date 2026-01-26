@@ -262,7 +262,8 @@ def process_files(processList=[]):
           f"ImportLoadID: {app.importLoadID} | " \
           f"ClientID: {app.importClientID} | " \
           f"DeviceID:{app.importDeviceID} | " \
-          f"Errors Found:{app.errorCount}{color.END}")
+          f"Errors Found:{app.errorCount} | " \
+          f"Host: {app.host_name} | Port: {app.host_port}{color.END}")
 
     # The 'keys' header option automatically uses dictionary keys as column headers
     print(tabulate(log_processes, headers='keys', tablefmt='github'))
