@@ -29,8 +29,10 @@
 # Custom Handler: The MyHandler class is instantiated with a reference to the shared queue, allowing it to 
 # signal the main thread whenever a filesystem event occurs.
 # time.sleep(): This prevents the while True loop from consuming excessive CPU resources (busy-waiting) by pausing periodically. 
+
 from queue import Queue
 from watchdog.observers import Observer
+# subclassing this Class
 from watchdog.events import FileSystemEventHandler
 # config.json drives application loading import processes and watchDog observers 
 from config.config_app import load_file
@@ -40,7 +42,6 @@ from apis.color_class import color
 from tabulate import tabulate
 # time.sleep(1) in LOOP for rest to avoid busy-waiting
 import time
-
 # the application - process_files passed - processid list [] and src_path to execute. 
 from src.main import process_files
 
