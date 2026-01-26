@@ -22,7 +22,7 @@ Python drives the application but MySQL or MariaDB does all Data Manipulation & 
 
 Multiple access and error logs and formats can be loaded, parsed and imported along with User Agent parsing and IP Address Geolocation retrieval processes within a single `main:process_files` execution. 
 
-"Import Load" execution can be configured to only load logs to Server (single child process) leaving other processes to be executed within another `main:process_files` on a centralized computer.
+`main:process_files` execution can be configured to only load logs to Server (single child process) leaving other processes to be executed within another `main:process_files` on a centralized computer.
 ### Application runs on Windows, Linux & MacOS - Database runs on MySQL & MariaDB
 ![Entity Relationship Diagram](./images/entity_relationship_diagram.png)
 ## Database designed for HTTP log data analysis
