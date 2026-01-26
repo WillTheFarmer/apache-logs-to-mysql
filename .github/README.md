@@ -2,15 +2,15 @@
 ![Entity Relationship Diagram](./images/import_load_summary.png)
 httpLogs2MySQL is a Python ***JSON data-driven*** App & MySQL schema to automate importing access & error files, normalizing log data into database and generating a well-documented data lineage audit trail 24/7.
 
-Process properties - collection of Processes executed filtered or individually in an "Import Load" process (ID)
+Process properties - collection of Processes executed filtered or individually in `main:process_files`
 
 ![Process Properties](./images/process_properties.png)
 
-watchdog Observer properties - collection of Observers that execute "Import Load" process (ID) with file(s) parameter
+watchdog Observer properties - collection of Observers that execute `main:process_files` with file(s) parameter
 
 ![Observers Properties](./images/observer_properties.png)
 
-All processing stages (child processes) are encapsulated within one "Import Load" (parent process) that captures process metrics, notifications and errors into database import tables.
+All processing stages (child processes) are encapsulated within one `main:process_files` (parent process) that captures process metrics, notifications and errors into database import tables.
 
 Every log data record is traceable back to the computer, path, file, load process, parse process and import process the data originates from.
 
@@ -20,9 +20,9 @@ Python handles polling of log file folders and executing database LOAD DATA, Pro
 
 Python drives the application but MySQL or MariaDB does all Data Manipulation & Processing. 
 
-Multiple access and error logs and formats can be loaded, parsed and imported along with User Agent parsing and IP Address Geolocation retrieval processes within a single "Import Load" execution. 
+Multiple access and error logs and formats can be loaded, parsed and imported along with User Agent parsing and IP Address Geolocation retrieval processes within a single `main:process_files` execution. 
 
-"Import Load" execution can be configured to only load logs to Server (single child process) leaving other processes to be executed within another "Import Load" on a centralized computer.
+"Import Load" execution can be configured to only load logs to Server (single child process) leaving other processes to be executed within another `main:process_files` on a centralized computer.
 ### Application runs on Windows, Linux & MacOS - Database runs on MySQL & MariaDB
 ![Entity Relationship Diagram](./images/entity_relationship_diagram.png)
 ## Database designed for HTTP log data analysis
