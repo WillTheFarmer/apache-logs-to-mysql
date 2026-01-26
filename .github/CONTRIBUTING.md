@@ -8,7 +8,7 @@ If you find this code useful please contribute a :star: to the repository.
 
 If you find this application valuable to your log collection system monetary contributions are appreciated. Repository has my ***Buy Me a Coffee*** :coffee: link.
 
-Monetary :moneybag: contributions made will encourage [Web Interface](https://github.com/WillTheFarmer/mysql-to-apache-echarts) development continuation for MySQL or MariaDB schema created here.
+Monetary :moneybag: contributions made will encourage [Web Interface](https://github.com/WillTheFarmer/mysql-to-apache-echarts) repository development continuation for MySQL or MariaDB schema created by [mysql-schema-http-logs](https://github.com/willthefarmer/mysql-schema-http-logs) repository.
 
 This repository exists because I volunteer at local nonprofit that provides food and clothing for those in need. The Director is familiar with MySQL and wanted to import Apache website logs into MySQL tables. At that meeting I knew little about Apache logs but lots about MySQL. I thought it would be a couple days to research existing solutions and offered to investigate.
 
