@@ -30,17 +30,15 @@ def get_connection():
         return conn
 
     except pymysql.err.OperationalError as e:
+        # DB something not found
         add_error({__name__},{type(e).__name__}, {e}, e )
 
     except pymysql.err.MySQLError as e:
         # Catch specific PyMySQL errors during connection attempt
         add_error({__name__},{type(e).__name__}, {e}, e )
-        # print(f"Error connecting to MySQL database: {e}")
-        # You might want to log the error, display a user-friendly message, or exit the program
         sys.exit(1) # Exit the script upon connection failure
 
     except Exception as e:
         # Catch any other potential exceptions
         add_error({__name__},{type(e).__name__}, {e}, e )
-        # print(f"An unexpected error occurred: {e}")
         sys.exit(1)
