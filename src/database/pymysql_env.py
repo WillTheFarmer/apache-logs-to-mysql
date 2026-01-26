@@ -16,7 +16,7 @@ mysql_user = getenv('MYSQL_USER')
 mysql_password = getenv('MYSQL_PASSWORD')
 mysql_schema = getenv('MYSQL_SCHEMA')
 
-def getConnection():
+def get_connection():
     """Establishes and returns a database connection."""
     # Database connection parameters
     db_params = {

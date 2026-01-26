@@ -27,6 +27,8 @@ class app:
   # host_name and host_port used for log messages for main.py functions
   host_name = ''
   host_port = 0
+  
+  # pymysql_connection_json.py - get_connection default parameters if parameters not passed
   mysql = None
   
   # used in main:process_files and main:update_importProcess for log messages and UPDATE import_process

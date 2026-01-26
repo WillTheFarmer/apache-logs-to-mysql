@@ -9,7 +9,7 @@ from apis.error_app import add_error
 import pymysql
 import sys
 
-def getConnection(parms=app.mysql):
+def get_connection(parms=app.mysql):
     """Establishes and returns a database connection."""
     # Database connection parameters
     

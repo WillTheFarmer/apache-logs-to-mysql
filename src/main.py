@@ -95,9 +95,9 @@ if config:
     # Two options for shared database connection to help install issues
     # and separate connction data from JSON app process settings.  
     # Option 1 - pymysql_env.py uses .env file for connection settings 
-    #from src.database.pymysql_env import getConnection
+    #from src.database.pymysql_env import get_connection
     # Option 2 - pymysql_json.py uses config.json file for connection settings
-    from src.database.pymysql_json import getConnection
+    from src.database.pymysql_json import get_connection
 
 def update_importProcess(data):
 
@@ -178,7 +178,7 @@ def process_files(processList=[]):
     app.processSeconds = 0 
 
     # shared connection for all app modules
-    app.dbConnection = getConnection()
+    app.dbConnection = get_connection()
     # shared cursor for app-level functions
     app.cursor = app.dbConnection.cursor()
 
