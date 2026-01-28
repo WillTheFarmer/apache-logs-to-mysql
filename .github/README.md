@@ -88,7 +88,11 @@ local-infile=1
 To minimize data exposure and breach risks create a database USER for Python module with GRANTS to only schema objects and privileges required to execute import processes. Replace hostname from `localhost` to hostname of installed database if different. (`mysql_user_and_grants.sql` in repository)
 ### 4. Run Application
 
-`config.json` has Processes and Observers configured to share folders. Some processes look in folders for unprocessed files. All Observers watch for the arrival of new unprocessed files in a directory path.
+`config.json` has Processes and Observers configured to share folders. 
+
+Some Processes look in folders (data_file_loader.py) for unprocessed files.
+
+All Observers watch for the arrival of new unprocessed files in a directory path.
 
 Run `files_watch.py` then add file or files to a configured folder. `main:process_files` will process ONLY the added files. 
 
