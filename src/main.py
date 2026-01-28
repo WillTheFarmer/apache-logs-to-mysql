@@ -25,8 +25,9 @@
 # function: process()
 # synopsis: main:process_files (import_load table) executes child processes (import_process table) & watchdog observers defined in config.json.
 # author: Will Raymond <farmfreshsoftware@gmail.com>
+# Refinement updates will be frequent.  
 
-# used everywhere
+# used for app.expandUser
 from os import path
 
 # used to ID computer process is running on.

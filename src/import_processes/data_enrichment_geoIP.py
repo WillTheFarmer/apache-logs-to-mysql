@@ -30,7 +30,10 @@ from apis.color_class import color
 # GeoIP worker
 import geoip2.database
 
+# used for to check if geodatabases exist
 from os import path
+
+# used to remove \\ from paths
 from os import sep
 
 def process(parms):

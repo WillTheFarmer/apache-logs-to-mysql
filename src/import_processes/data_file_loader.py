@@ -34,7 +34,10 @@ from time import ctime
 from time import perf_counter
 from datetime import datetime
 
+# used for getctime, getmtime, get sise for extracting file properties to store in import_file
 from os import path
+
+# used to remove \\ from paths
 from os import sep
 
 from glob import glob
@@ -43,14 +46,15 @@ import pymysql
 
 from src.apis.utilities import copy_backup_file
 
-# this new design parses format properties into LOAD DATA string. Code cutting re-design moved quick once I figured out building an App with Python.
-# module needs to be refined and tested yet. It was a rushed release due to other stuff but I wanted to get the re-design out. Refinement updates will be frequent.  
+# this new design uses 'format properties' as LOAD DATA string components to assemble to foster code re-use for all log formats.
+# module needs to be refined and tested yet. It was a rushed release due to other stuff but I wanted to get the re-design out.
 # The LOAD DATA string building happens here. this was lots of duplicate code between the 5 formats. 
 # It has been refined down to normalization of assembling the LOAD DATA string based on the variables:
 # mod.load_table - MYSQL staging table
 # mod.log_format - the FIELD substring of the LOAD DATA string
 # mod.log_server - this enables attaching domains and ports to log files of logFormats that do not contain host data.
 # mod.log_serverport - same as above but for the port
+#
 # days_since_imported - calculated in the importFileID() function. The days since the file was INSERTed into the import_file TABLE
 # 
 # Define specific MySQL error codes for conditional handling - this is work is progress
