@@ -14,4 +14,4 @@ This repository exists because I volunteer at local nonprofit that provides food
 
 Surprisingly none I found performed any data normalization and were very primitive. The lack of existing relational database open-source solutions led to creation of this solution.
 
-March 2025 was 1200 hours :hourglass_flowing_sand: of researching existing solutions, database design and SQL/Python development. Python code re-design added another 400 hours. It is much more time then I intended to invest but it did produce my first open-source software.
+March 2025 was 1200 hours :hourglass_flowing_sand: of researching existing solutions, database design and SQL/Python development. Python code re-design added another 400 hours. It is much more time then I intended to invest but it did produce my first open-source software. This is also my first Python App after years of using it just for scripts.
