@@ -44,6 +44,8 @@ from tabulate import tabulate
 import time
 # the application - process_files passed - processid list [] and src_path to execute. 
 from src.main import process_files
+# used to verify path exists
+from pathlib import Path
 
 class ProcessFile(FileSystemEventHandler):
     processFiles = 0
@@ -78,25 +80,35 @@ if __name__ == "__main__":
         observers_list = []
         attrValues = {}
         for observer in config['observers']:
+
             # print(f"Process List : {observer.get("processList")}")
             observerInfo = {"Status": observer.get("status"),
-                             "id": observer.get("id"),
-                             "name": observer.get("name"),
-                             "path": observer.get("path"),
-                             "recursive": observer.get("recursive"),
-                             "interval":  observer.get("interval"),
-                             "processList": observer.get("processList")}
+                                "id": observer.get("id"),
+                                "name": observer.get("name"),
+                                "path": observer.get("path"),
+                                "recursive": observer.get("recursive"),
+                                "interval":  observer.get("interval"),
+                                "processList": observer.get("processList")}
 
-            watch_log =  observer.get("log")
-            watch_path = observer.get("path")
-            watch_recursive = observer.get("recursive")
-            watch_interval = observer.get("interval")
-            watch_processes = observer.get("processList")
+            file_path = Path(observer.get("path"))
 
-            # print(f"watch_processes list: {watch_processes}")
+            if file_path.exists():
 
-            event_handler = ProcessFile(event_queue, watch_processes)
-            watchdogObserver.schedule(event_handler, watch_path, recursive=watch_recursive)               
+                watch_log =  observer.get("log")
+                watch_path = observer.get("path")
+                watch_recursive = observer.get("recursive")
+                watch_interval = observer.get("interval")
+                watch_processes = observer.get("processList")
+
+                # print(f"watch_processes list: {watch_processes}")
+                event_handler = ProcessFile(event_queue, watch_processes)
+                watchdogObserver.schedule(event_handler, watch_path, recursive=watch_recursive)
+
+                # display what is running
+                observerInfo.update({"Watch": f"{color.fg.GREEN}Running{color.END}"})
+            else:
+                observerInfo.update({"Watch": f"{color.fg.RED}Error{color.END}"})
+                print(f"The path '{file_path}' does not exist.")
 
             observers_list.append(observerInfo)
 

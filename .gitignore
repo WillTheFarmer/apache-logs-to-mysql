@@ -6,17 +6,26 @@ __pycache__
 # Visual Studio Code
 .vscode
 snippets
+*.code-workspace
 
 # Installer logs
-.txt
+pip-log.txt
 .log
 
 # Environments
 .env
-.Environments
+
+# Ignore test code
+/test/
+
+# Ignore dev code
+/dev/
+
+# Ignore build code
+/build/
+
+# Ignore dist code
+/dist/
 
 # Ignore maxmind and dbip databases
 /data/downloads/*
-
-# Ignore test code
-/tests/
