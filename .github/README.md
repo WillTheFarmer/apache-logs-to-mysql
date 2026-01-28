@@ -90,7 +90,7 @@ To minimize data exposure and breach risks create a database USER for Python mod
 
 Run `files_watch.py` then add file or files to a configured folder. `main:process_files` will process ONLY the added files. 
 
-Each Observer has a Process list of processIDs from `config.json` Processes collection. This Process subset and file(s) are passed to `main:process_files` which overrides configured Process executions. 
+Each Observer has a subset Process list (processIDs) from `config.json` Processes collection. This Process subset and file(s) are passed to `main:process_files` which overrides configured Process executions.
 
 When `main:process_files` is passed parameters it requires a Process list (processID) to execute.
 
@@ -100,7 +100,7 @@ Run `files_import.py` to ingest all unprocessed files in all comfigured folders.
 
 `config.json` has Processes and Observers configured to share folders.
 
-`files_import.py` executes `main:process_files` which runs the Processes. 
+`files_import.py` executes `main:process_files` which runs the Processes.
  
 `files_watch.py` executes `watchdog` which loads the Observers that call `main:process_files`.
 
