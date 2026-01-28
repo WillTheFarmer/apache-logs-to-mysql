@@ -90,11 +90,15 @@ To minimize data exposure and breach risks create a database USER for Python mod
 
 Run `files_import.py` to ingest all files in configured folders. Next time `files_import.py` is run only new files since last run will be processed. It knows what files have been imported.
 
-Run `files_watch.py` and add file or files to a configured folder. Application `main:process_files` will process ONLY the added files. Multiple folders and formats can be processed in one run.
+Run `files_watch.py` then add file or files to a configured folder. Application `main:process_files` will process ONLY the added files. Multiple folders and formats can be processed in one run.
 
-To process all files in the shared configured folder run `files_import.py`. All unprocessed files in folders will be ingested.
+Run `files_import.py` to process all files in configured folders. All unprocessed files in all comfigured folders will be ingested.
 
-The included `config.json` has Processes and Observers configured to share folders. Any number of Processes and Objects can run in a single `main:process_files` execution.  
+`config.json` has Processes and Observers configured to share folders.
+
+`files_import.py` executes `main:process_files` which runs the Processes. 
+ 
+`files_watch.py` executes `watchdog` which loads the Observers that call `main:process_files`.
 
 Run import process directly:
 ```
