@@ -102,7 +102,9 @@ When `main:process_files` is passed parameters it requires a Process list (proce
 
 Multiple folders and formats can be processed running different Observers with properties for different log formats and paths.
 
-Run `files_import.py` to ingest all unprocessed files in all comfigured folders. Next time `files_import.py` is run only new files since last run will be processed. It knows what files have been imported.
+Run `files_import.py` to ingest all unprocessed files in all configured folders.
+
+Next time `files_import.py` is run only new files since last run will be processed. It knows what files have been imported.
 
 `files_import.py` executes `main:process_files` which runs the Processes.
  
