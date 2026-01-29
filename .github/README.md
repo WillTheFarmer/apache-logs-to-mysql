@@ -10,7 +10,11 @@ httpLogs2MySQL is a Python ***JSON data-driven*** App & MySQL schema to automate
 
 1) Some ***Processes*** load files from folders `data_file_loader.py` for unprocessed files. Some processes execute MySQL stored procedures `data_file_loader.py` and some processes perform Data Enhancements - `data_enrichment_geoip.py` and `data_enrichment_useragent.py`.
 
-Process Modules `data_file_loader.py` and `data_file_loader.py` properties values are set in the `config.json`.
+2) All ***Process Datasets*** have an attributes property. The attributes property can have any number of properties the process Module requires.
+
+3) All ***Process Modules*** have a `process` method and a `class ProcessProperties` properties. 
+
+The `data_file_loader.py` and `data_file_loader.py` modules have attribute properties for folder path and log format and load table values set in the `config.json`.
 
 To process different log format files in different directories datasets are added to the Process collection of the `config.json`. Some can have different number of parameters in the process dataset.
 
@@ -20,7 +24,7 @@ The NGINX MySQL Stored Procedures are based on the Apache. Additional data files
 
 `files_import.py` executes `main:process_files` which runs the `config.json` Processes. The Processes collection can be filtered and ordered by Python and commented code is there. By default the application filters on status = 'Active'.
  
-2) All ***Observers*** watch for the arrival of new unprocessed files in a directory path.
+3) All ***Observers*** watch for the arrival of new unprocessed files in a directory path.
 
 Each Observer has a Process list (processIDs) subset from `config.json` Processes collection. This Process subset and file(s) are passed to `main:process_files` which overrides configured Process executions.
 
