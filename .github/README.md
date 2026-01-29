@@ -4,12 +4,32 @@
 
 httpLogs2MySQL is a Python ***JSON data-driven*** App & MySQL schema to automate importing access & error files, normalizing log data into database and generating a well-documented data lineage audit trail 24/7.
 
-Process properties - collection of Processes executed filtered or individually in `main:process_files`
+## Application Collections and The Factory Method
 
+`config.json` has ***Processes*** and ***Observers*** configured to share the seven (7) log format folders in repository `/data/` folder.
+
+1) Some ***Processes*** load files from folders `data_file_loader.py` for unprocessed files. Some processes execute MySQL stored procedures `data_file_loader.py` and currently 2 processes perform Data Enhandments - `data_enrichment_geoip.py` and `data_enrichment_useragent.py`.
+
+Process Modules `data_file_loader.py` and `data_file_loader.py` can be configured in the `config.json` Processes collection with different properties to process different log format files in different directories. 
+
+The data-driven Process properties design allows flexibility and expandability. The NGINX MySQL Stored Procedures are based on the Apache. Additional data files can be incorporated without code modification of current processes.
+
+`files_import.py` executes `main:process_files` which runs the `config.json` Processes. The Processes collection can be filtered and ordered by Python and commented code is there. By default the application filters on status = 'Active'.
+ 
+2) All ***Observers*** watch for the arrival of new unprocessed files in a directory path.
+
+Each Observer has a Process list (processIDs) subset from `config.json` Processes collection. This Process subset and file(s) are passed to `main:process_files` which overrides configured Process executions.
+
+When `main:process_files` is passed parameters it requires a Process list (processID) to execute.
+
+Multiple folders and formats can be processed running different Observers with properties for different log formats and paths.
+
+`files_watch.py` executes `watchdog` which loads the Observers that call `main:process_files`.
+
+### Process properties - Application Processes
 ![Process Properties](./images/process_properties.png)
 
-watchdog Observer properties - collection of Observers that execute `main:process_files` with file(s) parameter
-
+### Observer properties - Application watchdog Observers
 ![Observers Properties](./images/observer_properties.png)
 
 All processing stages (child processes) are encapsulated within one `main:process_files` (parent process) that captures process metrics, notifications and errors into database import tables.
@@ -86,29 +106,7 @@ local-infile=1
 ```
 ### 3. Create database USER & GRANTS
 To minimize data exposure and breach risks create a database USER for Python module with GRANTS to only schema objects and privileges required to execute import processes. Replace hostname from `localhost` to hostname of installed database if different. (`mysql_user_and_grants.sql` in repository)
-### 4. application Concepts to Understand
-
-`config.json` has ***Processes*** and ***Observers*** configured to share the seven (7) log format folders in repository `/data/` folder.
-
-1) Some ***Processes*** load files from folders `data_file_loader.py` for unprocessed files. Some processes execute MySQL stored procedures `data_file_loader.py` and currently 2 processes perform Data Enhandments - `data_enrichment_geoip.py` and `data_enrichment_useragent.py`.
-
-Process Modules `data_file_loader.py` and `data_file_loader.py` can be configured in the `config.json` Processes collection with different properties to process different log format files in different directories. 
-
-The data-driven Process properties design allows flexibility and expandability. The NGINX MySQL Stored Procedures are based on the Apache. Additional data files can be incorporated without code modification of current processes.
-
-`files_import.py` executes `main:process_files` which runs the `config.json` Processes. The Processes collection can be filtered and ordered by Python and commented code is there. By default the application filters on status = 'Active'.
- 
-2) All ***Observers*** watch for the arrival of new unprocessed files in a directory path.
-
-Each Observer has a Process list (processIDs) subset from `config.json` Processes collection. This Process subset and file(s) are passed to `main:process_files` which overrides configured Process executions.
-
-When `main:process_files` is passed parameters it requires a Process list (processID) to execute.
-
-Multiple folders and formats can be processed running different Observers with properties for different log formats and paths.
-
-`files_watch.py` executes `watchdog` which loads the Observers that call `main:process_files`.
-
-### 5. Run Application
+### 4. Run Application
 
 Run `files_watch.py` then add file or files to a configured folder and `main:process_files` will process ONLY the added files. 
 
