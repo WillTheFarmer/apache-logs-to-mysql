@@ -1,6 +1,4 @@
-Current release is fluid until after Ground Hog day.
-
-No need to report issues until after next release.
+Current release is fluid until after Ground Hog day. No need to report issues until after next release.
 
 To contribute Issues or Errors found using application please create a `New issue` under repository `Issues` tab. 
 
