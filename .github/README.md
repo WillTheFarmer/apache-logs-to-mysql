@@ -24,7 +24,7 @@ The NGINX MySQL Stored Procedures are based on the Apache. Additional data files
 
 `files_import.py` executes `main:process_files` which runs the `config.json` Processes. The Processes collection can be filtered and ordered by Python and commented code is there. By default the application filters on status = 'Active'.
  
-3) All ***Observers*** watch for the arrival of new unprocessed files in a directory path.
+4) All ***Observers*** watch for the arrival of new unprocessed files in a directory path.
 
 Each Observer has a Process list (processIDs) subset from `config.json` Processes collection. This Process subset and file(s) are passed to `main:process_files` which overrides configured Process executions.
 
