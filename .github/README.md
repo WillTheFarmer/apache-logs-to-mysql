@@ -108,11 +108,4 @@ Run `files_import.py` to ingest all unprocessed files in all comfigured folders.
  
 `files_watch.py` executes `watchdog` which loads the Observers that call `main:process_files`.
 
-Run import process directly:
-```
-python3 files_import.py
-```
-Run polling module:
-```
-python3 files_watch.py
-```
+The GeoIP databases are not included in repository. Links to download GeoLite2 and Geo-IP databases are in Data Enrichments section.
