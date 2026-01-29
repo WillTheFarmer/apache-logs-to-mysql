@@ -88,7 +88,7 @@ local-infile=1
 To minimize data exposure and breach risks create a database USER for Python module with GRANTS to only schema objects and privileges required to execute import processes. Replace hostname from `localhost` to hostname of installed database if different. (`mysql_user_and_grants.sql` in repository)
 ### 4. Run Application
 
-`config.json` has Processes and Observers configured to share folders. 
+`config.json` has Processes and Observers configured to share the seven (7) log format folders in repository `/data/` folder.
 
 Some Processes look in folders (data_file_loader.py) for unprocessed files.
 
