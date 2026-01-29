@@ -8,11 +8,15 @@ httpLogs2MySQL is a Python ***JSON data-driven*** App & MySQL schema to automate
 
 `config.json` has ***Processes*** and ***Observers*** configured to share the seven (7) log format folders in repository `/data/` folder.
 
-1) Some ***Processes*** load files from folders `data_file_loader.py` for unprocessed files. Some processes execute MySQL stored procedures `data_file_loader.py` and currently 2 processes perform Data Enhandments - `data_enrichment_geoip.py` and `data_enrichment_useragent.py`.
+1) Some ***Processes*** load files from folders `data_file_loader.py` for unprocessed files. Some processes execute MySQL stored procedures `data_file_loader.py` and some processes perform Data Enhancements - `data_enrichment_geoip.py` and `data_enrichment_useragent.py`.
 
-Process Modules `data_file_loader.py` and `data_file_loader.py` can be configured in the `config.json` Processes collection with different properties to process different log format files in different directories. 
+Process Modules `data_file_loader.py` and `data_file_loader.py` properties values are set in the `config.json`.
 
-The data-driven Process properties design allows flexibility and expandability. The NGINX MySQL Stored Procedures are based on the Apache. Additional data files can be incorporated without code modification of current processes.
+To process different log format files in different directories datasets are added to the Process collection of the `config.json`. Some can have different number of parameters in the process dataset.
+
+The data-driven properties allows flexibility and expandability.
+
+The NGINX MySQL Stored Procedures are based on the Apache. Additional data files can be incorporated without code modification of current processes.
 
 `files_import.py` executes `main:process_files` which runs the `config.json` Processes. The Processes collection can be filtered and ordered by Python and commented code is there. By default the application filters on status = 'Active'.
  
