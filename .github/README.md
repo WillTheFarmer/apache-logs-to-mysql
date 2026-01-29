@@ -12,29 +12,27 @@ httpLogs2MySQL is a Python ***JSON data-driven*** App & MySQL schema to automate
 
 2) All ***Process Datasets*** have an `attributes` property. The attributes property can have any number of properties the ***Process Module*** requires.
 
-3) All ***Process Modules*** have a `process` method and a `class ProcessProperties` properties. 
+To process different log format files in different directories datasets are added to the Process collection of the `config.json`. Some can have different number of parameters in the process dataset.
 
 The `data_file_loader.py` and `database_module.py` modules have attribute properties for folder path and log format and load table values set in the `config.json`.
 
-To process different log format files in different directories datasets are added to the Process collection of the `config.json`. Some can have different number of parameters in the process dataset.
+3) All ***Process Modules*** have a `process` method and a `class ProcessProperties` properties. 
 
-The data-driven properties allows flexibility and expandability.
-
-The NGINX MySQL Stored Procedures are based on the Apache. Additional data files can be incorporated without code modification of current processes.
-
-`files_import.py` executes `main:process_files` which runs the `config.json` Processes. The Processes collection can be filtered and ordered by Python and commented code is there. By default the application filters on status = 'Active'.
- 
-4) `main:process_files` can be passed `collection Filter` parameter. It can be a Process list (processID) to execute for any number of reasons. This makes the App more integratable, flexibility and adaptable.
+4) `main:process_files` can be passed `collection Filter` parameter. It can be a Process list (processID) to execute for any number of reasons. This makes the App more integratable and adaptable.
 
 5) All ***Observers*** watch for the arrival of new unprocessed files in a directory path.
 
 Each Observer has a Process list (processIDs) subset from `config.json` Processes collection. This Process subset and `pathfile` are passed to `main:process_files` which overrides configured Process executions.
 
-
 Multiple folders and formats can be processed running different Observers with properties for different log formats and paths.
 
 `files_watch.py` executes `watchdog` which loads the Observers that call `main:process_files`.
 
+`files_import.py` executes `main:process_files` which runs the `config.json` Processes. The Processes collection can be filtered and ordered by Python and commented code is there. By default the application filters on status = 'Active'.
+
+The data-driven properties allows flexibility and expandability.
+
+The NGINX MySQL Stored Procedures are based on the Apache. Additional data files can be incorporated without code modification of current processes.
 ### Process properties - Application Processes
 ![Process Properties](./images/process_properties.png)
 
